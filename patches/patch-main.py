@@ -3,7 +3,7 @@
 
 Usage: patch-main.py <path-to-resources/app/lib/main.js>
 
-Patches (all verified against the 0.2.0-rc.2 bundle):
+Patches (verified against the 0.2.0-rc.2 and 0.2.1-rc.2 bundles):
   1. platform allowlist: accept linux (was win32/darwin only -> threw on Linux)
   2. x-client-platform: report desktop-linux instead of falling through to mac
   3. DesktopPlatformView platform argument: pass linux through
@@ -14,6 +14,22 @@ Patches (all verified against the 0.2.0-rc.2 bundle):
   8. command manager: keep the CLI installer on the overridden resources root
 """
 import sys
+
+
+def rewrite_pnpm_path(src: str) -> str:
+    """Preserve the upstream layout while overriding its resources root."""
+    paths = (
+        'join(process.resourcesPath, "runtime", "pnpm", "bin", "pnpm.mjs")',
+        'join(process.resourcesPath, "runtime", "primary-runtime", "dependencies", "pnpm", "bin", "pnpm.mjs")',
+    )
+    count = sum(src.count(path) for path in paths)
+    if count != 1:
+        raise ValueError(f'pnpm 路径改走 resources 根 (found {count}, expected 1)')
+    for path in paths:
+        if path in src:
+            return src.replace(path, path.replace('process.resourcesPath', 'desktopResourcesRoot()'))
+    raise AssertionError('unreachable')
+
 
 def main() -> int:
     path = sys.argv[1]
@@ -88,9 +104,6 @@ def main() -> int:
         ('join(process.resourcesPath, "runtime", "bin")',
          'join(desktopResourcesRoot(), "runtime", "bin")',
          'nodeBin 路径改走 resources 根'),
-        ('join(process.resourcesPath, "runtime", "pnpm", "bin", "pnpm.mjs")',
-         'join(desktopResourcesRoot(), "runtime", "pnpm", "bin", "pnpm.mjs")',
-         'pnpm 路径改走 resources 根'),
         ('join(process.resourcesPath, "runtime", "primary-runtime")',
          'join(desktopResourcesRoot(), "runtime", "primary-runtime")',
          'primaryRuntime 路径改走 resources 根'),
@@ -102,6 +115,12 @@ def main() -> int:
          'CLI 命令管理器 resources 改走 resources 根'),
     ):
         sub(old, new, label)
+
+    try:
+        src = rewrite_pnpm_path(src)
+        done.append('pnpm 路径改走 resources 根（保留上游目录布局）')
+    except ValueError as error:
+        missing.append(str(error))
 
     # 5b) packaged-state users ----------------------------------------------
     occurrences = src.count('app.isPackaged')
@@ -142,7 +161,9 @@ def main() -> int:
         '关窗：无托盘时退出而非隐藏',
     )
 
-    if src != orig:
+    # An upstream mismatch must leave the input intact, so a retry never patches
+    # a mixture of original and already-transformed code.
+    if not missing and src != orig:
         open(path, 'w', encoding='utf8').write(src)
 
     print(f'== {path}')
@@ -150,6 +171,8 @@ def main() -> int:
         print(f'  ✓ {item}')
     for item in missing:
         print(f'  ✗ 未应用：{item}')
+    if missing:
+        print('  未写入：补丁不完整，原文件保持不变')
     print(f'  字节 {len(orig)} -> {len(src)}')
     return 1 if missing else 0
 

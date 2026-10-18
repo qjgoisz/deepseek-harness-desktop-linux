@@ -209,6 +209,14 @@ chmod +x dist/DeepSeek-Harness-*.AppImage
 
 ## 维护与离线测试
 
+自用分支已适配官方 `0.2.1-rc.2` 载荷。pnpm 从旧版的 `runtime/pnpm`
+移到了 `runtime/primary-runtime/dependencies/pnpm`；资源根覆盖保留载荷自身的
+目录布局，两种布局均支持，遇到未知或重复匹配时中止且不写入部分补丁。
+Sharp facade 的版本信息取自载荷中的原包，随图片 worker 一起更新。
+
+官方 `latest` 下载地址会覆盖更新，已有缓存默认保留。如果提示官方 dmg 已更新，
+可另存新版 dmg，再用 `--dmg /绝对路径/新版.dmg` 构建，复用其他依赖缓存。
+
 入口 `auto-build.sh` 负责参数和流程；`scripts/build/` 按职责分为
 common、download、prepare、tree、package、native-packages 模块。`scripts/extract-asar.py` 展开
 asar 与 unpacked 载荷；`scripts/npm-linux-swap.py` 转换平台包并检查遗留原生包。

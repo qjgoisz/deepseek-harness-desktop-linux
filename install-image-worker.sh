@@ -61,17 +61,23 @@ if [ -d "$NM/sharp" ] && [ ! -d "$NM/.sharp-native-backup/sharp" ]; then
 fi
 FACADE="$NM/sharp"
 mkdir -p "$FACADE/dist"
-cat > "$FACADE/package.json" <<'JSON'
-{
-  "name": "sharp",
-  "version": "0.35.4",
-  "description": "Out-of-process Sharp facade: keeps libvips out of the Electron process on Linux.",
-  "main": "./dist/index.cjs",
-  "type": "commonjs",
-  "engines": { "node": ">=20.9.0" },
-  "license": "Apache-2.0"
+python3 - "$W/sharp/package.json" "$FACADE/package.json" <<'PY'
+import json, sys
+with open(sys.argv[1], encoding='utf8') as handle:
+    native = json.load(handle)
+facade = {
+    'name': 'sharp',
+    'version': native['version'],
+    'description': 'Out-of-process Sharp facade: keeps libvips out of the Electron process on Linux.',
+    'main': './dist/index.cjs',
+    'type': 'commonjs',
+    'engines': native.get('engines', {'node': '>=20.9.0'}),
+    'license': native.get('license', 'Apache-2.0'),
 }
-JSON
+with open(sys.argv[2], 'w', encoding='utf8') as handle:
+    json.dump(facade, handle, indent=2)
+    handle.write('\n')
+PY
 cat > "$FACADE/dist/index.cjs" <<'JS'
 'use strict';
 /**

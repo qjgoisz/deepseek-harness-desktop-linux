@@ -1,5 +1,9 @@
 # DeepSeek Harness — Linux 移植产物
 
+> 下文是 `0.2.0-rc.2` 的历史多格式验证记录。自用分支本次更新到 `0.2.1-rc.2`，
+> 生成 `deepseek-harness_0.2.1-rc.2_amd64.bundled.deb`，使用实色与普通窗口圆角。
+> 新版其他格式及 ARM64 尚未重新验证，详见 [变更记录](CHANGELOG.md)。
+
 由官方 **macOS arm64** 安装包（`DeepSeek Harness 0.2.0-rc.2.dmg`）中的应用载荷重新打包为 Linux 版本。
 上游应用：`@deepseek-ai/dsh-desktop 0.2.0-rc.2`。
 

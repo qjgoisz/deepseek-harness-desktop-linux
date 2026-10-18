@@ -1,6 +1,6 @@
 # DeepSeek Harness — Linux 移植源码包
 
-把官方 **macOS arm64** 安装包（`DeepSeek Harness 0.2.0-rc.2.dmg`）里的应用载荷，
+把官方 **macOS arm64** 安装包里的应用载荷（本自用分支当前适配 `0.2.1-rc.2`），
 重新打包成 Linux 桌面发行包（AppImage / deb / pacman / rpm，x86_64 + aarch64）。
 
 本目录是**可复现的移植工具链**：官方 dmg + 若干公开下载物 → 10 个 Linux 安装包。
@@ -209,7 +209,8 @@ HOME=/tmp/t DSH_HOME=/tmp/t/.dsh xvfb-run -a ./out-x64/deepseek-harness --ozone-
 ./build-packages.sh arm64
 ```
 
-产物落在 `dist/`：
+产物落在 `dist/`，版本来自载荷的 `runtime.json`。以下保留 `0.2.0-rc.2` 的
+历史命名示例；`0.2.1-rc.2` 本次仅验证 x86_64 bundled deb，见 [变更记录](docs/CHANGELOG.md)。
 
 | 文件 | 说明 |
 |---|---|
