@@ -25,6 +25,7 @@
 - `patches/patch-main.py` 遇到未知或重复匹配时应失败，且不写入部分补丁。维护其他补丁时也应避免匹配失败后悄悄交付半成品；同时检查主进程与两个 preload。
 - 保留 Sharp 的独立 Node worker 隔离方案。facade 的版本信息应读取实际 worker 原包，不能写死旧版版本号。
 - 不把插件自身的性能问题或协作桥改动夹带进桌面重打包；发现相关问题可记录诊断，按用户指定范围另行处理。
+- `local-fixes/dsh-usage-settings/` 单独保存用户授权纳入自用分支的插件导航修复；仅显式运行 `apply-fix.py --apply` 时修改本机插件，不接入 Desktop 打包流程。2026-10-18 纳入版本管理时 Python 与 JavaScript 语法检查通过；DOM 回归测试因缺少 `chromium` 未运行成功，未应用到已安装实例，桌面构建与 GUI 验证基线不变。
 
 ## 构建与产物
 
