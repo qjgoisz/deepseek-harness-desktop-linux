@@ -15,7 +15,7 @@ html[data-dsh-mac-chrome] body {
 html[data-dsh-mac-chrome][data-fullscreen] body { clip-path: none; }
 '''
 
-CSS = LEGACY_CSS.replace('dsh-personal-rounded:v1', 'dsh-personal-rounded:v2') + '''
+PERSISTENT_CSS = LEGACY_CSS.replace('dsh-personal-rounded:v1', 'dsh-personal-rounded:v2') + '''
 /* Personal controls stay visible and clickable, regardless of hover or focus.
    Keep the native state/pointer bridge for Wayland titlebar double-clicks. */
 html[data-dsh-mac-chrome][data-fullscreen] #dsh-mac-lights {
@@ -23,7 +23,9 @@ html[data-dsh-mac-chrome][data-fullscreen] #dsh-mac-lights {
     pointer-events: auto !important; transition: none !important;
 }
 html[data-dsh-mac-chrome][data-fullscreen] #dsh-fullscreen-reveal { display: none !important; }
-/* Reserve the same room as the revealed toolbar, without hover animation.
+'''
+
+PREVIOUS_CSS = PERSISTENT_CSS + '''/* Reserve the same room as the revealed toolbar, without hover animation.
    Scope the toggle to the sidebar so plugin panel controls stay in place. */
 html[data-dsh-mac-chrome][data-fullscreen] [class*="_sidebarCol"] button[class*="_toggle"],
 html[data-dsh-mac-chrome][data-fullscreen] [class*="_collapsed"] button[class*="_newSession"] {
@@ -31,15 +33,31 @@ html[data-dsh-mac-chrome][data-fullscreen] [class*="_collapsed"] button[class*="
 }
 '''
 
+CSS = PERSISTENT_CSS.replace('dsh-personal-rounded:v2', 'dsh-personal-rounded:v3') + '''
+/* Use ordinary-window positions in every native window state. The state
+   selector keeps these rules as specific as the legacy fullscreen overrides. */
+html[data-dsh-mac-chrome]:is([data-fullscreen], :not([data-fullscreen])) [class*="_sidebarCol"] button[class*="_toggle"] {
+    left: var(--dsh-linux-toggle-left, 240px) !important; right: auto !important;
+    translate: none !important; transition: none !important;
+}
+html[data-dsh-mac-chrome]:is([data-fullscreen], :not([data-fullscreen])) [class*="_sidebarCol"] [class*="_collapsed"] button[class*="_toggle"] {
+    left: 128px !important;
+}
+html[data-dsh-mac-chrome]:is([data-fullscreen], :not([data-fullscreen])) [class*="_sidebarCol"] [class*="_collapsed"] button[class*="_newSession"] {
+    left: 88px !important; translate: none !important; transition: none !important;
+}
+'''
+
 def transform_preload(src):
-    if '/* dsh-personal-rounded:v2 */' in src:
-        if src.count(CSS) != 1:
+    if '/* dsh-personal-rounded:v3 */' in src:
+        if src.count(CSS) != 1 or src.count('/* dsh-personal-rounded:') != 1:
             raise ValueError('Unknown or duplicate personal window styles')
         return src
-    if '/* dsh-personal-rounded:v1 */' in src:
-        if src.count(LEGACY_CSS) != 1:
-            raise ValueError('Unknown or duplicate previous personal window styles')
-        return src.replace(LEGACY_CSS, CSS, 1)
+    for version, previous in ((1, LEGACY_CSS), (2, PREVIOUS_CSS)):
+        if f'/* dsh-personal-rounded:v{version} */' in src:
+            if src.count(previous) != 1 or src.count('/* dsh-personal-rounded:') != 1:
+                raise ValueError('Unknown or duplicate previous personal window styles')
+            return src.replace(previous, CSS, 1)
     anchor = '\tconst CSS = `'
     policy = 'if (kdeSession && !kdeBlurReady) root.dataset.dshOpaqueSidebar = "";'
     if src.count(anchor) != 1 or src.count(policy) != 1:

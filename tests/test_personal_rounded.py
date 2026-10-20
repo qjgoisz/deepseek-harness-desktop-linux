@@ -31,8 +31,9 @@ class PersonalRoundedTests(unittest.TestCase):
             source = chrome.PRELOAD_FN.replace('__TITLEBAR_HEIGHT__', '48').replace('__EXTRA_CSS__', extra)
             source = reveal.transform(material.transform_preload(source))
             fresh = rounded.transform_preload(source)
-            legacy = fresh.replace(rounded.CSS, rounded.LEGACY_CSS)
-            self.assertEqual(rounded.transform_preload(legacy), fresh)
+            for previous in (rounded.LEGACY_CSS, rounded.PREVIOUS_CSS):
+                legacy = fresh.replace(rounded.CSS, previous)
+                self.assertEqual(rounded.transform_preload(legacy), fresh)
             self.assertEqual(rounded.transform_preload(fresh), fresh)
             self.assertIn(reveal.JS, fresh)  # Keep state sync and Wayland double-click restore.
 
