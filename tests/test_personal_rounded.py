@@ -1,6 +1,7 @@
 import importlib.util
 from pathlib import Path
 import unittest
+import tempfile
 
 spec = importlib.util.spec_from_file_location('rounded', Path(__file__).resolve().parents[1]/'patches/patch-personal-rounded.py')
 rounded = importlib.util.module_from_spec(spec)
@@ -22,3 +23,31 @@ class PersonalRoundedTests(unittest.TestCase):
         result = rounded.transform_main('\tconst configureKdeBlur = (window) => {\nreturn request;\n};')
         self.assertIn('return Promise.resolve(false)', result)
         self.assertEqual(result, rounded.transform_main(result))
+
+    def test_upgrade_existing_personal_preloads(self):
+        from test_kde_material import chrome, material
+        from test_fullscreen_reveal import reveal
+        for extra in (chrome.MAIN_EXTRA_CSS, chrome.WELCOME_EXTRA_CSS):
+            source = chrome.PRELOAD_FN.replace('__TITLEBAR_HEIGHT__', '48').replace('__EXTRA_CSS__', extra)
+            source = reveal.transform(material.transform_preload(source))
+            fresh = rounded.transform_preload(source)
+            legacy = fresh.replace(rounded.CSS, rounded.LEGACY_CSS)
+            self.assertEqual(rounded.transform_preload(legacy), fresh)
+            self.assertEqual(rounded.transform_preload(fresh), fresh)
+            self.assertIn(reveal.JS, fresh)  # Keep state sync and Wayland double-click restore.
+
+    def test_bad_legacy_welcome_leaves_all_files_unchanged(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / 'lib'
+            root.mkdir()
+            original = '\tconst CSS = `\n`;\nif (kdeSession && !kdeBlurReady) root.dataset.dshOpaqueSidebar = "";'
+            sources = {
+                'main.js': '\tconst configureKdeBlur = (window) => {\nreturn request;\n};',
+                'preload-app.cjs': original,
+                'preload-welcome.cjs': original + rounded.LEGACY_CSS + rounded.LEGACY_CSS,
+            }
+            for name, source in sources.items():
+                (root / name).write_text(source)
+            with self.assertRaises(ValueError):
+                rounded.main(directory)
+            self.assertEqual(sources, {p.name: p.read_text() for p in root.iterdir()})

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Personal solid rounded window layer; keeps upstream fullscreen controls intact."""
+"""Personal solid rounded windows with persistent fullscreen controls."""
 from pathlib import Path
 import sys
 
-CSS = '''
+LEGACY_CSS = '''
 /* dsh-personal-rounded:v1 */
 html[data-dsh-mac-chrome] {
     background: linear-gradient(transparent, transparent) !important;
@@ -15,9 +15,31 @@ html[data-dsh-mac-chrome] body {
 html[data-dsh-mac-chrome][data-fullscreen] body { clip-path: none; }
 '''
 
+CSS = LEGACY_CSS.replace('dsh-personal-rounded:v1', 'dsh-personal-rounded:v2') + '''
+/* Personal controls stay visible and clickable, regardless of hover or focus.
+   Keep the native state/pointer bridge for Wayland titlebar double-clicks. */
+html[data-dsh-mac-chrome][data-fullscreen] #dsh-mac-lights {
+    display: flex !important; opacity: 1 !important; visibility: visible !important;
+    pointer-events: auto !important; transition: none !important;
+}
+html[data-dsh-mac-chrome][data-fullscreen] #dsh-fullscreen-reveal { display: none !important; }
+/* Reserve the same room as the revealed toolbar, without hover animation.
+   Scope the toggle to the sidebar so plugin panel controls stay in place. */
+html[data-dsh-mac-chrome][data-fullscreen] [class*="_sidebarCol"] button[class*="_toggle"],
+html[data-dsh-mac-chrome][data-fullscreen] [class*="_collapsed"] button[class*="_newSession"] {
+    translate: 76px 0 !important; transition: none !important;
+}
+'''
+
 def transform_preload(src):
-    if '/* dsh-personal-rounded:v1 */' in src:
+    if '/* dsh-personal-rounded:v2 */' in src:
+        if src.count(CSS) != 1:
+            raise ValueError('Unknown or duplicate personal window styles')
         return src
+    if '/* dsh-personal-rounded:v1 */' in src:
+        if src.count(LEGACY_CSS) != 1:
+            raise ValueError('Unknown or duplicate previous personal window styles')
+        return src.replace(LEGACY_CSS, CSS, 1)
     anchor = '\tconst CSS = `'
     policy = 'if (kdeSession && !kdeBlurReady) root.dataset.dshOpaqueSidebar = "";'
     if src.count(anchor) != 1 or src.count(policy) != 1:
