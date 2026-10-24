@@ -2,6 +2,7 @@ import importlib.util
 from pathlib import Path
 import unittest
 import tempfile
+import subprocess
 
 spec = importlib.util.spec_from_file_location('rounded', Path(__file__).resolve().parents[1]/'patches/patch-personal-rounded.py')
 rounded = importlib.util.module_from_spec(spec)
@@ -9,7 +10,7 @@ spec.loader.exec_module(rounded)
 
 class PersonalRoundedTests(unittest.TestCase):
     def test_layer_is_idempotent_and_keeps_controls(self):
-        original = '\tconst CSS = `\n/* fullscreen controls */\n`;\nif (kdeSession && !kdeBlurReady) root.dataset.dshOpaqueSidebar = "";'
+        original = '\tconst CSS = `\n/* fullscreen controls */\n`;\nif (kdeSession && !kdeBlurReady) root.dataset.dshOpaqueSidebar = "";' + rounded.LEGACY_MEASUREMENT
         result = rounded.transform_preload(original)
         self.assertEqual(result, rounded.transform_preload(result))
         self.assertIn('/* fullscreen controls */', result)
@@ -35,13 +36,43 @@ class PersonalRoundedTests(unittest.TestCase):
                 legacy = fresh.replace(rounded.CSS, previous)
                 self.assertEqual(rounded.transform_preload(legacy), fresh)
             self.assertEqual(rounded.transform_preload(fresh), fresh)
+            self.assertEqual(rounded.transform_preload(fresh.replace(rounded.MEASUREMENT, rounded.LEGACY_MEASUREMENT)), fresh)
             self.assertIn(reveal.JS, fresh)  # Keep state sync and Wayland double-click restore.
+
+    def test_strip_width_reaches_zero_after_toggle_position_clamps(self):
+        from test_kde_material import chrome, material
+        from test_fullscreen_reveal import reveal
+        script = Path(__file__).with_name('sidebar-width-runtime.cjs')
+        for extra in (chrome.MAIN_EXTRA_CSS, chrome.WELCOME_EXTRA_CSS):
+            source = reveal.transform(material.transform_preload(chrome.PRELOAD_FN.replace('__TITLEBAR_HEIGHT__', '48').replace('__EXTRA_CSS__', extra)))
+            old = subprocess.run(['node', str(script)], input=source, text=True, capture_output=True)
+            self.assertNotEqual(old.returncode, 0, 'regression must reject the stale strip width')
+            self.assertIn('stale strip', old.stderr)
+            patched = rounded.transform_preload(source)
+            result = subprocess.run(['node', str(script)], input=patched, text=True, capture_output=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_unknown_measurement_in_welcome_does_not_partially_write(self):
+        from test_kde_material import chrome, material
+        from test_fullscreen_reveal import reveal
+        source = reveal.transform(material.transform_preload(chrome.PRELOAD_FN.replace('__TITLEBAR_HEIGHT__', '48').replace('__EXTRA_CSS__', chrome.MAIN_EXTRA_CSS)))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / 'lib'
+            root.mkdir()
+            sources = {
+                'main.js': '\tconst configureKdeBlur = (window) => {\n};',
+                'preload-app.cjs': source,
+                'preload-welcome.cjs': source.replace(rounded.LEGACY_MEASUREMENT, 'unknown measurement'),
+            }
+            for name, text in sources.items(): (root/name).write_text(text)
+            with self.assertRaises(ValueError): rounded.main(directory)
+            self.assertEqual(sources, {p.name: p.read_text() for p in root.iterdir()})
 
     def test_bad_legacy_welcome_leaves_all_files_unchanged(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory) / 'lib'
             root.mkdir()
-            original = '\tconst CSS = `\n`;\nif (kdeSession && !kdeBlurReady) root.dataset.dshOpaqueSidebar = "";'
+            original = '\tconst CSS = `\n`;\nif (kdeSession && !kdeBlurReady) root.dataset.dshOpaqueSidebar = "";' + rounded.LEGACY_MEASUREMENT
             sources = {
                 'main.js': '\tconst configureKdeBlur = (window) => {\nreturn request;\n};',
                 'preload-app.cjs': original,

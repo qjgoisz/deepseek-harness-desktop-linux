@@ -3,6 +3,22 @@
 from pathlib import Path
 import sys
 
+LEGACY_MEASUREMENT = '''\t\t\t\tconst toggleLeft = `${Math.max(88, width - 40)}px`;
+\t\t\t\tif (root.style.getPropertyValue("--dsh-linux-toggle-left") !== toggleLeft) {
+\t\t\t\t\troot.style.setProperty("--dsh-linux-sidebar-width", `${width}px`);
+\t\t\t\t\troot.style.setProperty("--dsh-linux-toggle-left", toggleLeft);
+\t\t\t\t}'''
+
+MEASUREMENT = '''\t\t\t\t// Track the actual strip width even after the button position clamps.
+\t\t\t\tconst sidebarWidth = `${width}px`;
+\t\t\t\tif (root.style.getPropertyValue("--dsh-linux-sidebar-width") !== sidebarWidth) {
+\t\t\t\t\troot.style.setProperty("--dsh-linux-sidebar-width", sidebarWidth);
+\t\t\t\t}
+\t\t\t\tconst toggleLeft = `${Math.max(88, width - 40)}px`;
+\t\t\t\tif (root.style.getPropertyValue("--dsh-linux-toggle-left") !== toggleLeft) {
+\t\t\t\t\troot.style.setProperty("--dsh-linux-toggle-left", toggleLeft);
+\t\t\t\t}'''
+
 LEGACY_CSS = '''
 /* dsh-personal-rounded:v1 */
 html[data-dsh-mac-chrome] {
@@ -49,6 +65,13 @@ html[data-dsh-mac-chrome]:is([data-fullscreen], :not([data-fullscreen])) [class*
 '''
 
 def transform_preload(src):
+    # The old shared guard left a 0..128px strip behind during collapse because
+    # toggleLeft had already reached its 88px minimum. Upgrade existing v3 trees
+    # too, keeping this correction in the personal layer.
+    if src.count(LEGACY_MEASUREMENT) == 1 and MEASUREMENT not in src:
+        src = src.replace(LEGACY_MEASUREMENT, MEASUREMENT, 1)
+    elif src.count(MEASUREMENT) != 1 or LEGACY_MEASUREMENT in src:
+        raise ValueError('Unknown or duplicate sidebar measurement')
     if '/* dsh-personal-rounded:v3 */' in src:
         if src.count(CSS) != 1 or src.count('/* dsh-personal-rounded:') != 1:
             raise ValueError('Unknown or duplicate personal window styles')
