@@ -226,6 +226,7 @@ PYEOF
   # 7) 补丁
   python3 "$ROOT/patches/patch-main.py" "$out/resources/app/lib/main.js"
   python3 "$ROOT/patches/patch-titlebar.py" "$out/resources/app/lib/main.js"
+  python3 "$ROOT/patches/patch-system-proxy.py" "$out/resources/app"
   python3 "$ROOT/patches/patch-mac-chrome.py" "$out/resources/app"
   local fingerprint
   fingerprint="$(find "$out/resources/app/dsh/node_modules" -path '*node-addon-require-builtin-linux-*' -name '*.node' | head -1)"

@@ -79,3 +79,8 @@ for script in scripts/build/*.sh; do bash -n "$script"; done
 2026-10-24 最新载荷检测：官方 dmg 的应用与 runtime 版本均为 `0.2.1-rc.3`。独立副本的主进程、标题栏及完整自用外观补丁成功，主进程与两个 preload 语法检查通过；x64 原生依赖同版本实际转换 9 项成功，实际 ELF 指纹补丁成功。离线测试 46 项通过、2 项跳过，新载荷侧栏 CSS 的 144 种组合通过。未修改适配代码，未构建安装包或运行新版 CLI/图片 worker，未进行 Desktop Wayland/XWayland 验收，旧 GUI 验证基线不扩展到新版。详细记录见 `docs/COMPATIBILITY-2026-10-24.md`。
 
 2026-10-24 后续构建与修正：已生成 `0.2.1-rc.3` x86_64 bundled deb（Electron 44.4.5）。用户指出侧栏收起后新会话按钮附近有底色分界，实测侧栏宽度为 0、背景变量残留 123px；在 `patch-personal-rounded.py` 独立同步背景宽度，保留按钮坐标及配色策略，并支持已有 v3 树升级。50 项离线测试中 48 项通过、2 项跳过，新增回归确认旧逻辑失败；144 种侧栏布局通过。修正版成品的主进程/两个 preload 与应用树一致，CLI、pnpm、Node/Python、13 项 Python 包版本、图片 worker 隔离、133 个 ELF 架构检查及 SHA256 均通过。KWin 6.7.4 下从成品解包运行隔离 Wayland/XWayland 实例，各 8 个欢迎页/主界面窗口与侧栏状态检查通过，保存整屏截图并确认收起后背景宽度为 0、底色分界消失。窗口拖动、顶栏双击还原、登录后会话/插件及长会话仍待用户人工验收；未修改已安装实例。两后端的颜色深浅差异按用户指示保留观察记录，不调整配色或系统设置。本机检测报告 `docs/COMPATIBILITY-2026-10-24.md` 按用户要求加入 `.gitignore`，不随提交交付。
+
+
+2026-10-28 KDE/v2rayN 代理适配：构建流程新增 `patch-system-proxy.py`，仅 Linux KDE Desktop Host 默认读取系统手动 HTTP/HTTPS 代理，并监听 KDE 通知与配置替换；显式代理环境覆盖保留，CLI/worker 维持原行为。代理切换采用单一控制器，新请求切换、旧流式响应排空；用户插件目录不安装核心覆盖包，不改系统设置。规则和边界见 `docs/SYSTEM_PROXY.md`。56 项离线测试中 54 项通过、2 项因 RPM/pacman 工具缺失跳过，包含真实载荷副本的本机 HTTP 代理切换与私有 D-Bus 集成；脚本语法检查通过。该结论不代表真实 v2rayN GUI、远程 HTTPS/模型调用或长会话已经人工验收。
+
+本次另从已安装的 `0.2.1-rc.3` 复制独立应用树，仅应用系统代理补丁后增量生成 bundled x86_64 deb；未重新下载官方 dmg 或重跑 macOS 载荷转换。成品解包后的 56 项测试仍为 54 通过、2 跳过，包含本机 HTTPS CONNECT（临时测试 CA）、新 Node 子进程代理继承及私有 KDE D-Bus 信号；独立空 HOME 的完整 Desktop Host 启动/优雅退出通过。成品 CLI/pnpm、Node/Python、Sharp worker 隔离、133 个 ELF 架构、GUI/代理文件与应用树一致性及 SHA256 检查通过。已安装实例未替换或重启；真实 v2rayN/模型服务人工验收待用户完成。

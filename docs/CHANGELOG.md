@@ -485,3 +485,12 @@ pointer-events:none`），侧栏本身只保留 `background:0 0`。这样：
 - 体积优化：Python 载荷 421 → 231 MB、Node 载荷 204 → 104 MB，压缩改用 xz / zstd。
 
 > 该版产物与缓存后续被用户删除，其补丁与方案已在 2.0.0 中按新版重新实现。
+
+
+## 2026-10-28 — KDE/v2rayN 系统代理
+
+- Desktop Host 自动读取 KDE 手动 HTTP/HTTPS 代理，监听 v2rayN 使用的 KDE D-Bus 通知与配置文件替换；无显式代理覆盖时默认启用。
+- 动态切换连接池，保留既有流式请求，关闭代理时清除适配器发布的旧变量；保留绕过列表并补充 IPv4 CIDR。CLI、GUI 外观及 worker 策略保持原状。
+- 新增严格构建补丁、回归与私有 D-Bus/本机代理集成检查；56 项中 54 通过、2 跳过。真实 v2rayN 与登录后的网络人工验收待完成，支持边界见 SYSTEM_PROXY.md。
+
+本次测试 deb 从已安装 rc.3 的独立副本增量打包，未重新下载/转换官方 dmg。成品内置 CLI/pnpm、Node/Python、图片隔离、133 个 ELF 架构、文件一致性与 SHA256 检查通过；本机 HTTPS CONNECT、新 Node 子进程及完整隔离 Host 启停通过。测试包在 dist/，现用安装保持不变。

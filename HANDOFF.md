@@ -82,3 +82,8 @@ pnpm 在旧版为 `runtime/pnpm`，在 `0.2.1-rc.2` 为 `runtime/primary-runtime
 - 修正版 50 项离线测试为 48 通过、2 跳过；真实侧栏 CSS 的 144 种布局通过。最终包 CLI、pnpm、Node/Python、Python 包版本、Sharp worker 隔离、架构、GUI 文件一致性和 SHA256 均通过。Wayland/XWayland 各 8 个隔离 Desktop 状态检查通过，整屏截图确认收起后的分界消失。
 - 人工验收仍待用户进行，重点为真实拖动/双击还原、失焦行为、登录后使用与插件长会话。未修改已安装实例。用户允许忽略两后端的色彩处理差异，本次不修改系统或应用配色。
 - 本机检测报告被 `.gitignore` 忽略；逐项日志、截图和测试配置保存在 `others/compat-20261024/`，不提交。正式维护记录见 AGENTS.md 与 docs/CHANGELOG.md。
+
+
+## 2026-10-28 KDE/v2rayN 代理修复
+
+已将 Desktop Host 的系统代理桥接纳入仓库构建：`patches/patch-system-proxy.py` 及 `patches/system-proxy/`。详细支持范围、环境覆盖和动态切换规则见 `docs/SYSTEM_PROXY.md`。当前 rc.3 的复制应用树已应用补丁，增量 bundled deb 在 dist/；该包不是从新下载 dmg 全链路重建。56 项测试为 54 通过、2 跳过；实际本机 HTTP/HTTPS 代理、独立 D-Bus、子进程继承、完整 Host 启停及成品常规验证通过。未修改或重启已安装 DSH；下一步由用户安装测试包并实测真实 v2rayN 的开启/关闭/端口改变与模型联网。测试日志与增量打包暂存见 others/system-proxy-20261028/，不提交。

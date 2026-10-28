@@ -255,3 +255,8 @@ DSH_DESKTOP_RESOURCES_DIR="$PWD/out-arm64/resources" ELECTRON_RUN_AS_NODE=1 \
 当前 x86_64 验证环境虽有 qemu-aarch64，但没有 ARM64 动态加载器和系统库；
 未声称 ARM64 GUI 或 Sharp 运行验收通过。系统 Electron 版发行包还需目标发行版
 提供兼容的 ARM64 Electron。
+
+
+## KDE/v2rayN 代理适配
+
+应用树阶段自动运行 `patches/patch-system-proxy.py`，补充 Desktop Host 的系统代理读取和动态更新。范围、环境覆盖规则及测试见 [SYSTEM_PROXY.md](SYSTEM_PROXY.md)。新补丁对未知或重复匹配中止，不直接改用户插件目录。
