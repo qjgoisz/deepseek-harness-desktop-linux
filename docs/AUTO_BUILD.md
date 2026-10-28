@@ -209,8 +209,9 @@ chmod +x dist/DeepSeek-Harness-*.AppImage
 
 ## 维护与离线测试
 
-自用分支支持官方 `0.2.1-rc.2` 与 `0.2.1-rc.3` 载荷。`0.2.1-rc.3` 的本次检测、
-构建与验证范围见 `COMPATIBILITY-2026-10-24.md`。pnpm 从旧版的 `runtime/pnpm`
+当前自用分支基线为 `0.2.1-rc.3`；此前 rc.2 记录属于历史。当前构建与验证范围见
+[CHANGELOG.md](CHANGELOG.md) 和 [SYSTEM_PROXY.md](SYSTEM_PROXY.md)。本机
+`COMPATIBILITY-2026-10-24.md` 为被忽略的诊断材料，不随仓库分发。pnpm 从旧版的 `runtime/pnpm`
 移到了 `runtime/primary-runtime/dependencies/pnpm`；资源根覆盖保留载荷自身的
 目录布局，两种布局均支持，遇到未知或重复匹配时中止且不写入部分补丁。
 Sharp facade 的版本信息取自载荷中的原包，随图片 worker 一起更新。
@@ -260,3 +261,5 @@ DSH_DESKTOP_RESOURCES_DIR="$PWD/out-arm64/resources" ELECTRON_RUN_AS_NODE=1 \
 ## KDE/v2rayN 代理适配
 
 应用树阶段自动运行 `patches/patch-system-proxy.py`，补充 Desktop Host 的系统代理读取和动态更新。范围、环境覆盖规则及测试见 [SYSTEM_PROXY.md](SYSTEM_PROXY.md)。新补丁对未知或重复匹配中止，不直接改用户插件目录。
+
+2026-10-28 用户确认代理修复可用并要求清理缓存：本机 dl/、out-x64/、解包及打包暂存已清理，dist/ 成品与校验文件保留。后续完整构建需要重新准备下载依赖，不应假设旧应用树仍在。

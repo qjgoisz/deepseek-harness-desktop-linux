@@ -40,7 +40,9 @@ for script in scripts/build/*.sh; do bash -n "$script"; done
 
 真实通知用例在 `dbus-run-session` 的私有总线上发送信号、使用独立 HOME/XDG 配置；另行关闭文件监听/周期回读，断言 D-Bus 本身触发配置读取。不会向正在使用的桌面总线发送测试通知。
 
-待用户人工验收：安装修复包后普通启动、在真实 v2rayN 中开关系统代理、改端口、模型流式响应及插件联网。本机 HTTP/HTTPS 模拟服务测试不等于真实远端模型服务/登录/长会话已通过。
+2026-10-28 用户反馈本次 KDE/v2rayN 代理修复“可以了”，并授权清理缓存及推送。此为用户人工使用反馈，未逐项说明开关、端口修改、模型/插件、Wayland/XWayland 或长会话覆盖范围；不扩展为完整测试矩阵通过。
+
+本机 HTTP/HTTPS 模拟服务与私有 D-Bus 测试均已通过。后续回归可逐项覆盖普通启动、代理开关、端口修改、流式响应及插件联网；本次用户反馈不替代这些逐项覆盖记录。
 
 参考：
 - v2rayN 官方 Linux 脚本：https://github.com/2dust/v2rayN/blob/master/v2rayN/ServiceLib/Sample/proxy_set_linux_sh

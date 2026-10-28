@@ -3,11 +3,13 @@
 把 **DeepSeek Harness 桌面端**（官方仅发布 macOS / Windows 包）移植到 Linux 的
 **重新打包工具链**：官方 dmg 载荷 + 若干公开下载物 → AppImage / deb / pacman / rpm。
 
-覆盖 **x86_64** 与 **aarch64**，共 10 个发行包。
+工具链支持 **x86_64** 与 **aarch64** 的多种包型；各版本的实测范围见下文。
 
-自用分支当前适配：`@deepseek-ai/dsh-desktop 0.2.1-rc.2`。
+自用分支当前基线：`@deepseek-ai/dsh-desktop 0.2.1-rc.3`。
 本分支使用实色背景与普通窗口圆角，保留全屏交通灯及窗口控件修复。
-本次验证范围为 x86_64 bundled deb；历史多格式、ARM64 验证记录仍对应旧版载荷。
+当前验证范围为 x86_64 bundled deb；历史多格式、ARM64 验证记录仍对应旧版载荷。
+已加入 KDE/v2rayN 系统代理自动读取和动态切换，2026-10-28 用户反馈修复可用；
+支持范围和手动环境覆盖规则见 [系统代理说明](docs/SYSTEM_PROXY.md)。
 
 > 本仓库只包含**移植补丁与打包脚本**，不含任何官方二进制载荷（体积与授权原因）。
 > 详细的中文使用教程见 **[README.zh.md](README.zh.md)**。
@@ -36,6 +38,7 @@
 ```
 ├── patches/
 │   ├── patch-main.py            平台准入 / resources 根 / 打包态 / 托盘 / 窗口控制 IPC
+│   ├── patch-system-proxy.py    KDE/v2rayN Desktop 后台代理适配
 │   ├── patch-mac-chrome.py      macOS 风格装饰：左置交通灯 + 侧栏毛玻璃
 │   ├── patch-fingerprint.py     按 ELF 符号定位并放宽 V8 指纹白名单（x64 / arm64）
 │   ├── patch-titlebar.py        早期隐藏标题栏方案（已被 patch-mac-chrome 取代）
@@ -51,7 +54,7 @@
 └── docs/
     ├── ARTIFACTS.md             产物说明：安装方式、依赖策略、验证记录
     ├── CHANGELOG.md             完整变更日志（含每个修复的根因与实测数据）
-    └── SHA256SUMS.txt           本次构建 10 个产物的校验和
+    └── SHA256SUMS.txt           历史 0.2.0-rc.2 多格式产物的校验和
 ```
 
 ---
@@ -74,18 +77,14 @@
 ## 快速开始
 
 ```bash
-# 1) 按 README.zh.md 准备依赖（官方 dmg、Electron、Node/Python、原生模块、打包工具）
-# 2) 生成应用树
-python3 patches/patch-main.py        out-x64/resources/app
-python3 patches/patch-mac-chrome.py  out-x64/resources/app
-python3 patches/patch-fingerprint.py out-x64/resources/app/dsh/node_modules/node-addon-require-builtin-linux-x64-gnu/prebuilt/linux-x64-gnu-napi-v9.node
-./install-image-worker.sh out-x64 x64
-# 3) 打包
-./build-packages.sh x64
-./build-packages.sh arm64
-# 4) 验证
-./verify-launch-x64.sh && (cd dist && sha256sum -c SHA256SUMS.txt)
+./auto-build.sh --arch x64 --formats deb --electron bundled --package-jobs 4
+cd dist
+sha256sum -c deepseek-harness_0.2.1-rc.3_amd64.bundled.deb.sha256
 ```
+
+上例校验文件名对应当前 rc.3；新载荷构建后应使用实际生成的校验文件。
+官方滚动下载可能更新，构建时必须核对实际载荷版本。
+当前本机缓存已按用户要求清理，后续完整构建会重新准备下载物。
 
 完整的前置依赖清单、交叉打包注意事项与常见坑，见 **[README.zh.md](README.zh.md)**。
 

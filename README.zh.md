@@ -1,9 +1,12 @@
 # DeepSeek Harness — Linux 移植源码包
 
-把官方 **macOS arm64** 安装包里的应用载荷（本自用分支当前适配 `0.2.1-rc.2`），
+把官方 **macOS arm64** 安装包里的应用载荷（本自用分支当前基线 `0.2.1-rc.3`），
 重新打包成 Linux 桌面发行包（AppImage / deb / pacman / rpm，x86_64 + aarch64）。
 
 本目录是**可复现的移植工具链**：官方 dmg + 若干公开下载物 → 10 个 Linux 安装包。
+
+当前自用版包含 KDE/v2rayN 系统代理自动读取与动态切换；2026-10-28 用户反馈修复可用。
+范围及环境覆盖规则见 [系统代理说明](docs/SYSTEM_PROXY.md)。多格式和 ARM64 的历史验证不代表 rc.3 已完整实测。
 
 ---
 
@@ -13,6 +16,7 @@
 dsh-desktop-linux-source/
 ├── patches/                     逆向/适配补丁（按顺序执行）
 │   ├── patch-main.py            平台准入、resources 根、打包态判定、托盘、窗口控制 IPC
+│   ├── patch-system-proxy.py    KDE/v2rayN Desktop 后台代理适配
 │   ├── patch-titlebar.py        隐藏原生标题栏（历史版本，被 patch-mac-chrome 取代）
 │   ├── patch-fingerprint.py     放宽 node-addon-require-builtin 的 V8 指纹白名单
 │   ├── patch-mac-chrome.py      macOS 风格窗口装饰（左置交通灯 + 侧栏毛玻璃）
@@ -28,7 +32,7 @@ dsh-desktop-linux-source/
 ├── docs/
 │   ├── ARTIFACTS.md             产物说明：安装方式、依赖策略、验证记录
 │   ├── CHANGELOG.md             完整变更日志（含各修复的根因）
-│   └── SHA256SUMS.txt           本次构建 10 个产物的校验和
+│   └── SHA256SUMS.txt           历史 0.2.0-rc.2 多格式校验和
 └── README.md                    本文件
 ```
 
@@ -155,8 +159,11 @@ pip install --target <site-packages> \
 ### 4. 打补丁
 
 ```bash
-python3 patches/patch-main.py       out-x64/resources/app
-python3 patches/patch-mac-chrome.py out-x64/resources/app
+python3 patches/patch-main.py         out-x64/resources/app/lib/main.js
+python3 patches/patch-titlebar.py     out-x64/resources/app/lib/main.js
+python3 patches/patch-system-proxy.py out-x64/resources/app
+python3 patches/patch-mac-chrome.py   out-x64/resources/app
+python3 patches/patch-personal-rounded.py out-x64/resources/app
 python3 patches/patch-fingerprint.py \
   out-x64/resources/app/dsh/node_modules/node-addon-require-builtin-linux-x64-gnu/prebuilt/linux-x64-gnu-napi-v9.node
 ```
@@ -165,6 +172,7 @@ python3 patches/patch-fingerprint.py \
 
 | 补丁 | 作用 | 不改会怎样 |
 |---|---|---|
+| `patch-system-proxy.py` | KDE/v2rayN 系统代理读取和运行中切换，范围见 docs/SYSTEM_PROXY.md | 普通桌面启动无法自动使用系统代理 |
 | `patch-main.py` | 平台准入放行 linux；`DSH_DESKTOP_RESOURCES_DIR` / `DSH_DESKTOP_FORCE_PACKAGED`；托盘放行并改用 PNG；无托盘时关窗退出 | 启动即抛 `unsupported platform` |
 | `patch-mac-chrome.py` | 复用应用自带的 `data-windows-titlebar` 模式获得顶部预留带与拖拽区，绘制左上交通灯，侧栏毛玻璃 | 顶部有原生标题栏、按钮在右侧 |
 | `patch-fingerprint.py` | 放宽 V8 指纹匹配（x64 `0x17cdd`、arm64 `0x1df14` 写 `mov w0,#1; ret`） | 非 44.0.0 的 Electron 启动失败 |
@@ -210,7 +218,7 @@ HOME=/tmp/t DSH_HOME=/tmp/t/.dsh xvfb-run -a ./out-x64/deepseek-harness --ozone-
 ```
 
 产物落在 `dist/`，版本来自载荷的 `runtime.json`。以下保留 `0.2.0-rc.2` 的
-历史命名示例；`0.2.1-rc.2` 本次仅验证 x86_64 bundled deb，见 [变更记录](docs/CHANGELOG.md)。
+历史命名示例；当前 `0.2.1-rc.3` 仅验证 x86_64 bundled deb，见 [变更记录](docs/CHANGELOG.md)。
 
 | 文件 | 说明 |
 |---|---|

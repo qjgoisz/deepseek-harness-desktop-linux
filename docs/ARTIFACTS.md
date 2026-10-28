@@ -1,8 +1,12 @@
 # DeepSeek Harness — Linux 移植产物
 
-> 下文是 `0.2.0-rc.2` 的历史多格式验证记录。自用分支本次更新到 `0.2.1-rc.2`，
-> 生成 `deepseek-harness_0.2.1-rc.2_amd64.bundled.deb`，使用实色与普通窗口圆角。
-> 新版其他格式及 ARM64 尚未重新验证，详见 [变更记录](CHANGELOG.md)。
+> 当前自用基线为 `0.2.1-rc.3`，最新本机产物为
+> `dist/deepseek-harness_0.2.1-rc.3_amd64.bundled.deb`（bundled Electron 44.4.5）。
+> 2026-10-28 包从已安装 rc.3 的独立副本增量构建，包含 KDE/v2rayN 代理修复；
+> 用户反馈可用。自动化为 56 项中 54 通过、2 跳过，详见 [系统代理说明](SYSTEM_PROXY.md)。
+> SHA256：`58eed0612283285419b58e0c248cc6db651ce6307bb08df7a809bece89e1b511`。
+> 在 `dist/` 中运行对应 `.deb.sha256` 校验；下载/应用树/暂存已清理，成品保留。
+> **以下清单及 docs/SHA256SUMS.txt 均为 0.2.0-rc.2 历史记录，不代表当前文件存在或新版已验证。**
 
 由官方 **macOS arm64** 安装包（`DeepSeek Harness 0.2.0-rc.2.dmg`）中的应用载荷重新打包为 Linux 版本。
 上游应用：`@deepseek-ai/dsh-desktop 0.2.0-rc.2`。

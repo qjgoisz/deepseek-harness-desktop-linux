@@ -84,3 +84,6 @@ for script in scripts/build/*.sh; do bash -n "$script"; done
 2026-10-28 KDE/v2rayN 代理适配：构建流程新增 `patch-system-proxy.py`，仅 Linux KDE Desktop Host 默认读取系统手动 HTTP/HTTPS 代理，并监听 KDE 通知与配置替换；显式代理环境覆盖保留，CLI/worker 维持原行为。代理切换采用单一控制器，新请求切换、旧流式响应排空；用户插件目录不安装核心覆盖包，不改系统设置。规则和边界见 `docs/SYSTEM_PROXY.md`。56 项离线测试中 54 项通过、2 项因 RPM/pacman 工具缺失跳过，包含真实载荷副本的本机 HTTP 代理切换与私有 D-Bus 集成；脚本语法检查通过。该结论不代表真实 v2rayN GUI、远程 HTTPS/模型调用或长会话已经人工验收。
 
 本次另从已安装的 `0.2.1-rc.3` 复制独立应用树，仅应用系统代理补丁后增量生成 bundled x86_64 deb；未重新下载官方 dmg 或重跑 macOS 载荷转换。成品解包后的 56 项测试仍为 54 通过、2 跳过，包含本机 HTTPS CONNECT（临时测试 CA）、新 Node 子进程代理继承及私有 KDE D-Bus 信号；独立空 HOME 的完整 Desktop Host 启动/优雅退出通过。成品 CLI/pnpm、Node/Python、Sharp worker 隔离、133 个 ELF 架构、GUI/代理文件与应用树一致性及 SHA256 检查通过。已安装实例未替换或重启；真实 v2rayN/模型服务人工验收待用户完成。
+
+
+2026-10-28 用户反馈本次 KDE/v2rayN 代理修复“可以了”，并授权清理缓存及推送。此为用户人工使用反馈，未逐项说明开关、端口修改、模型/插件、Wayland/XWayland 或长会话覆盖范围；不扩展为完整测试矩阵通过。 本次更新 README、交接、产物与代理说明，修正当前 rc.3 基线及历史记录边界；仅文档维护，不改变功能或 56 项测试（54 通过、2 跳过）基线。按用户指示清理项目下载缓存、独立应用树、解包/打包暂存、测试 HOME 与 Python 缓存，保留 dist/ 成品、校验和及小体积诊断记录；未清理系统/用户全局缓存或现用 DSH 数据。原始 dmg 和应用树目前均不存在，后续构建需重新准备依赖。
