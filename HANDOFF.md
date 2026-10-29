@@ -1,39 +1,35 @@
 # 自用 DSH Desktop 项目交接
 
-更新日期：2026-10-28（Asia/Shanghai）。本文件描述当前交付与清理状态；历史过程见 `AGENTS.md` 和 `docs/CHANGELOG.md`。
+更新日期：2026-10-29（Asia/Shanghai）。当前维护分支为 `codex/personal-desktop`；本次维护提交包含 MCP 启动优化及必要测试、文档。历史细节见 AGENTS.md 与 docs/CHANGELOG.md。
 
-## 当前交付
+## 当前功能与边界
 
-- 仓库：`/home/debian/Documents/deepseek-harness/default-workspace/deepseek-harness-desktop-linux`。
-- 自用分支：`codex/personal-desktop`。功能提交 `0e8dc5c` 为 KDE/v2rayN 系统代理适配，`0577529` 为 rc.3 侧栏收起背景修复。
-- 基线：DSH `0.2.1-rc.3`，bundled Electron 44.4.5、Node 24.21.0、Python 3.12.14、pnpm 11.28.5、Sharp 0.35.5。不是对官方滚动下载当前版本的重新检测。
-- 产物：`dist/deepseek-harness_0.2.1-rc.3_amd64.bundled.deb`，同目录有 `.sha256`。
-- SHA256：`58eed0612283285419b58e0c248cc6db651ce6307bb08df7a809bece89e1b511`。
-- 代理修复包以已安装 rc.3 的独立副本增量打包，未重新下载官方 dmg 或重跑 macOS 载荷转换。其他格式、ARM64、非 KDE 桌面未因本次修改获得新的实测结论。
+- 基线为 DSH 0.2.1-rc.3，Electron 44.4.5、Node 24.21.0、Python 3.12.14、pnpm 11.28.5、Sharp 0.35.5；自用实色圆角、固定侧栏按钮和 KDE/v2rayN 代理适配保持原状。
+- MCP 构建补丁 v2 支持按服务 auto/legacy 协商与 blocking/background 启动，默认 auto/blocking；严格服务始终等待。后台连接完成后注册真实工具，不预注册占位工具，重连、通知、退出和热重载由原连接管理。
+- local-fixes/mcp-startup/ 提供固定 mcp-remote 0.15.1 的公共锁文件和显式配置工具，检查 v2 核心并备份配置，只修改 Wolfram/OpenAlex/Exa 的指定字段，不安装用户级核心覆盖包。
+- 安装 deb 不会自动启用这些配置；可以按 docs/MCP_STARTUP.md 单独启用后台模式，或显式运行工具应用三项优化。配置工具与打包流程分离，不修改现用实例。
+- 官方 rc.4 Desktop 更新仍暂停；最近一次快速查询清单仍指向 rc.3，不将 npm rc.4 发布当作桌面载荷已可用。
+- 用户已取消 npm Web 迁移，相关脚本、文档、工具包和数据副本已清理；今后继续维护 Desktop，不恢复迁移流程。
 
-## 验收与验证
+## 当前本机产物
 
-2026-10-28 用户反馈代理修复“可以了”，并要求清理缓存、同步文档和推送。此为人工使用反馈，未逐项说明代理开关、端口修改、模型/插件、窗口后端或长会话覆盖范围。
+- 当前 deb：dist/deepseek-harness_0.2.1-rc.3_amd64.bundled.deb，同目录附 .sha256。
+- SHA256：42ccb7170636f94bf0423eed0f53dc5345299ae64b62bf723c4cad206ddcfcae。
+- 前两步 v1 包位于 dist/previous-mcp-step12-20261029/，SHA256 为 f38c1204e8c32cfff149833ee56c35bcc9c990baa079cdca1f8cd33f77417460；更早代理修复包位于 dist/previous-20261028/，SHA256 为 58eed0612283285419b58e0c248cc6db651ce6307bb08df7a809bece89e1b511。
+- 当前包从上一版 rc.3 deb 独立解包升级 MCP client 后增量生成；未重新下载/转换官方 dmg。主进程中的临时窗口观测和退出注入在打包前已还原，GUI、代理及运行时与上一版一致。
+- dist 成品仅本机交付，不进入 Git，也未创建远端 release；没有安装或重启用户的现用 Desktop。实际源码提交和远端同步状态以 git log、git status 及推送结果为准。
 
-自动化基线为 56 项中 54 通过、2 项因缺少 RPM/pacman 工具跳过；包括真实载荷副本的本机 HTTP/HTTPS CONNECT、代理切换、旧流式响应继续、新 Node 子进程代理继承及私有 KDE D-Bus 通知。独立 HOME 的完整 Desktop Host 启动/优雅退出通过。成品 CLI/pnpm、Node/Python、Sharp worker 隔离、133 个 ELF 架构、GUI/代理文件一致性及 SHA256 检查通过。
+## 已验证
 
-代理功能的支持范围、手动环境变量优先级、CLI/worker 边界和不支持的 PAC/SOCKS 等情况见 `docs/SYSTEM_PROXY.md`。自用外观规则见 `PERSONAL.md`；不要改变交通灯始终显示、侧栏按钮坐标、实色圆角及窗口状态策略。
+- 完整回归 62 项：60 通过、2 缺少 RPM/pacman 工具跳过；包括原载荷/v1 升级/v2 幂等、未知补丁拒绝、配置工具旧核心保护及 12 个后台生命周期场景。
+- Wayland/XWayland 各通过受控慢 MCP 下主界面先显示、后注册工具、退出取消和严格等待，共六项完整 Desktop 检查。使用空 HOME、独立配置与端口、本地假 MCP，无用户凭据、真实任务工具或模型调用。
+- 受控测试使用 no-sandbox/disable-gpu，不写入成品参数，不代表 GPU 或窗口外观全矩阵验收。以原生 BrowserWindow 显示状态和整屏截图核对，不能用 DOM visibility 代替原生窗口显示。
+- 成品重新解包后的 62 项回归、CLI/pnpm、13 项 Python 包、Sharp worker 隔离、133 个 ELF、9 个 GUI/代理/MCP 文件一致性与 SHA256 通过。
+- 原真实配置测试中 OpenAlex/OCR 成功，但 Exa 要求登录、Wolfram 隔离初始化未通过；完整 Host 当时约 66–67 秒包含失败/超时，不能称为全部就绪。本轮后台模式验收不能替代真实服务及用户全插件启动验收。
 
-## 缓存与保留材料
+## 清理与继续维护
 
-本次已按用户授权清理项目 `dl/`、`out-x64/`、空 `tools/`、解包/打包暂存、测试 HOME、诊断用模块副本和 Python 缓存。系统缓存、现用 DSH 配置/凭据/会话未清理。
-
-保留：
-
-- `dist/` 安装包和校验文件；不会提交到 Git。
-- `others/system-proxy-20261028/` 的小体积测试/构建日志、结果 JSON、缓存清理清单；其中的应用副本、解包树与打包工作目录已不存在。
-- `others/proxy-diagnosis-20261028/` 的诊断报告及结果；复制的运行时代码和模块链接已清理，原探针不能依赖这些已删除副本直接重跑。
-- 本机 `docs/COMPATIBILITY-2026-10-24.md` 继续被忽略，不随提交推送；其中路径与截图描述仅代表历史记录。
-
-## 后续工作约定
-
-1. 先读 `AGENTS.md`、核对当前分支、工作区和全部 worktree；每次提交前实质更新 AGENTS.md。
-2. 后续构建需要重新准备下载物和应用树，不能假设旧缓存存在。构建方法见 `docs/AUTO_BUILD.md`。
-3. 官方 `latest` 下载地址会滚动覆盖，必须核对解包后的应用与 runtime 清单；检测新的上游版本应作为下一轮适配，不能把本次验收扩展到新版。
-4. 测试使用独立 HOME/DSH_HOME/XDG/profile 与端口，不修改或重启用户正在使用的安装实例，不复制登录凭据或发真实模型请求。
-5. 本轮按用户要求推送自用分支；实际远端同步状态以 `git status` 与 `git ls-remote` 核对为准，不创建或推送其他分支。
+- 工作区曾约 55G，下载物、解包/应用树、测试 HOME、凭据副本、node_modules 和原始日志已清理。当前约 767M，主要保留三个 Desktop deb 及少量本机验收记录。
+- others/mcp-background-20261029/ 保留小日志、脱敏 verification.json、结果 JSON 和私有整屏截图；截图包含其他应用窗口，不得公开上传。其他 others/ 中的报告是历史证据，不能假设其中旧私有测试目录仍存在。
+- docs/COMPATIBILITY-2026-10-24.md 继续忽略，不随提交交付。后续构建/集成重测需重新准备独立载荷，不能恢复或依赖已取消的 Web 迁移副本。
+- 先读 AGENTS.md，核对当前分支与所有 worktree，保留用户修改。每次提交前实质更新 AGENTS.md；提交和推送只针对用户授权的自用分支，交付时报告提交号和推送结果。

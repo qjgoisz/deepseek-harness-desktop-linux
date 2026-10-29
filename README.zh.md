@@ -8,6 +8,10 @@
 当前自用版包含 KDE/v2rayN 系统代理自动读取与动态切换；2026-10-28 用户反馈修复可用。
 范围及环境覆盖规则见 [系统代理说明](docs/SYSTEM_PROXY.md)。多格式和 ARM64 的历史验证不代表 rc.3 已完整实测。
 
+MCP 启动优化支持按服务选择协商方式、固定本地 mcp-remote 入口和可选后台初始化。
+默认仍阻塞等待；仅显式 `startupMode: background` 且非严格服务会解除界面启动等待。
+安装 deb 不会自动改配置，启用与回退见 [MCP 启动说明](docs/MCP_STARTUP.md)。
+
 ---
 
 ## 目录结构
@@ -17,6 +21,7 @@ dsh-desktop-linux-source/
 ├── patches/                     逆向/适配补丁（按顺序执行）
 │   ├── patch-main.py            平台准入、resources 根、打包态判定、托盘、窗口控制 IPC
 │   ├── patch-system-proxy.py    KDE/v2rayN Desktop 后台代理适配
+│   ├── patch-mcp-negotiation.py MCP 协商方式与可选后台初始化
 │   ├── patch-titlebar.py        隐藏原生标题栏（历史版本，被 patch-mac-chrome 取代）
 │   ├── patch-fingerprint.py     放宽 node-addon-require-builtin 的 V8 指纹白名单
 │   ├── patch-mac-chrome.py      macOS 风格窗口装饰（左置交通灯 + 侧栏毛玻璃）

@@ -11,6 +11,11 @@
 已加入 KDE/v2rayN 系统代理自动读取和动态切换，2026-10-28 用户反馈修复可用；
 支持范围和手动环境覆盖规则见 [系统代理说明](docs/SYSTEM_PROXY.md)。
 
+自用分支另提供按服务选择 MCP 协商方式和后台初始化的补丁。默认仍等待连接；
+显式配置 `startupMode: background` 的可选服务可在主界面显示后继续连接，严格服务仍等待。
+固定 mcp-remote 本地入口和配置工具须单独启用，安装 deb 不会自动改用户配置。
+启用、回退与验证边界见 [MCP 启动说明](docs/MCP_STARTUP.md)。
+
 > 本仓库只包含**移植补丁与打包脚本**，不含任何官方二进制载荷（体积与授权原因）。
 > 详细的中文使用教程见 **[README.zh.md](README.zh.md)**。
 
@@ -39,6 +44,7 @@
 ├── patches/
 │   ├── patch-main.py            平台准入 / resources 根 / 打包态 / 托盘 / 窗口控制 IPC
 │   ├── patch-system-proxy.py    KDE/v2rayN Desktop 后台代理适配
+│   ├── patch-mcp-negotiation.py MCP 协商方式与可选后台初始化（默认行为不变）
 │   ├── patch-mac-chrome.py      macOS 风格装饰：左置交通灯 + 侧栏毛玻璃
 │   ├── patch-fingerprint.py     按 ELF 符号定位并放宽 V8 指纹白名单（x64 / arm64）
 │   ├── patch-titlebar.py        早期隐藏标题栏方案（已被 patch-mac-chrome 取代）

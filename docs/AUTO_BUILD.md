@@ -216,6 +216,10 @@ chmod +x dist/DeepSeek-Harness-*.AppImage
 目录布局，两种布局均支持，遇到未知或重复匹配时中止且不写入部分补丁。
 Sharp facade 的版本信息取自载荷中的原包，随图片 worker 一起更新。
 
+生成应用树时还会应用 MCP 协商与后台初始化补丁：默认 auto/blocking，未知或部分修改的
+载荷会中止，不交付半成品。固定 mcp-remote 及用户 profile 配置由独立工具显式应用，
+不随打包自动安装到用户数据目录，详见 [MCP_STARTUP.md](MCP_STARTUP.md)。
+
 官方 `latest` 下载地址会覆盖更新，已有缓存默认保留。如果提示官方 dmg 已更新，
 可另存新版 dmg，再用 `--dmg /绝对路径/新版.dmg` 构建，复用其他依赖缓存。
 

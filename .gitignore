@@ -19,3 +19,6 @@ Thumbs.db
 
 # Python helper/test caches
 __pycache__/
+
+# Opt-in MCP launcher dependencies are installed from the public lockfile.
+/local-fixes/mcp-startup/runtime/node_modules/

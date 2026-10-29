@@ -5,6 +5,17 @@
 
 ---
 
+## 2026-10-29 — 自用 MCP 启动优化
+
+- 新增按服务 `versionNegotiation: auto | legacy`（默认 auto），避免已知旧协议服务重复启动探测进程；不全局关闭新协议探测。
+- 新增 `startupMode: blocking | background`（默认 blocking）。显式选择后台的可选服务不阻塞 Desktop 启动，连接后注册真实工具；严格服务仍等待并传播启动错误，重连、退出和热重载维持原连接归属。
+- 独立配置工具与公共锁文件固定 mcp-remote 0.15.1，本地入口替代启动时 npx 查询；仅显式应用时修改已知服务，保留备份，不安装用户级 DSH 核心覆盖包。
+- 62 项测试中 60 通过、2 因 RPM/pacman 工具缺失跳过；覆盖 12 个后台生命周期场景。Wayland/XWayland 各通过受控慢 MCP 就绪、取消及严格等待，共六项完整 Desktop 检查。
+- 基于既有 rc.3 deb 增量打包，仅改变 MCP client；成品 CLI/pnpm、13 项 Python 包、图片隔离、133 个 ELF、GUI/代理/MCP 一致性及 SHA256 通过。没有更新上游载荷或修改现用配置；真实 Exa/Wolfram 与用户全插件启动仍有验收边界，不承诺整体启动耗时。
+- 用户取消 npm Web 迁移，移除迁移专用内容；清理测试与打包缓存，保留 Desktop 成品和本机私有验收记录。源码提交不包含载荷、安装包、用户数据或私有截图。
+
+启用、回退和具体边界见 [MCP_STARTUP.md](MCP_STARTUP.md)。
+
 
 ## 2026-10-28 — KDE/v2rayN 系统代理
 
