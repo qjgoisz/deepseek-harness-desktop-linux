@@ -273,3 +273,7 @@ DSH_DESKTOP_RESOURCES_DIR="$PWD/out-arm64/resources" ELECTRON_RUN_AS_NODE=1 \
 官方更新清单中的完整 macOS 应用 ZIP 也可构建，使用 `--archive /绝对路径/官方.zip`（`--dmg` 仍兼容）。先按对应官方清单校验文件大小及 SHA512，再解包核对应用 package.json 与 runtime.json 的版本；文件名或 HEAD 不代表版本。当前构建入口不会自动读取更新清单或验证它的 SHA512，该步骤需在构建前完成。7z 自动识别归档格式，按内容 SHA256 复用/刷新解包缓存。运行时版本仍读取该载荷，不采用旧包版本顶替。
 
 本轮 rc.5 成品与验证边界见 [兼容性记录](COMPATIBILITY-2026-10-30.md)。
+
+## libc 探测补丁
+
+应用树构建会运行 patch-flock-libc.py，避免首次会话写锁加载 Linux 原生模块时，完整诊断报告的网络查询同步阻塞后台。补丁只在 libc 探测调用期间排除网络并恢复原设置；不依赖 NODE_OPTIONS，不改变代理或锁策略。验证记录见 [STARTUP_LIBC.md](STARTUP_LIBC.md)。

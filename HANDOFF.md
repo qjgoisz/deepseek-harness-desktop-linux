@@ -1,32 +1,20 @@
 # 自用 DSH Desktop 项目交接
 
-更新日期：2026-10-30（Asia/Shanghai），分支 `codex/personal-desktop`。本轮按用户授权提交并推送 rc.5 构建入口、测试和文档更新；具体提交号和远端同步结果以 git log、git status 及推送结果为准。
+更新日期：2026-10-31。分支 codex/personal-desktop，HEAD aa724a5；本轮 libc 探测修复按授权纳入本地提交，暂不推送；具体提交号以 git log 为准。
 
-## 当前交付
+## 当前交付与待验收
 
-- 已按用户要求从官方更新清单的 macOS arm64 ZIP 完成 rc.5 构建与测试，未使用仍旧的滚动 DMG。ZIP 的官方 SHA512、应用和 runtime 版本均已核对；详见 docs/COMPATIBILITY-2026-10-30.md。
-- 本机成品：dist/deepseek-harness_0.2.1-rc.5_amd64.bundled.deb，SHA256 为 13b0e527bc6d35e96c3d294a8e0b9578344a9094437002532c4d757e027e9c7f，同目录附校验文件。
-- Node 24.21.0、Python 3.12.14、pnpm 11.28.5、Sharp 0.35.5、Electron 44.4.5；原生替换同版本，无漂移。自用实色圆角、固定侧栏按钮、系统代理和 MCP v2 补丁均直接匹配。
-- 本轮开始时历史 rc.3 deb 已不存在，仅余校验文件，不再将旧报告中的回退目录描述为现有安装包。没有修改用户已安装实例或配置；新 deb 尚需用户安装和人工验收。
+- 已应用局部构建补丁 patch-flock-libc.py，首次会话锁加载的 getReport 仅在调用期间排除网络诊断，finally 恢复设置；不更改锁语义、代理设置、运行时版本或用户插件。
+- 新 deb：dist/deepseek-harness_0.2.1-rc.5_amd64.bundled.deb，SHA256 31353beddc7e81f279a8b6f11fbfd048133ff1d2708dcdc9fdcf95301fc880a7。旧 rc.5 SHA 13b0e527... 是历史构建，不是当前成品。
+- 新包从当前已安装 rc.5 独立复制树，仅修改 flock.js 后增量生成；未安装或修改现用 DSH。dist/ 本轮开始时没有旧 deb，不声称存在回退安装包。
+- 67 项回归 65 通过、2 工具缺失跳过；成品 CLI/pnpm、Node/Python、13 Python 包、Sharp 隔离、133 ELF、26565 资源文件一致性及 SHA256 通过。具体范围见 docs/STARTUP_LIBC.md。
+- Wayland/XWayland 隔离空 HOME Desktop 实测：持有外网连接时首次加载锁模块并取得锁约 2ms，设置恢复、正常退出。测试 no-sandbox/disable-gpu 不写入成品；尚待用户安装后用原配置、会话及插件验证启动时快速切换入口，不能把受控空 HOME 测试称为全插件启动耗时。
+- Node 24.21.0、Python 3.12.14、pnpm 11.28.5、Sharp 0.35.5、Electron 44.4.5 保持官方载荷/既有构建版本。
 
-## 已验证与边界
+## 其他维护边界
 
-- 原应用树及成品解包后的 63 项测试均为 61 通过、2 项缺少 RPM/pacman 工具跳过；真实 rc.5 依赖参与 MCP 生命周期和本机代理集成测试。
-- 144 种侧栏布局、JS/shell 语法、CLI/pnpm、Node/Python、13 项 Python 包、Sharp worker 隔离、133 个 ELF、26565 个资源文件与应用树一致性、SHA256 通过。
-- 成品解包隔离 Wayland/XWayland Desktop：欢迎页、主界面、原生最大化/还原、全屏及退出通过；交通灯持续显示。整屏截图保存为私有材料。测试参数 no-sandbox/disable-gpu，不写入成品；不代表 GPU、拖动/双击、登录后插件、模型或长会话已经验收。
-- rc.5 主界面为 dsh-app://app/，测试驱动须识别；Inspector 退出前需断开，避免调试器等待造成假超时。成品无观测注入。
-
-## 持续约定
-
-- MCP 默认 auto/blocking；仅显式 background 且非严格服务释放启动屏障。连接完成后才提供真实工具，严格服务仍等待；安装 deb 不自动修改现用 MCP 配置。
-- local-fixes/mcp-startup/ 的固定 mcp-remote 0.15.1 与配置工具仍是显式操作，见 docs/MCP_STARTUP.md；真实 Exa 登录、Wolfram 隔离问题不算本轮修复成果。
-- KDE/v2rayN 系统代理适配沿用，见 docs/SYSTEM_PROXY.md。未调整系统设置或 Wayland/XWayland 颜色策略。
-- npm Web 迁移已取消，不恢复其脚本、文档或数据副本。旧 rc.4 暂停请求已由本轮明确授权的 rc.5 打包替代，没有新建自动监测。
-- 新增 --archive 接受官方 ZIP/DMG，--dmg 保留兼容；先按对应官方清单校验 SHA512，本轮不宣称构建器自动读取清单。版本仍从载荷读取。
-- others/rc5-20261030/ 为本机缓存与测试材料，dist/ 为本机产物，均不进入 Git。整屏截图包含其他应用画面，不公开上传；原始日志可能含隔离 token，禁止公开。
-- docs/COMPATIBILITY-2026-10-24.md 继续忽略。本轮 2026-10-30 记录只含公开版本与脱敏结果，可以版本管理。
-- 每次提交前实质更新 AGENTS.md，保留用户修改。推送只针对明确授权范围，交付说明分支/提交/推送状态；不要创建上游 GUI PR 或 release。交付前检查所有 worktree/分支绑定，避免临时目录占用分支。
-
-2026-10-30 按用户要求清理解包缓存：移除 rc.5 原始展开应用、out-x64、成品解包副本、官方归档解包目录及打包 work 暂存；保留官方 ZIP、依赖下载缓存、dist 成品/校验文件与测试记录、私有截图。后续运行成品测试须重新解包，不能依赖已移除的树。本次不改变测试结论，未提交或推送。
-
-2026-10-30 用户反馈本次安装测试正常，未逐项说明覆盖范围，不扩展为完整人工测试矩阵。本机测试/构建日志、结果 JSON、私有截图及临时测试脚本已按用户要求移除；本文保留此前实际验证结论，不能再引用原始本机记录为当前存在的文件。官方 ZIP、依赖下载缓存、安装包与校验文件保留。
+- 自用 GUI 实色圆角、交通灯及侧栏位置、KDE/v2rayN 代理、MCP v2 均保持原样。MCP 默认 auto/blocking，显式 background 且非严格服务才释放屏障；安装 deb 不自动修改 MCP 配置。
+- 本次诊断已证明代理不是根本修复：真实后台在 flock 的 libc 探测中同步执行完整报告，网络端点反向 DNS 可令整个后台等待数十秒。修复必须保留真实文件锁，不可通过跳过锁规避。
+- npm Web 迁移已取消，不恢复。docs/COMPATIBILITY-2026-10-24.md 持续忽略；其他历史记录以当时版本和覆盖边界理解。
+- others/ 下诊断和构建材料均为本机忽略文件，禁止提交原始 profile、日志、截图或认证信息。构建缓存按默认保留，测试 HOME 清理不等于删除 dist 成品。
+- 每次提交前实质更新 AGENTS.md；只在用户授权后提交、推送或安装，明确实际状态。交付前核对所有 worktree 与分支绑定。
