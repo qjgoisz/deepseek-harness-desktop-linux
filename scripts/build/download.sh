@@ -148,15 +148,15 @@ dmg_resources() {
   signature="$(sha256sum "$DMG" | cut -d' ' -f1)"
   if [ "$(cat "$DMG_DIR/.extracted" 2>/dev/null || true)" != "$signature" ] || [ "$FORCE" -eq 1 ]; then
     [ -n "$SEVENZ" ] || die "缺少 7z（Debian: apt install p7zip-full）"
-    step "解包 dmg → $(rel "$DMG_DIR")（约 1 GB，只做一次）" >&2
+    step "解包官方归档 → $(rel "$DMG_DIR")（约 1 GB，只做一次）" >&2
     DROP_QUIET=1 drop "$DMG_DIR" >&2
     mkdir -p "$DMG_DIR"
-    "$SEVENZ" x -y -o"$DMG_DIR" "$DMG" >/dev/null || die "dmg 解包失败: $DMG"
+    "$SEVENZ" x -y -o"$DMG_DIR" "$DMG" >/dev/null || die "官方归档解包失败: $DMG"
     printf '%s\n' "$signature" > "$DMG_DIR/.extracted"
   fi
   local found
   found="$(find "$DMG_DIR" -maxdepth 5 -type d -path '*.app/Contents/Resources' | head -1)"
-  [ -n "$found" ] || die "dmg 里找不到 *.app/Contents/Resources"
+  [ -n "$found" ] || die "官方归档里找不到 *.app/Contents/Resources"
   printf '%s' "$found"
 }
 

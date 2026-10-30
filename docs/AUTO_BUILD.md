@@ -267,3 +267,9 @@ DSH_DESKTOP_RESOURCES_DIR="$PWD/out-arm64/resources" ELECTRON_RUN_AS_NODE=1 \
 应用树阶段自动运行 `patches/patch-system-proxy.py`，补充 Desktop Host 的系统代理读取和动态更新。范围、环境覆盖规则及测试见 [SYSTEM_PROXY.md](SYSTEM_PROXY.md)。新补丁对未知或重复匹配中止，不直接改用户插件目录。
 
 2026-10-28 用户确认代理修复可用并要求清理缓存：本机 dl/、out-x64/、解包及打包暂存已清理，dist/ 成品与校验文件保留。后续完整构建需要重新准备下载依赖，不应假设旧应用树仍在。
+
+## 官方桌面 ZIP 载荷（2026-10-30）
+
+官方更新清单中的完整 macOS 应用 ZIP 也可构建，使用 `--archive /绝对路径/官方.zip`（`--dmg` 仍兼容）。先按对应官方清单校验文件大小及 SHA512，再解包核对应用 package.json 与 runtime.json 的版本；文件名或 HEAD 不代表版本。当前构建入口不会自动读取更新清单或验证它的 SHA512，该步骤需在构建前完成。7z 自动识别归档格式，按内容 SHA256 复用/刷新解包缓存。运行时版本仍读取该载荷，不采用旧包版本顶替。
+
+本轮 rc.5 成品与验证边界见 [兼容性记录](COMPATIBILITY-2026-10-30.md)。

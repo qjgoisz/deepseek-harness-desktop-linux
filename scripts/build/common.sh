@@ -29,7 +29,8 @@ DeepSeek Harness — Linux 一键构建
                          应用树 out-*/ 与产物 dist/ 仍在仓库根
   --work 目录            AppImage 暂存目录（默认 /tmp/dsh-appimage；给了 --store 则是
                          <store>/work）
-  --dmg 路径|URL         使用自备的官方 dmg（URL 会先下到 <store>/others/ 再当本地文件用）
+  --archive 路径|URL     使用官方 macOS ZIP 或 DMG（--dmg 为兼容别名）
+  --dmg 路径|URL         使用自备的官方归档（URL 会先下到 <store>/others/ 再当本地文件用）
   --force                忽略已存在的下载/中间产物，重新生成
   --clean                成功后清理解包物、pip 缓存和打包暂存；已打包的应用树也删除
   --no-verify            跳过应用树自检（默认自检失败即中止）

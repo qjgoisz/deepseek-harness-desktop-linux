@@ -5,7 +5,7 @@
 
 工具链支持 **x86_64** 与 **aarch64** 的多种包型；各版本的实测范围见下文。
 
-自用分支当前基线：`@deepseek-ai/dsh-desktop 0.2.1-rc.3`。
+自用分支当前基线：`@deepseek-ai/dsh-desktop 0.2.1-rc.5`。
 本分支使用实色背景与普通窗口圆角，保留全屏交通灯及窗口控件修复。
 当前验证范围为 x86_64 bundled deb；历史多格式、ARM64 验证记录仍对应旧版载荷。
 已加入 KDE/v2rayN 系统代理自动读取和动态切换，2026-10-28 用户反馈修复可用；
@@ -85,10 +85,10 @@
 ```bash
 ./auto-build.sh --arch x64 --formats deb --electron bundled --package-jobs 4
 cd dist
-sha256sum -c deepseek-harness_0.2.1-rc.3_amd64.bundled.deb.sha256
+sha256sum -c deepseek-harness_0.2.1-rc.5_amd64.bundled.deb.sha256
 ```
 
-上例校验文件名对应当前 rc.3；新载荷构建后应使用实际生成的校验文件。
+上例校验文件名对应当前 rc.5；新载荷构建后应使用实际生成的校验文件。
 官方滚动下载可能更新，构建时必须核对实际载荷版本。
 当前本机缓存已按用户要求清理，后续完整构建会重新准备下载物。
 

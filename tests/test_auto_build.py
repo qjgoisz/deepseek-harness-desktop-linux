@@ -86,6 +86,15 @@ class BuildCLI(unittest.TestCase):
         self.assertNotIn('下载 https://download.deepseek.com/', result.stdout)
         self.assertFalse(self.marker.exists())
 
+    def test_local_zip_archive_alias_is_offline(self):
+        local = Path(self.temp.name) / 'input.zip'
+        local.write_bytes(b'fixture')
+        result = self.run_cli('--dry-run', '--only', 'prepare', '--archive', str(local))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(str(local), result.stdout)
+        self.assertNotIn('下载 https://download.deepseek.com/', result.stdout)
+        self.assertFalse(self.marker.exists())
+
     def package_fixture(self, fail=False):
         shutil.copytree(ROOT / 'icons', self.root / 'icons')
         tree = self.root / 'out-x64'

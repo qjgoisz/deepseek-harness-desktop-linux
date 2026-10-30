@@ -1,35 +1,32 @@
 # 自用 DSH Desktop 项目交接
 
-更新日期：2026-10-29（Asia/Shanghai）。当前维护分支为 `codex/personal-desktop`；本次维护提交包含 MCP 启动优化及必要测试、文档。历史细节见 AGENTS.md 与 docs/CHANGELOG.md。
+更新日期：2026-10-30（Asia/Shanghai），分支 `codex/personal-desktop`。本轮按用户授权提交并推送 rc.5 构建入口、测试和文档更新；具体提交号和远端同步结果以 git log、git status 及推送结果为准。
 
-## 当前功能与边界
+## 当前交付
 
-- 基线为 DSH 0.2.1-rc.3，Electron 44.4.5、Node 24.21.0、Python 3.12.14、pnpm 11.28.5、Sharp 0.35.5；自用实色圆角、固定侧栏按钮和 KDE/v2rayN 代理适配保持原状。
-- MCP 构建补丁 v2 支持按服务 auto/legacy 协商与 blocking/background 启动，默认 auto/blocking；严格服务始终等待。后台连接完成后注册真实工具，不预注册占位工具，重连、通知、退出和热重载由原连接管理。
-- local-fixes/mcp-startup/ 提供固定 mcp-remote 0.15.1 的公共锁文件和显式配置工具，检查 v2 核心并备份配置，只修改 Wolfram/OpenAlex/Exa 的指定字段，不安装用户级核心覆盖包。
-- 安装 deb 不会自动启用这些配置；可以按 docs/MCP_STARTUP.md 单独启用后台模式，或显式运行工具应用三项优化。配置工具与打包流程分离，不修改现用实例。
-- 官方 rc.4 Desktop 更新仍暂停；最近一次快速查询清单仍指向 rc.3，不将 npm rc.4 发布当作桌面载荷已可用。
-- 用户已取消 npm Web 迁移，相关脚本、文档、工具包和数据副本已清理；今后继续维护 Desktop，不恢复迁移流程。
+- 已按用户要求从官方更新清单的 macOS arm64 ZIP 完成 rc.5 构建与测试，未使用仍旧的滚动 DMG。ZIP 的官方 SHA512、应用和 runtime 版本均已核对；详见 docs/COMPATIBILITY-2026-10-30.md。
+- 本机成品：dist/deepseek-harness_0.2.1-rc.5_amd64.bundled.deb，SHA256 为 13b0e527bc6d35e96c3d294a8e0b9578344a9094437002532c4d757e027e9c7f，同目录附校验文件。
+- Node 24.21.0、Python 3.12.14、pnpm 11.28.5、Sharp 0.35.5、Electron 44.4.5；原生替换同版本，无漂移。自用实色圆角、固定侧栏按钮、系统代理和 MCP v2 补丁均直接匹配。
+- 本轮开始时历史 rc.3 deb 已不存在，仅余校验文件，不再将旧报告中的回退目录描述为现有安装包。没有修改用户已安装实例或配置；新 deb 尚需用户安装和人工验收。
 
-## 当前本机产物
+## 已验证与边界
 
-- 当前 deb：dist/deepseek-harness_0.2.1-rc.3_amd64.bundled.deb，同目录附 .sha256。
-- SHA256：42ccb7170636f94bf0423eed0f53dc5345299ae64b62bf723c4cad206ddcfcae。
-- 前两步 v1 包位于 dist/previous-mcp-step12-20261029/，SHA256 为 f38c1204e8c32cfff149833ee56c35bcc9c990baa079cdca1f8cd33f77417460；更早代理修复包位于 dist/previous-20261028/，SHA256 为 58eed0612283285419b58e0c248cc6db651ce6307bb08df7a809bece89e1b511。
-- 当前包从上一版 rc.3 deb 独立解包升级 MCP client 后增量生成；未重新下载/转换官方 dmg。主进程中的临时窗口观测和退出注入在打包前已还原，GUI、代理及运行时与上一版一致。
-- dist 成品仅本机交付，不进入 Git，也未创建远端 release；没有安装或重启用户的现用 Desktop。实际源码提交和远端同步状态以 git log、git status 及推送结果为准。
+- 原应用树及成品解包后的 63 项测试均为 61 通过、2 项缺少 RPM/pacman 工具跳过；真实 rc.5 依赖参与 MCP 生命周期和本机代理集成测试。
+- 144 种侧栏布局、JS/shell 语法、CLI/pnpm、Node/Python、13 项 Python 包、Sharp worker 隔离、133 个 ELF、26565 个资源文件与应用树一致性、SHA256 通过。
+- 成品解包隔离 Wayland/XWayland Desktop：欢迎页、主界面、原生最大化/还原、全屏及退出通过；交通灯持续显示。整屏截图保存为私有材料。测试参数 no-sandbox/disable-gpu，不写入成品；不代表 GPU、拖动/双击、登录后插件、模型或长会话已经验收。
+- rc.5 主界面为 dsh-app://app/，测试驱动须识别；Inspector 退出前需断开，避免调试器等待造成假超时。成品无观测注入。
 
-## 已验证
+## 持续约定
 
-- 完整回归 62 项：60 通过、2 缺少 RPM/pacman 工具跳过；包括原载荷/v1 升级/v2 幂等、未知补丁拒绝、配置工具旧核心保护及 12 个后台生命周期场景。
-- Wayland/XWayland 各通过受控慢 MCP 下主界面先显示、后注册工具、退出取消和严格等待，共六项完整 Desktop 检查。使用空 HOME、独立配置与端口、本地假 MCP，无用户凭据、真实任务工具或模型调用。
-- 受控测试使用 no-sandbox/disable-gpu，不写入成品参数，不代表 GPU 或窗口外观全矩阵验收。以原生 BrowserWindow 显示状态和整屏截图核对，不能用 DOM visibility 代替原生窗口显示。
-- 成品重新解包后的 62 项回归、CLI/pnpm、13 项 Python 包、Sharp worker 隔离、133 个 ELF、9 个 GUI/代理/MCP 文件一致性与 SHA256 通过。
-- 原真实配置测试中 OpenAlex/OCR 成功，但 Exa 要求登录、Wolfram 隔离初始化未通过；完整 Host 当时约 66–67 秒包含失败/超时，不能称为全部就绪。本轮后台模式验收不能替代真实服务及用户全插件启动验收。
+- MCP 默认 auto/blocking；仅显式 background 且非严格服务释放启动屏障。连接完成后才提供真实工具，严格服务仍等待；安装 deb 不自动修改现用 MCP 配置。
+- local-fixes/mcp-startup/ 的固定 mcp-remote 0.15.1 与配置工具仍是显式操作，见 docs/MCP_STARTUP.md；真实 Exa 登录、Wolfram 隔离问题不算本轮修复成果。
+- KDE/v2rayN 系统代理适配沿用，见 docs/SYSTEM_PROXY.md。未调整系统设置或 Wayland/XWayland 颜色策略。
+- npm Web 迁移已取消，不恢复其脚本、文档或数据副本。旧 rc.4 暂停请求已由本轮明确授权的 rc.5 打包替代，没有新建自动监测。
+- 新增 --archive 接受官方 ZIP/DMG，--dmg 保留兼容；先按对应官方清单校验 SHA512，本轮不宣称构建器自动读取清单。版本仍从载荷读取。
+- others/rc5-20261030/ 为本机缓存与测试材料，dist/ 为本机产物，均不进入 Git。整屏截图包含其他应用画面，不公开上传；原始日志可能含隔离 token，禁止公开。
+- docs/COMPATIBILITY-2026-10-24.md 继续忽略。本轮 2026-10-30 记录只含公开版本与脱敏结果，可以版本管理。
+- 每次提交前实质更新 AGENTS.md，保留用户修改。推送只针对明确授权范围，交付说明分支/提交/推送状态；不要创建上游 GUI PR 或 release。交付前检查所有 worktree/分支绑定，避免临时目录占用分支。
 
-## 清理与继续维护
+2026-10-30 按用户要求清理解包缓存：移除 rc.5 原始展开应用、out-x64、成品解包副本、官方归档解包目录及打包 work 暂存；保留官方 ZIP、依赖下载缓存、dist 成品/校验文件与测试记录、私有截图。后续运行成品测试须重新解包，不能依赖已移除的树。本次不改变测试结论，未提交或推送。
 
-- 工作区曾约 55G，下载物、解包/应用树、测试 HOME、凭据副本、node_modules 和原始日志已清理。当前约 767M，主要保留三个 Desktop deb 及少量本机验收记录。
-- others/mcp-background-20261029/ 保留小日志、脱敏 verification.json、结果 JSON 和私有整屏截图；截图包含其他应用窗口，不得公开上传。其他 others/ 中的报告是历史证据，不能假设其中旧私有测试目录仍存在。
-- docs/COMPATIBILITY-2026-10-24.md 继续忽略，不随提交交付。后续构建/集成重测需重新准备独立载荷，不能恢复或依赖已取消的 Web 迁移副本。
-- 先读 AGENTS.md，核对当前分支与所有 worktree，保留用户修改。每次提交前实质更新 AGENTS.md；提交和推送只针对用户授权的自用分支，交付时报告提交号和推送结果。
+2026-10-30 用户反馈本次安装测试正常，未逐项说明覆盖范围，不扩展为完整人工测试矩阵。本机测试/构建日志、结果 JSON、私有截图及临时测试脚本已按用户要求移除；本文保留此前实际验证结论，不能再引用原始本机记录为当前存在的文件。官方 ZIP、依赖下载缓存、安装包与校验文件保留。

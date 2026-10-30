@@ -1,12 +1,12 @@
 # DeepSeek Harness — Linux 移植源码包
 
-把官方 **macOS arm64** 安装包里的应用载荷（本自用分支当前基线 `0.2.1-rc.3`），
+把官方 **macOS arm64** 安装包里的应用载荷（本自用分支当前基线 `0.2.1-rc.5`），
 重新打包成 Linux 桌面发行包（AppImage / deb / pacman / rpm，x86_64 + aarch64）。
 
 本目录是**可复现的移植工具链**：官方 dmg + 若干公开下载物 → 10 个 Linux 安装包。
 
 当前自用版包含 KDE/v2rayN 系统代理自动读取与动态切换；2026-10-28 用户反馈修复可用。
-范围及环境覆盖规则见 [系统代理说明](docs/SYSTEM_PROXY.md)。多格式和 ARM64 的历史验证不代表 rc.3 已完整实测。
+范围及环境覆盖规则见 [系统代理说明](docs/SYSTEM_PROXY.md)。多格式和 ARM64 的历史验证不代表 rc.5 已完整实测。
 
 MCP 启动优化支持按服务选择协商方式、固定本地 mcp-remote 入口和可选后台初始化。
 默认仍阻塞等待；仅显式 `startupMode: background` 且非严格服务会解除界面启动等待。
@@ -223,7 +223,7 @@ HOME=/tmp/t DSH_HOME=/tmp/t/.dsh xvfb-run -a ./out-x64/deepseek-harness --ozone-
 ```
 
 产物落在 `dist/`，版本来自载荷的 `runtime.json`。以下保留 `0.2.0-rc.2` 的
-历史命名示例；当前 `0.2.1-rc.3` 仅验证 x86_64 bundled deb，见 [变更记录](docs/CHANGELOG.md)。
+历史命名示例；当前 `0.2.1-rc.5` 仅验证 x86_64 bundled deb，见 [变更记录](docs/CHANGELOG.md)。
 
 | 文件 | 说明 |
 |---|---|

@@ -69,7 +69,7 @@ while [ $# -gt 0 ]; do
     --jobs)     JOBS="${2:?--jobs 需要一个值}"; shift 2 ;;
     --store)    STORE="${2:?--store 需要一个值}"; shift 2 ;;
     --work)     WORK="${2:?--work 需要一个值}"; shift 2 ;;
-    --dmg)      DMG_GIVEN="${2:?--dmg 需要一个值}"; shift 2 ;;
+    --dmg|--archive) DMG_GIVEN="${2:?--dmg 需要一个值}"; shift 2 ;;
     --force)    FORCE=1; shift ;;
     --clean)    CLEAN=1; shift ;;
     --no-verify) VERIFY=0; shift ;;
