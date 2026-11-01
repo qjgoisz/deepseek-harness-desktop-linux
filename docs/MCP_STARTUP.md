@@ -4,6 +4,8 @@
 
 本次维护包含三项：对已知服务选择单次 legacy 协商；固定本地 mcp-remote 入口，去掉启动时的 npx 查询。第三项为可选 MCP 后台初始化。没有实施按需才启动、提前显示加载窗口或其他启动策略。
 
+2026-11-01 安装路径适配：配套工具改为要求明确配置且可写的 npm 全局前缀，在 `<prefix>/lib/dsh-mcp-remote-0.15.1` 通过锁文件安装；缺省或权限不足退出。已有配置可显式迁移旧入口，详情见 [配套工具](../local-fixes/mcp-startup/README.md)。不改变 Desktop 核心补丁。
+
 ## 实现及生效范围
 
 - `patches/patch-mcp-negotiation.py` 已接入应用树构建，stdio/HTTP 均可设置 `versionNegotiation`，默认 `auto`，只允许 `auto`、`legacy`。每次重连继续使用服务配置，其他生命周期保持上游行为。未知、重复或不完整补丁拒绝写入；语法检查通过后原子替换单一模块。

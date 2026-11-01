@@ -29,3 +29,7 @@
 - 完整回归 73 项：71 通过、2 工具缺失跳过；官方 rc.5 首次输出与旧版一致，独立 GUI 组合链和三个 JS 语法检查通过。既有安装包内容与窗口外观不变，本次未重打包或运行原生 GUI。详见 docs/patches/patch-titlebar.md。
 
 2026-11-01 文档范围按用户要求收敛：docs/patches/ 删除自用分支行为及本地维护审计内容，只保留补丁用途/目标、官方等价修复证据和后续核对条件。界面定制与旧树迁移记为不适用。官方核对仍截至 2026-10-31，未重新查询；本轮仅文档调整；用户现已授权分两次提交并推送。
+
+## 2026-11-01 MCP runtime 路径迁移
+
+当前 npm 用户前缀为 /home/debian/.local。local-fixes/mcp-startup/install-runtime.mjs 要求明确设置且可写的前缀，锁定运行目录为 <prefix>/lib/dsh-mcp-remote-0.15.1；不会使用 npm 缺省路径或修改 npm 设置。配置工具可显式迁移旧目录，流程见 local-fixes/mcp-startup/README.md。现用 OpenAlex/Exa 已备份后迁移到新入口；旧 share/dsh-mcp-remote-0.15.1 保留供回退，本轮不重启 Desktop。74 项回归 72 通过、2 跳过，未重打包。用户已授权将配套工具、回归与说明提交并推送 origin/codex/personal-desktop；具体提交及远端状态以 Git 结果为准。

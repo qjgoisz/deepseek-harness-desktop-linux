@@ -53,3 +53,17 @@ assert.equal(strict.match(/startupMode: blocking/g).length,1);
 assert.throws(()=>configure(source.replace('serverName: Exa','serverName: Exa\n        startupMode: unknown'),yaml,node,entry));
 for(const s of [source.replace('mcp-remote@0.15.1','mcp-remote@0.16.0'),source.replace('serverName: Exa','serverName: Other'),source+'\n'+source])assert.throws(()=>configure(s,yaml,node,entry));
 console.log('PASS: targeted YAML edits; tags/comments/headers/env preserved; idempotent; unknown/duplicate refused');
+const previous={node,entry};
+const migratedEntry='/new-prefix/lib/runtime/node_modules/mcp-remote/dist/proxy.js';
+const migrated=configure(updated,yaml,'/new/node',migratedEntry,previous);
+assert.equal(configure(migrated,yaml,'/new/node',migratedEntry,previous),migrated);
+assert(migrated.includes('https://example.invalid/?login'));
+assert(migrated.includes('X-Test: keep'));
+assert(migrated.includes('TEST: keep'));
+assert.throws(()=>configure(updated,yaml,'/new/node',migratedEntry));
+assert.throws(()=>configure(updated,yaml,'/new/node',migratedEntry,{node,entry:'/untrusted/path'}));
+console.log('PASS: explicit verified old runtime migration; unknown old paths refused');
+
+const wrapped=updated.replaceAll(entry,entry.replace('/mcp/', '/m\\\n            cp/'));
+assert.equal(configure(wrapped,yaml,'/new/node',migratedEntry,previous),migrated);
+console.log('PASS: YAML folded path migration');
