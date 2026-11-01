@@ -12,6 +12,9 @@ MCP 启动优化支持按服务选择协商方式、固定本地 mcp-remote 入�
 默认仍阻塞等待；仅显式 `startupMode: background` 且非严格服务会解除界面启动等待。
 安装 deb 不会自动改配置，启用与回退见 [MCP 启动说明](docs/MCP_STARTUP.md)。
 
+每个补丁的用途、目标文件及官方修复核对见 [补丁总览](docs/patches/README.md)。
+2026-10-31 已覆盖全部 14 个补丁源码/辅助文件，尚未确认有整份可因官方等价实现而移除。
+
 ---
 
 ## 目录结构
@@ -19,13 +22,19 @@ MCP 启动优化支持按服务选择协商方式、固定本地 mcp-remote 入�
 ```
 dsh-desktop-linux-source/
 ├── patches/                     逆向/适配补丁（按顺序执行）
-│   ├── patch-main.py            平台准入、resources 根、打包态判定、托盘、窗口控制 IPC
+│   ├── patch-main.py            平台准入、resources 根、打包态判定、托盘、CLI 路径
 │   ├── patch-system-proxy.py    KDE/v2rayN Desktop 后台代理适配
+│   ├── system-proxy/           KDE 适配模块与连接池控制器
 │   ├── patch-mcp-negotiation.py MCP 协商方式与可选后台初始化
-│   ├── patch-titlebar.py        隐藏原生标题栏（历史版本，被 patch-mac-chrome 取代）
+│   ├── patch-flock-libc.py      libc 探测临时排除网络诊断
+│   ├── patch-titlebar.py        Linux 标题栏中间配置，仍为 chrome 的顺序依赖
 │   ├── patch-fingerprint.py     放宽 node-addon-require-builtin 的 V8 指纹白名单
-│   ├── patch-mac-chrome.py      macOS 风格窗口装饰（左置交通灯 + 侧栏毛玻璃）
-│   └── upgrade-mac-chrome.py    对已打过旧版 chrome 的树做增量升级（幂等补充）
+│   ├── patch-mac-chrome.py      左置交通灯、窗口控制及 GUI 补丁组合入口
+│   ├── patch-kde-material.py    KDE 材质基础层（自用层禁用 blur）
+│   ├── patch-fullscreen-reveal.py 指针、焦点、窗口状态及 Wayland 双击
+│   ├── patch-linux-identity.py  Linux 桌面项身份
+│   ├── patch-personal-rounded.py 自用实色圆角及固定按钮
+│   └── upgrade-mac-chrome.py    旧 chrome 树手工迁移（不参与自动构建）
 ├── image-worker-src/            Sharp/libvips 进程隔离方案
 │   ├── client.cjs               Sharp API 兼容层（跑在 Electron 内，只转发）
 │   ├── worker.cjs               真正执行 libvips 的独立 Node 进程
@@ -35,6 +44,7 @@ dsh-desktop-linux-source/
 ├── install-image-worker.sh      把 Sharp 替身包装入某个应用树
 ├── verify-launch-x64.sh         五种格式逐个解包并实测启动
 ├── docs/
+│   ├── patches/                每份补丁的说明和上游审计
 │   ├── ARTIFACTS.md             产物说明：安装方式、依赖策略、验证记录
 │   ├── CHANGELOG.md             完整变更日志（含各修复的根因）
 │   └── SHA256SUMS.txt           历史 0.2.0-rc.2 多格式校验和
@@ -163,24 +173,30 @@ pip install --target <site-packages> \
 
 ### 4. 打补丁
 
+以下仅用于完成 Linux 运行时及原生包替换后的**干净应用树**，顺序与 `scripts/build/tree.sh` 一致。不要在已有成品上整段重跑；titlebar 现已支持识别完整中间态/自用态并跳过，但其他补丁仍有各自的重复应用边界。
+
 ```bash
 python3 patches/patch-main.py         out-x64/resources/app/lib/main.js
 python3 patches/patch-titlebar.py     out-x64/resources/app/lib/main.js
 python3 patches/patch-system-proxy.py out-x64/resources/app
+python3 patches/patch-mcp-negotiation.py out-x64/resources/app
+python3 patches/patch-flock-libc.py   out-x64/resources/app
 python3 patches/patch-mac-chrome.py   out-x64/resources/app
-python3 patches/patch-personal-rounded.py out-x64/resources/app
 python3 patches/patch-fingerprint.py \
   out-x64/resources/app/dsh/node_modules/node-addon-require-builtin-linux-x64-gnu/prebuilt/linux-x64-gnu-napi-v9.node
 ```
 
-逐项说明：
+`patch-mac-chrome.py` 已顺序调用 KDE 材质、全屏指针、Linux 身份、自用实色圆角四项，无须再手工补跑个人层。各脚本的完整说明和移除条件见 [补丁目录](docs/patches/README.md)。关键入口：
 
 | 补丁 | 作用 | 不改会怎样 |
 |---|---|---|
 | `patch-system-proxy.py` | KDE/v2rayN 系统代理读取和运行中切换，范围见 docs/SYSTEM_PROXY.md | 普通桌面启动无法自动使用系统代理 |
 | `patch-main.py` | 平台准入放行 linux；`DSH_DESKTOP_RESOURCES_DIR` / `DSH_DESKTOP_FORCE_PACKAGED`；托盘放行并改用 PNG；无托盘时关窗退出 | 启动即抛 `unsupported platform` |
-| `patch-mac-chrome.py` | 复用应用自带的 `data-windows-titlebar` 模式获得顶部预留带与拖拽区，绘制左上交通灯，侧栏毛玻璃 | 顶部有原生标题栏、按钮在右侧 |
-| `patch-fingerprint.py` | 放宽 V8 指纹匹配（x64 `0x17cdd`、arm64 `0x1df14` 写 `mov w0,#1; ret`） | 非 44.0.0 的 Electron 启动失败 |
+| `patch-titlebar.py` | 为后续 chrome 生成已知 Linux 标题栏结构 | chrome 的精确锚点不能匹配 |
+| `patch-mac-chrome.py` | 交通灯、拖动和窗口控制；调用四项 GUI 子补丁，最终由自用层强制实色 | 缺少本分支的自绘窗口控制与自用外观 |
+| `patch-mcp-negotiation.py` | 显式协商方式与非严格服务后台连接，默认 auto/blocking | 不能启用本分支的按服务启动优化 |
+| `patch-flock-libc.py` | libc 探测时暂时排除网络报告并恢复 | 首次会话锁可能因网络诊断同步阻塞数十秒 |
+| `patch-fingerprint.py` | 根据 ELF 符号及已知序言定位指纹函数，不使用固定偏移 | 当前 Electron 与原生包的指纹门禁阻止加载；绕过仍需实际兼容验证 |
 | `upgrade-mac-chrome.py` | 旧版 chrome 的增量修复 | 仅在树已打过旧版 chrome 时需要 |
 
 ### 5. 装 Sharp 进程隔离

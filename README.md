@@ -16,6 +16,9 @@
 固定 mcp-remote 本地入口和配置工具须单独启用，安装 deb 不会自动改用户配置。
 启用、回退与验证边界见 [MCP 启动说明](docs/MCP_STARTUP.md)。
 
+全部补丁的用途、目标文件及官方 rc.5/源码对照见 [补丁总览与逐项文档](docs/patches/README.md)。
+2026-10-31 审计尚未发现可因官方等价修复而整份移除的补丁；界面定制和旧树迁移工具标为不适用，不计入官方缺陷修复结论。
+
 > 本仓库只包含**移植补丁与打包脚本**，不含任何官方二进制载荷（体积与授权原因）。
 > 详细的中文使用教程见 **[README.zh.md](README.zh.md)**。
 
@@ -42,13 +45,19 @@
 
 ```
 ├── patches/
-│   ├── patch-main.py            平台准入 / resources 根 / 打包态 / 托盘 / 窗口控制 IPC
+│   ├── patch-main.py            平台准入 / resources 根 / 打包态 / 托盘 / CLI 路径
 │   ├── patch-system-proxy.py    KDE/v2rayN Desktop 后台代理适配
+│   ├── system-proxy/           系统代理适配模块及连接池控制器
 │   ├── patch-mcp-negotiation.py MCP 协商方式与可选后台初始化（默认行为不变）
-│   ├── patch-mac-chrome.py      macOS 风格装饰：左置交通灯 + 侧栏毛玻璃
+│   ├── patch-flock-libc.py      会话锁 libc 探测排除网络诊断
+│   ├── patch-mac-chrome.py      左置交通灯、窗口控制及 GUI 补丁组合入口
+│   ├── patch-kde-material.py    KDE 材质基础层（自用层禁用 blur）
+│   ├── patch-fullscreen-reveal.py 全屏指针桥、焦点、状态及 Wayland 双击
+│   ├── patch-linux-identity.py  Linux 桌面项身份关联
+│   ├── patch-personal-rounded.py 自用实色、圆角、交通灯及固定侧栏按钮
 │   ├── patch-fingerprint.py     按 ELF 符号定位并放宽 V8 指纹白名单（x64 / arm64）
-│   ├── patch-titlebar.py        早期隐藏标题栏方案（已被 patch-mac-chrome 取代）
-│   └── upgrade-mac-chrome.py    对已打过旧版 chrome 的树做增量修复（幂等）
+│   ├── patch-titlebar.py        Linux 标题栏中间配置（chrome 的顺序依赖）
+│   └── upgrade-mac-chrome.py    旧 chrome 树的手工迁移工具（非自动构建入口）
 ├── image-worker-src/
 │   ├── client.cjs               Sharp API 兼容层（Electron 内，只记录并转发）
 │   ├── worker.cjs               真正执行 libvips 的独立 Node 进程
@@ -58,6 +67,7 @@
 ├── install-image-worker.sh      把 Sharp 替身包装入某棵应用树
 ├── verify-launch-x64.sh         五种格式逐个解包并实测启动
 └── docs/
+    ├── patches/                全部补丁的独立文档与上游审计
     ├── ARTIFACTS.md             产物说明：安装方式、依赖策略、验证记录
     ├── CHANGELOG.md             完整变更日志（含每个修复的根因与实测数据）
     └── SHA256SUMS.txt           历史 0.2.0-rc.2 多格式产物的校验和
