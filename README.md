@@ -50,6 +50,7 @@
 │   ├── system-proxy/           系统代理适配模块及连接池控制器
 │   ├── patch-mcp-negotiation.py MCP 协商方式与可选后台初始化（默认行为不变）
 │   ├── patch-flock-libc.py      会话锁 libc 探测排除网络诊断
+│   ├── patch-desktop-auth-cookie.py Desktop Host 认证保存在内存，避免 Cookie 累积
 │   ├── patch-mac-chrome.py      左置交通灯、窗口控制及 GUI 补丁组合入口
 │   ├── patch-kde-material.py    KDE 材质基础层（自用层禁用 blur）
 │   ├── patch-fullscreen-reveal.py 全屏指针桥、焦点、状态及 Wayland 双击

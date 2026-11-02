@@ -1,8 +1,19 @@
 # 自用 DSH Desktop 项目交接
 
-更新日期：2026-11-01。分支 codex/personal-desktop；libc 修复提交 e744487、标题栏修复提交 fd6702e。用户授权随后单独提交补丁文档，并将三个本地提交一并推送 origin/codex/personal-desktop；最终提交号与远端结果以 git log 和推送结果为准。
+更新日期：2026-11-02。分支 codex/personal-desktop；本轮 Cookie 修复基于 c63219c（npm 前缀适配）。用户反馈验收可用并授权清理、提交与推送 origin/codex/personal-desktop；实际提交号和远端同步结果以 git log/status 为准。
 
-## 当前交付与待验收
+## 本轮：Desktop Cookie 累积修复
+
+- 新增 patches/patch-desktop-auth-cookie.py，接入 scripts/build/tree.sh。欢迎页 HTTP 与账户 WebSocket 复用 authenticateWebHost 的当前内存 Cookie，不再以 Electron Cookie 库重复认证。请求限定在当前 Host origin，拒绝 URL 用户信息及重定向；错误带 HTTP 状态码，不输出 token 或 Cookie。
+- 保留通用 Web 的签名、authority 和有效期校验；旧 Cookie 不再被这些请求读取或发送，等待自然过期。不修改现用 Cookie 库、配置、登录凭据或会话。
+- 80 项回归 78 通过、2 RPM/pacman 工具缺失跳过，构建 shell 与新增 JS/Python 语法检查通过。测试用真实载荷函数和合成凭据复现 HTTP 431，并覆盖 HTTP、账户 WebSocket、100 次换端口/密钥、并存 Host、过期/签名及取消/重定向。
+- 从已安装 rc.5 复制独立完整应用树，仅应用新补丁后进行 Desktop 测试。Wayland/XWayland 各启动、重启一次，预置 100 个合成旧 Cookie，均进入可见主界面且 Cookie 数不增长，正常退出。独立 HOME/DSH_HOME/XDG/user-data，无用户插件或凭据。no-sandbox/disable-gpu、Inspector 与播种/观测仅限临时测试树，不进入补丁；不是全 GUI 或真实登录/长会话验收。
+- 用户随后要求打包，并明确指定从默认 DMG 下载开始运行原始 auto-build.sh。已完成 `./auto-build.sh --arch x64 --formats deb --electron bundled --package-jobs 4` 的 prepare/tree/package 全流程，没有用上一份 deb 或 ZIP 生成最终成品。官方 DMG 应用/runtime 均为 rc.5，SHA256 7f387a78a7800de26af98a796c833295ebe57ee72f1f36a0810f296c871c2baf。
+- 当前 dist/deepseek-harness_0.2.1-rc.5_amd64.bundled.deb 已包含 Cookie 修复，SHA256 32d34addc782227b49d0c251ccaf253aa14d10be13cbd40da2d18c87ae970af6，260349116 字节。旧包（900bc502...）及校验文件移至 dist/previous-20261102-before-cookie/，不假设更早的回退目录仍存在。成品 CLI/pnpm、Node/Python、13 Python 包、图片隔离、133 ELF、26565 资源一致性和 SHA256 通过；最终包的 80 项回归为 78 通过、2 跳过。测试夹具支持从已打补丁成品恢复已知原始状态，以继续验证首次写入失败保护。
+- 从最终 deb 解包的原始应用文件完成 Wayland/XWayland 各启动和重启一次：在独立测试会话经 Inspector 预置 100 个合成旧 Cookie，均进入可见主页面、数量不增长并正常退出；没有在成品文件中加入播种/观测代码。no-sandbox/disable-gpu 和 Inspector 仅为测试启动参数，不扩展为用户原配置/登录/长会话验收。用户随后反馈“好了”，视为使用验收反馈，未逐项说明覆盖范围；本代理未替换安装或修改现用数据。
+- 按用户后续清理要求，确认无进程占用后删除下载物、DMG/ZIP 解包、out-x64、打包暂存、测试 HOME/原始日志、废弃增量包和 Python 缓存；保留 dist 成品/回退包及校验文件、源码和 others/ 内的小体积脱敏摘要。两份 deb 校验再次通过，后续完整构建需重新准备下载和应用树。新补丁用途及官方固定源码核对见 docs/patches/patch-desktop-auth-cookie.md；本次构建时另读取官方更新清单，仍为 rc.5，最终输入为默认 DMG。
+
+## 历史交付与待验收（2026-10-31，后续状态以上节为准）
 
 - 已应用局部构建补丁 patch-flock-libc.py，首次会话锁加载的 getReport 仅在调用期间排除网络诊断，finally 恢复设置；不更改锁语义、代理设置、运行时版本或用户插件。
 - 新 deb：dist/deepseek-harness_0.2.1-rc.5_amd64.bundled.deb，SHA256 31353beddc7e81f279a8b6f11fbfd048133ff1d2708dcdc9fdcf95301fc880a7。旧 rc.5 SHA 13b0e527... 是历史构建，不是当前成品。
@@ -13,7 +24,7 @@
 
 ## 其他维护边界
 
-- 全部 14 个补丁源码/辅助文件已逐项说明，入口见 [补丁审计](docs/patches/README.md)。核对官方 rc.5 原始 ZIP 和 master 固定快照 ce7073d51254c26cd63b22a60835b8f948deb447（源码 Desktop 为 0.2.2-alpha.2），未确认整份补丁已被官方等价吸收；没有改用 alpha 构建。
+- 全部 15 个补丁源码/辅助文件已逐项说明，入口见 [补丁审计](docs/patches/README.md)。既有核对基线为官方 rc.5 原始 ZIP 和 master 固定快照 ce7073d51254c26cd63b22a60835b8f948deb447（源码 Desktop 为 0.2.2-alpha.2）；Cookie 项追加核对相同固定源码。未确认整份补丁已被官方等价吸收；没有改用 alpha 构建。
 - KDE blur 和全屏悬停视觉被自用层覆盖，但基础层仍有结构和交互依赖。titlebar 是 chrome 的构建中间步骤，旧版完成树重跑会重复插入，2026-11-01 已修复为完整状态跳过、部分/未知状态拒绝写入；upgrade 仅为历史手工迁移。其他旧 GUI 脚本的部分写入/弱校验风险仍保留记录，没有删除补丁。
 - 本轮审计在独立官方副本逐项应用、重跑和语法核对，并重跑 67 项回归（65 通过、2 跳过）与 144 种侧栏组合；文档改动不改变现有 deb 的内容、SHA256 或原生 GUI 验证范围。
 - 自用 GUI 实色圆角、交通灯及侧栏位置、KDE/v2rayN 代理、MCP v2 均保持原样。MCP 默认 auto/blocking，显式 background 且非严格服务才释放屏障；安装 deb 不自动修改 MCP 配置。

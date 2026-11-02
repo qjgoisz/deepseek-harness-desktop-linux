@@ -1,6 +1,6 @@
 # 补丁总览与官方修复核对
 
-文档调整：2026-11-01。官方核对日期：2026-10-31。本目录覆盖 `patches/` 全部 14 个源码文件（12 个 Python 脚本、2 个运行时辅助文件），每个文件均有独立说明。
+文档调整：2026-11-02。既有项目官方核对日期：2026-10-31；Desktop Cookie 项于 2026-11-02 重新核对同一固定源码快照，未扩展到最新 master。本目录覆盖 `patches/` 全部 15 个源码文件（13 个 Python 脚本、2 个运行时辅助文件），每个文件均有独立说明。
 
 审计仅回答：**DeepSeek 官方在所查载荷或源码中，是否已有补丁所解决问题的等价实现。** 补丁的用途与目标单独说明；本地脚本维护、分支叠加和测试成绩不作为官方修复证据。
 
@@ -28,6 +28,7 @@
 | [patch-system-proxy.py](patch-system-proxy.md) | 未发现等价修复。 |
 | [patch-mcp-negotiation.py](patch-mcp-negotiation.md) | 未发现等价修复。 |
 | [patch-flock-libc.py](patch-flock-libc.md) | 未发现等价修复。 |
+| [patch-desktop-auth-cookie.py](patch-desktop-auth-cookie.md) | 所查固定源码仍使用持久 Cookie 认证路径，未发现等价修复。 |
 | [upgrade-mac-chrome.py](upgrade-mac-chrome.md) | 不适用：迁移工具不能按官方缺陷修复判定失效。 |
 | [system-proxy/desktop-system-proxy.mjs](system-proxy--desktop-system-proxy.md) | 对应系统代理能力未发现官方等价实现。 |
 | [system-proxy/proxy-controller.js](system-proxy--proxy-controller.md) | 对应动态切换能力未发现官方等价实现。 |

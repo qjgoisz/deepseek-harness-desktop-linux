@@ -5,6 +5,18 @@
 
 ---
 
+## 2026-11-02 — Desktop Host Cookie 累积修复（已打包，用户反馈可用）
+
+- 欢迎页 RPC 和账户 WebSocket 复用主进程当前 Host 的内存 Cookie，移除 Electron 持久 Cookie 库上的重复认证和全量读取，避免随机端口产生的 30 天 Cookie 累积触发 HTTP 431。旧条目不再参与这些请求，无需删除用户 Cookie 库。
+- 请求绑定 Host origin，拒绝 URL 用户信息与重定向；每次后台启动单独捕获 Cookie，保留签名、有效期和端口隔离，错误中保留 HTTP 状态码。通用 Web 认证协议与请求头大小上限不变。
+- 新增严格幂等/原子补丁、构建接入及真实载荷函数回归；80 项测试 78 通过、2 因 RPM/pacman 工具缺失跳过。覆盖旧条目超限、HTTP/账户 WebSocket、100 次换端口/密钥启动、并存 Host、跨 origin、签名/过期、重定向与取消。
+- 隔离完整 Desktop：Wayland/XWayland 各启动与重启一次，100 个合成旧 Cookie 不增长，主窗口可见、主页面加载完成并正常退出。使用独立状态、no-sandbox/disable-gpu、Inspector 及仅在临时副本的播种/观测注入；未验证真实登录、用户插件/模型或长会话。测试大副本、HOME 与原始日志清理，保留脱敏摘要。
+- 用户随后明确要求从默认 DMG 下载开始，已按原始 auto-build.sh 完成 rc.5 的 prepare/tree/package 全流程，最终成品不复用旧 deb/ZIP。新 bundled amd64 deb 的 SHA256 为 32d34addc782227b49d0c251ccaf253aa14d10be13cbd40da2d18c87ae970af6；旧包保留在 dist/previous-20261102-before-cookie/。版本沿用 Node 24.21.0、Python 3.12.14、pnpm 11.28.5、Sharp 0.35.5、Electron 44.4.5。
+- 最终包解包后通过 80 项回归（78 通过、2 工具缺失跳过）、CLI/pnpm、13 个 Python 包、图片隔离、133 ELF、26565 资源文件一致性及 SHA256 校验。Wayland/XWayland 各启动和重启一次，100 个合成 Cookie 不增长、主窗口可见、主界面完成加载、退出 0；测试通过 Inspector 操作独立会话，没有给成品文件加入观测注入。自动化不代表真实登录/用户插件或长会话验收；本代理未替换已安装实例。补丁说明与官方核对见 [patch-desktop-auth-cookie](patches/patch-desktop-auth-cookie.md)。
+- 用户随后反馈“好了”并授权清理、提交和推送；为使用验收反馈，未逐项说明登录/插件/长会话覆盖。已清理工作区下载、解包、应用树、打包暂存、测试 HOME/原始日志、废弃增量产物和 Python 缓存，保留当前/回退 deb、校验文件与脱敏小摘要；不改用户数据或全局缓存。两份成品校验再次通过；本次源码交付不包含载荷、安装包或本机状态，目标为 origin/codex/personal-desktop。
+
+---
+
 ## 2026-10-29 — 自用 MCP 启动优化
 
 - 新增按服务 `versionNegotiation: auto | legacy`（默认 auto），避免已知旧协议服务重复启动探测进程；不全局关闭新协议探测。

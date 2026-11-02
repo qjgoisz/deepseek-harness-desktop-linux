@@ -1,11 +1,11 @@
 # DeepSeek Harness — Linux 移植产物
 
-> 当前自用基线为 `0.2.1-rc.3`，最新本机产物为
-> `dist/deepseek-harness_0.2.1-rc.3_amd64.bundled.deb`（bundled Electron 44.4.5）。
-> 2026-10-28 包从已安装 rc.3 的独立副本增量构建，包含 KDE/v2rayN 代理修复；
-> 用户反馈可用。自动化为 56 项中 54 通过、2 跳过，详见 [系统代理说明](SYSTEM_PROXY.md)。
-> SHA256：`58eed0612283285419b58e0c248cc6db651ce6307bb08df7a809bece89e1b511`。
-> 在 `dist/` 中运行对应 `.deb.sha256` 校验；下载/应用树/暂存已清理，成品保留。
+> 2026-11-02 当前自用基线为 `0.2.1-rc.5`，最新本机产物为
+> `dist/deepseek-harness_0.2.1-rc.5_amd64.bundled.deb`（260349116 字节，bundled Electron 44.4.5），包含 Desktop Cookie 累积修复，用户已反馈可用。
+> 按用户要求，使用原始 auto-build.sh 从默认官方下载 DMG 开始完成 prepare/tree/package，应用/runtime 均为 rc.5；最终包未复用旧 deb 或 ZIP。
+> SHA256：`32d34addc782227b49d0c251ccaf253aa14d10be13cbd40da2d18c87ae970af6`。
+> 在 `dist/` 中运行对应 `.deb.sha256` 校验；旧包（900bc502...）保留于 `dist/previous-20261102-before-cookie/`。
+> 成品 80 项回归 78 通过、2 工具缺失跳过；CLI/pnpm、Node/Python、13 个 Python 包、图片隔离、133 ELF、26565 资源文件一致性及校验通过。隔离 Wayland/XWayland 启动/重启各通过，100 个合成 Cookie 数不增长。用户反馈未逐项说明登录/插件/长会话覆盖，不扩大上述测试结论；本代理未替换现用安装或修改用户数据。现已按用户要求清理下载、应用树、解包、打包和测试暂存，保留 dist 成品及回退包/校验文件。用户授权将必要源码和说明提交并推送；实际 Git 状态见仓库。
 > **以下清单及 docs/SHA256SUMS.txt 均为 0.2.0-rc.2 历史记录，不代表当前文件存在或新版已验证。**
 
 由官方 **macOS arm64** 安装包（`DeepSeek Harness 0.2.0-rc.2.dmg`）中的应用载荷重新打包为 Linux 版本。

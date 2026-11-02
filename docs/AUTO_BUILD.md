@@ -279,3 +279,9 @@ DSH_DESKTOP_RESOURCES_DIR="$PWD/out-arm64/resources" ELECTRON_RUN_AS_NODE=1 \
 ## libc 探测补丁
 
 应用树构建会运行 patch-flock-libc.py，避免首次会话写锁加载 Linux 原生模块时，完整诊断报告的网络查询同步阻塞后台。补丁只在 libc 探测调用期间排除网络并恢复原设置；不依赖 NODE_OPTIONS，不改变代理或锁策略。验证记录见 [STARTUP_LIBC.md](STARTUP_LIBC.md)。
+
+## Desktop Cookie 累积补丁
+
+应用树阶段自动运行 `patches/patch-desktop-auth-cookie.py`。欢迎页 RPC 和账户 WebSocket 复用主进程已有的当前 Host 内存 Cookie，不再通过 Electron 持久 Cookie 库进行第二次认证，避免随机端口留下的 30 天 Cookie 堆积并触发 HTTP 431。旧条目可自然过期；构建和首次启动都不删除用户 Cookie 或登录状态，不改变通用 Web 认证、签名和端口隔离。用途与官方核对见 [补丁说明](patches/patch-desktop-auth-cookie.md)。安装包必须重新构建后才包含该修复，既有 dist 成品不会自动更新。
+
+2026-11-02 已从默认官方下载 DMG 运行完整 prepare/tree/package 并交付 Cookie 修复包，用户反馈可用。随后按要求清理下载、解包、out-x64 和打包/测试暂存，保留 dist 当前及回退包；后续完整构建需要重新下载和生成应用树，不应假设缓存仍在。
