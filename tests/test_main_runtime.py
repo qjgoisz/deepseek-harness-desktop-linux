@@ -15,6 +15,23 @@ SPEC.loader.exec_module(MAIN)
 
 
 class MainRuntime(unittest.TestCase):
+    def test_platform_view_preserves_optional_update_guard(self):
+        prefix = ('const platformView = new DesktopPlatformView('
+                  'join(app.getAppPath(), "lib", "preload-platform-account.cjs"), '
+                  '() => locale.id === "zh-CN" ? "zh_CN" : "en_US", ')
+        platform = 'process.platform === "win32" ? "win32" : "darwin"'
+        for ending in [');', ', (owner) => isMandatory() || updateOverlays.input(owner).blocked);']:
+            source = prefix + platform + ending
+            with self.subTest(ending=ending):
+                result = MAIN.rewrite_platform_view(source)
+                self.assertEqual(result, source.replace(platform,
+                    'process.platform === "win32" ? "win32" : process.platform === "linux" ? "linux" : "darwin"'))
+                self.assertTrue(result.endswith(ending))
+                for bad in [source + source, source.replace(ending, ', unknownGuard);'),
+                            source + '\nnew DesktopPlatformView(other);', result]:
+                    with self.assertRaises(ValueError):
+                        MAIN.rewrite_platform_view(bad)
+
     def test_resources_override_keeps_both_supported_pnpm_layouts(self):
         for segments in ['"runtime", "pnpm"',
                          '"runtime", "primary-runtime", "dependencies", "pnpm"']:

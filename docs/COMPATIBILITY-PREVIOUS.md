@@ -1,4 +1,6 @@
-# DSH rc.5 Desktop 打包与验证
+# 上一版 DSH Desktop 兼容性记录：0.2.1-rc.5
+
+本页记录该版本首次从官方更新 ZIP 完成的完整适配。此处的产物和缓存状态为当时记录。当前版本见 [兼容性记录](COMPATIBILITY.md)。
 
 2026-10-30（Asia/Shanghai），自用分支 `codex/personal-desktop`。本次使用官方桌面更新清单中的 macOS arm64 ZIP，而非仍旧的滚动 DMG；未安装、替换或重启用户现用 Desktop，未提交或推送。
 

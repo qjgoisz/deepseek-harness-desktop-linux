@@ -1,6 +1,6 @@
 # patch-desktop-auth-cookie.py：Desktop 本地认证 Cookie 累积
 
-文档及官方固定源码核对日期：2026-11-02。源码：[查看文件](../../patches/patch-desktop-auth-cookie.py)。
+源码：[查看文件](../../patches/patch-desktop-auth-cookie.py)。
 
 ## 用途与目标
 
@@ -14,15 +14,11 @@ Desktop Host 使用随机端口。浏览器认证 Cookie 的名称包含完整 a
 
 ## 官方是否已有等价修复
 
-**所查官方固定源码仍存在该路径，未发现等价修复。**
+**官方 master 源码已有等价修复，已核对的发布 ZIP 尚未包含。**
 
-核对固定快照 `ce7073d51254c26cd63b22a60835b8f948deb447`：
+发布 ZIP 的 lib/main.js 仍在欢迎页使用 net.fetch 和持久 Cookie 库进行认证。master 已将单次 Host 认证得到的内存 Cookie 用于欢迎页 HTTP 与账户 WebSocket，并在 Host 启动后按名称清理同一主机的旧认证 Cookie。当前发布 ZIP 仍需补丁。后续应确认新发布载荷包含修复，再跑 HTTP、WebSocket 与重启回归。 [apps/desktop/src/main.ts](https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/apps/desktop/src/main.ts) [apps/desktop/src/welcome-backend.ts](https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/apps/desktop/src/welcome-backend.ts) [apps/desktop/src/account-backend.ts](https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/apps/desktop/src/account-backend.ts) [apps/desktop/src/web-document.ts](https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/apps/desktop/src/web-document.ts)
 
-- [apps/desktop/src/main.ts](https://github.com/deepseek-ai/deepseek-harness/blob/ce7073d51254c26cd63b22a60835b8f948deb447/apps/desktop/src/main.ts) 已先取得 `hostCookie`，随后仍以 `net.fetch` 和默认会话 Cookie 读取器调用欢迎页连接。
-- [apps/desktop/src/welcome-backend.ts](https://github.com/deepseek-ai/deepseek-harness/blob/ce7073d51254c26cd63b22a60835b8f948deb447/apps/desktop/src/welcome-backend.ts) 再次以 `credentials: include` 访问启动 URL；请求失败仅抛出通用认证错误。
-- [apps/desktop/src/web-document.ts](https://github.com/deepseek-ai/deepseek-harness/blob/ce7073d51254c26cd63b22a60835b8f948deb447/apps/desktop/src/web-document.ts) 已提供不依赖 Chromium Cookie 库的 Host Cookie 获取和主页面转发路径，但未统一欢迎页连接。
-
-结论只针对上述快照，不代表最新 master 或后续桌面载荷；本项源码审计未检查最新 master。既有官方 rc.5 载荷来源与校验记录见 [核对基线](README.md#核对基线)。
+核对范围见 [补丁总览](README.md#核对基线)。
 
 ## 后续核对条件
 

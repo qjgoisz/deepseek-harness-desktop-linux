@@ -16,7 +16,7 @@
 
 保留普通域名/子域名、端口和通配 `*` 等上游支持的绕过形式，补充 IPv4 字面地址的 CIDR 匹配。localhost、整个 127.0.0.0/8 和 IPv6 回环仍使用上游强制直连规则。不会为了匹配 CIDR 而解析目标域名。
 
-首版不处理 PAC/自动发现、反向例外、纯 SOCKS、IPv6 CIDR 或 `<local>` 等特殊 KIO 例外语法。配置不支持或读取失败时输出不含端点/凭据的诊断，保留最近一次成功策略；首次启动尚无有效系统策略时沿用初始直连状态。下游工具使用各自的 `NO_PROXY` 语法，不能据此宣称所有外部程序完全支持相同 CIDR/绕过语义。插件自行创建的网络代理和已经运行的外部进程也不保证被全局 dispatcher 覆盖。
+当前适配不处理 PAC/自动发现、反向例外、纯 SOCKS、IPv6 CIDR 或 `<local>` 等特殊 KIO 例外语法。配置不支持或读取失败时输出不含端点/凭据的诊断，保留最近一次成功策略；首次启动尚无有效系统策略时沿用初始直连状态。下游工具使用各自的 `NO_PROXY` 语法，不能据此宣称所有外部程序完全支持相同 CIDR/绕过语义。插件自行创建的网络代理和已经运行的外部进程也不保证被全局 dispatcher 覆盖。
 
 `kreadconfig` 属于 KDE 工具；缺失时会给出诊断。`dbus-monitor` 缺失时文件监听和周期检查继续工作，不新增硬性 D-Bus 包依赖。
 
@@ -40,9 +40,7 @@ for script in scripts/build/*.sh; do bash -n "$script"; done
 
 真实通知用例在 `dbus-run-session` 的私有总线上发送信号、使用独立 HOME/XDG 配置；另行关闭文件监听/周期回读，断言 D-Bus 本身触发配置读取。不会向正在使用的桌面总线发送测试通知。
 
-2026-10-28 用户反馈本次 KDE/v2rayN 代理修复“可以了”，并授权清理缓存及推送。此为用户人工使用反馈，未逐项说明开关、端口修改、模型/插件、Wayland/XWayland 或长会话覆盖范围；不扩展为完整测试矩阵通过。
-
-本机 HTTP/HTTPS 模拟服务与私有 D-Bus 测试均已通过。后续回归可逐项覆盖普通启动、代理开关、端口修改、流式响应及插件联网；本次用户反馈不替代这些逐项覆盖记录。
+本机 HTTP/HTTPS 模拟服务与私有 D-Bus 测试均已通过。当前载荷的验证范围见 [兼容性记录](COMPATIBILITY.md)。
 
 参考：
 - v2rayN 官方 Linux 脚本：https://github.com/2dust/v2rayN/blob/master/v2rayN/ServiceLib/Sample/proxy_set_linux_sh

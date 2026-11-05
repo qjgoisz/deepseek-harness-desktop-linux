@@ -1,6 +1,6 @@
 # patch-mcp-negotiation.py：MCP 协商与后台初始化
 
-文档调整：2026-11-01。官方核对日期：2026-10-31。源码：[查看文件](../../patches/patch-mcp-negotiation.py)。
+源码：[查看文件](../../patches/patch-mcp-negotiation.py)。
 
 ## 用途与目标
 
@@ -10,17 +10,11 @@
 
 ## 官方是否已有等价修复
 
-**未发现等价修复。**
+**官方载荷和所查源码均未发现等价修复。**
 
-官方 rc.5 与所查 index.ts 仍等待 connection.ready，没有对应配置字段；所查 SDK 依赖为 @modelcontextprotocol/client 2.2.0。连接 supervisor 原已管理工具同步、通知、重连和生命周期，这些不计为补丁新增或缺失的官方功能。
+MCP 客户端固定使用 auto 协商，插件启动时等待 connection.ready，未提供按服务选择协商方式和可选后台连接。 [packages/mcp/mcp-client/src/connection.ts](https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/packages/mcp/mcp-client/src/connection.ts) [packages/mcp/mcp-client/src/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/packages/mcp/mcp-client/src/index.ts)
 
-核对范围：官方桌面载荷 `0.2.1-rc.5`，以及官方源码快照 `ce7073d51254c26cd63b22a60835b8f948deb447`（Desktop package.json 为 `0.2.2-alpha.2`）。源码版本存在不等于桌面载荷已发布；本结论只适用于已核对的版本，不代表后续版本。完整载荷校验信息见 [总览](README.md#核对基线)。
-
-官方源码依据：
-
-- [packages/mcp/mcp-client/src/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/ce7073d51254c26cd63b22a60835b8f948deb447/packages/mcp/mcp-client/src/index.ts)
-- [packages/mcp/mcp-client/src/connection.ts](https://github.com/deepseek-ai/deepseek-harness/blob/ce7073d51254c26cd63b22a60835b8f948deb447/packages/mcp/mcp-client/src/connection.ts)
-- [packages/mcp/mcp-client/package.json](https://github.com/deepseek-ai/deepseek-harness/blob/ce7073d51254c26cd63b22a60835b8f948deb447/packages/mcp/mcp-client/package.json)
+核对范围见 [补丁总览](README.md#核对基线)。
 
 ## 后续核对条件
 

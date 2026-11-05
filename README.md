@@ -1,14 +1,14 @@
 # deepseek-harness-desktop-linux
 
 把 **DeepSeek Harness 桌面端**（官方仅发布 macOS / Windows 包）移植到 Linux 的
-**重新打包工具链**：官方 dmg 载荷 + 若干公开下载物 → AppImage / deb / pacman / rpm。
+**重新打包工具链**：官方 macOS ZIP 或 DMG 载荷 + 若干公开下载物 → AppImage / deb / pacman / rpm。
 
-工具链支持 **x86_64** 与 **aarch64** 的多种包型；各版本的实测范围见下文。
+工具链支持 **x86_64** 与 **aarch64** 的多种包型；当前实测范围见下文。
 
-自用分支当前基线：`@deepseek-ai/dsh-desktop 0.2.1-rc.5`。
+自用分支当前适配基线：`@deepseek-ai/dsh-desktop 0.2.2-rc.1`，用户反馈修复本机预设后界面恢复。
 本分支使用实色背景与普通窗口圆角，保留全屏交通灯及窗口控件修复。
-当前验证范围为 x86_64 bundled deb；历史多格式、ARM64 验证记录仍对应旧版载荷。
-已加入 KDE/v2rayN 系统代理自动读取和动态切换，2026-10-28 用户反馈修复可用；
+当前验证范围为 x86_64 bundled deb。
+已加入 KDE/v2rayN 系统代理自动读取和动态切换。
 支持范围和手动环境覆盖规则见 [系统代理说明](docs/SYSTEM_PROXY.md)。
 
 自用分支另提供按服务选择 MCP 协商方式和后台初始化的补丁。默认仍等待连接；
@@ -16,8 +16,8 @@
 固定 mcp-remote 本地入口和配置工具须单独启用，安装 deb 不会自动改用户配置。
 启用、回退与验证边界见 [MCP 启动说明](docs/MCP_STARTUP.md)。
 
-全部补丁的用途、目标文件及官方 rc.5/源码对照见 [补丁总览与逐项文档](docs/patches/README.md)。
-2026-10-31 审计尚未发现可因官方等价修复而整份移除的补丁；界面定制和旧树迁移工具标为不适用，不计入官方缺陷修复结论。
+全部补丁的用途、目标文件及官方载荷/源码对照见 [补丁总览与逐项文档](docs/patches/README.md)。
+2026-11-05 已适配官方更新 ZIP 的 rc.1，Electron 同步至 44.7.0，保留新版更新输入守卫；主进程、代理、MCP、libc 和 Cookie 仍需相应补丁。来源、成品和验证边界见 [本轮兼容性记录](docs/COMPATIBILITY.md)。
 
 > 本仓库只包含**移植补丁与打包脚本**，不含任何官方二进制载荷（体积与授权原因）。
 > 详细的中文使用教程见 **[README.zh.md](README.zh.md)**。
@@ -35,9 +35,9 @@
 | 3 | 运行时载荷是 macOS 构建 | 换 Linux 版 Node 24.21.0 + Python 3.12.14（13 个科学计算包）+ pnpm |
 | 4 | 原实现依赖 `process.resourcesPath`，系统 Electron 下指错目录 | `DSH_DESKTOP_RESOURCES_DIR` 覆盖 |
 | 5 | 系统 Electron 下 `app.isPackaged` 为 false，被误判为开发模式 | `DSH_DESKTOP_FORCE_PACKAGED=1` |
-| 6 | 原生插件只认 Electron 43.0.0 / 44.0.0 / 45.0.0-alpha.6 的 V8 指纹 | 二进制放宽匹配（**不降级 Electron**） |
+| 6 | 原生插件限制 Electron/V8 指纹 | 二进制放宽匹配（**不降级 Electron**） |
 | 7 | **libvips 在 Electron 内段错误，JS 无法捕获，整个应用崩溃** | 进程隔离：Sharp 调用转发到独立 Node worker |
-| 8 | Linux 无窗口装饰规则，且托盘代码被 `win32` 门禁挡住 | 复用应用自身的 `data-windows-titlebar` 模式 + 复刻其 darwin 材质配方 |
+| 8 | Linux 无窗口装饰规则，且托盘代码被 `win32` 门禁挡住 | 复用应用自身的 `data-windows-titlebar` 模式并补充 Linux 托盘 |
 
 ---
 
@@ -70,8 +70,8 @@
 └── docs/
     ├── patches/                全部补丁的独立文档与上游审计
     ├── ARTIFACTS.md             产物说明：安装方式、依赖策略、验证记录
-    ├── CHANGELOG.md             完整变更日志（含每个修复的根因与实测数据）
-    └── SHA256SUMS.txt           历史 0.2.0-rc.2 多格式产物的校验和
+    ├── CHANGELOG.md             当前版本变更
+    └── COMPATIBILITY.md         当前兼容性报告
 ```
 
 ---
@@ -80,8 +80,8 @@
 
 ```bash
 ./auto-build.sh --dry-run
-./auto-build.sh --formats deb --electron bundled --package-jobs 4
-./auto-build.sh --arch all --formats all
+./auto-build.sh --arch x64 --formats deb --electron bundled --package-jobs 4 \
+  --archive /绝对路径/已校验的/deepseek-harness-0.2.2-rc.1-mac-arm64.zip
 ```
 
 默认保留缓存、解包文件、构建目录和历史产物；`--clean` 显式清理中间文件。
@@ -91,21 +91,9 @@
 依赖、分阶段执行、网络配置与验证边界见 [自动构建文档](docs/AUTO_BUILD.md)。
 窗口外观使用本仓库现有补丁；本工具链不更改其默认材质或窗口行为。
 
-## 快速开始
+## 安装与校验
 
-```bash
-./auto-build.sh --arch x64 --formats deb --electron bundled --package-jobs 4
-cd dist
-sha256sum -c deepseek-harness_0.2.1-rc.5_amd64.bundled.deb.sha256
-```
-
-上例校验文件名对应当前 rc.5；新载荷构建后应使用实际生成的校验文件。
-官方滚动下载可能更新，构建时必须核对实际载荷版本。
-当前本机缓存已按用户要求清理，后续完整构建会重新准备下载物。
-
-完整的前置依赖清单、交叉打包注意事项与常见坑，见 **[README.zh.md](README.zh.md)**。
-
----
+构建输入、安装命令和校验方式见 [产物说明](docs/ARTIFACTS.md)和[中文构建教程](README.zh.md)。
 
 ## 两个值得说明的实现
 
@@ -124,41 +112,10 @@ resources/
 
 worker 崩溃只影响当次图片操作：客户端自动重启，连续 3 次失败后熔断，桌面端不受影响。
 
-### macOS 风格窗口装饰
+### 窗口装饰
 
-不自造轮子，而是**复用应用自带机制**：
-
-- 用 `html[data-windows-titlebar]`（原本只在 Windows 启用的自绘标题栏模式）拿到
-  48px 顶部预留带、自动拖拽区与页面内边距；
-- 交通灯按应用自身常量 `trafficLightPosition {x:16, y:18}` 绘制，点击走新增 IPC；
-- 侧栏毛玻璃**逐字复刻**应用 `[data-platform=darwin]` 的配方
-  （`color-mix(... 50%, transparent)` + 竖向渐变 + `backdrop-filter: blur(40px) saturate(150%)`）；
-- **刻意不改 `data-platform`**：该属性同时决定快捷键把 `primary` 解析成 ⌘ 还是 Ctrl，
-  伪造 darwin 会破坏 Linux 快捷键语义。
-
----
-
-## 已知问题（非本移植引入）
-
-- `dsh-connect-workbuddy@1.4.0` 读 `info.multimodal`，而接口返回 `supportsImages`，
-  导致 16/16 模型被算出 `inputModalities=["text"]`，发图报 `session/agent-busy`。
-  macOS / Windows 上同样存在。
-
----
+Linux 窗口复用应用内置的自绘标题栏布局。左侧交通灯通过 IPC 操作窗口，Linux 平台标识保留 Ctrl 快捷键语义。当前窗口材质、全屏和侧栏位置见 [自用外观说明](PERSONAL.md)。
 
 ## 许可
 
-应用本体版权归 **DeepSeek**。本仓库只做重新打包的工具链，不修改业务逻辑；
-请遵守原应用许可条款，勿将重打包产物用于商业分发。
-
-## Linux 全屏交通灯
-
-沿用上游的全屏及平铺窗口判断。全屏时默认隐藏交通灯，鼠标移到窗口顶部任意横向位置的 4px 边缘后，侧栏按钮向右滑动让位，再显示交通灯。显示后，鼠标在顶部背景条的实际可见范围内移动时保持显示（边界读取自背景层，随布局变化），离开后延迟 200ms 收起。XWayland 通过窗口层面的鼠标位置判断背景条边界，保留顶部原生拖拽与双击还原；坐标换算包含窗口所在显示器的位置和页面缩放。原生 Wayland 不提供全局鼠标位置，全屏布局改用页面鼠标事件，并补上最大化时的双击还原。窗口状态轮询同时兼容从 KWin 菜单进入全屏的情况。原有背景材质保持不变，普通窗口的交通灯保持原有显示方式。
-
-触发与保持显示的行为参考 [Apple 全屏使用说明](https://support.apple.com/zh-cn/guide/mac-help/mchl9c21d2be/mac)和 [窗口工具栏全屏可见性文档](https://developer.apple.com/documentation/swiftui/view/windowtoolbarfullscreenvisibility(_:))。触发边缘高度、收起延迟和按钮位移动画是本项目的适配参数，Apple 文档未规定这些数值。
-
-## KDE 窗口材质
-
-KDE 的 XWayland 窗口通过 `xprop` 请求 KWin 背景模糊；需要系统提供 `xprop`，并在 KWin 中启用背景模糊效果。原生 Wayland、缺少 `xprop` 或无法验证 X11 窗口归属时保留实色回退。欢迎页在实色模式下整页不透明，避免左右两侧材质不一致。
-
-以上窗口交互和材质行为已在 KDE KWin 6.7.4 的 XWayland、原生 Wayland 下验证；其他桌面环境未实测。
+应用本体版权归 **DeepSeek**。请遵守原应用许可条款。

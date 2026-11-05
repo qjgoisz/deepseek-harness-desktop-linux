@@ -83,8 +83,8 @@ Electron，避免 Debian 官方仓库没有 Electron 时阻止安装。这些格
 
 应用版本从每棵应用树的 `resources/runtime/primary-runtime/runtime.json` 读取，
 Electron 描述读取应用树的 `version` 文件。deb 保留应用版本；pacman 用下划线替换
-版本中的连字符；RPM 将预发布部分放入 Release（例如 `0.2.0-rc.2` 转为
-Version `0.2.0`、Release `0.rc.2.1`）。不符合支持的版本形式会明确报错。
+版本中的连字符；RPM 将预发布部分放入 Release（例如 `0.2.2-rc.1` 转为
+Version `0.2.2`、Release `0.rc.1.1`）。不符合支持的版本形式会明确报错。
 每个安装包均附带使用相对文件名的 `.sha256`。
 
 ## 分阶段构建
@@ -162,8 +162,9 @@ appimagetool 解包暂存，以及本次已打包架构的应用树。
 
 ## 版本与验证
 
-Node、Python 与 Python 包版本来自 dmg 的 `runtime.json`。`--dry-run` 使用占位版本
-展示计划，不承诺这些版本对应当前 latest。Electron 默认 44.4.5，可配置；现有二进制
+Node、Python 与 Python 包版本来自官方归档的 `runtime.json`，pnpm 沿用归档内置版本。
+`--dry-run` 不读取归档，显示所选 Electron 及 Node/Python 计划值。Electron 默认 44.7.0，与官方 0.2.2-rc.1
+的 Electron Framework 版本一致，可配置；现有二进制
 指纹补丁与应用布局针对已支持的载荷，其他版本仍需验证。
 
 原生平台包默认要求同版本的 Linux 包；LibreOffice 使用应用指定版本的 WASM 回退，
@@ -211,11 +212,8 @@ chmod +x dist/DeepSeek-Harness-*.AppImage
 
 ## 维护与离线测试
 
-当前自用分支基线为 `0.2.1-rc.3`；此前 rc.2 记录属于历史。当前构建与验证范围见
-[CHANGELOG.md](CHANGELOG.md) 和 [SYSTEM_PROXY.md](SYSTEM_PROXY.md)。本机
-`COMPATIBILITY-2026-10-24.md` 为被忽略的诊断材料，不随仓库分发。pnpm 从旧版的 `runtime/pnpm`
-移到了 `runtime/primary-runtime/dependencies/pnpm`；资源根覆盖保留载荷自身的
-目录布局，两种布局均支持，遇到未知或重复匹配时中止且不写入部分补丁。
+当前兼容性范围见 [兼容性记录](COMPATIBILITY.md)。当前 pnpm 位于
+`runtime/primary-runtime/dependencies/pnpm`，资源根覆盖保留载荷自身的目录布局。
 Sharp facade 的版本信息取自载荷中的原包，随图片 worker 一起更新。
 
 生成应用树时还会应用 MCP 协商与后台初始化补丁：默认 auto/blocking，未知或部分修改的
@@ -248,8 +246,7 @@ python3 -m unittest discover -s tests -v
 
 在 x86_64 上可以下载 ARM64 载荷并生成 aarch64 AppImage、arm64 deb、
 aarch64 pacman/RPM；mksquashfs 使用主机版本，AppImage runtime 使用目标版本。
-本仓库已对 0.2.0-rc.2 / Electron 44.4.5 完成 ARM64 应用树的架构检查与上述
-格式打包验证。跨架构构建不会将静态检查当作运行自检成功。
+本版成品验收范围为 amd64 bundled deb。ARM64 需要在目标设备上执行运行自检。
 
 要验证目标机图片链路，请在 ARM64 Linux 上运行：
 
@@ -268,13 +265,13 @@ DSH_DESKTOP_RESOURCES_DIR="$PWD/out-arm64/resources" ELECTRON_RUN_AS_NODE=1 \
 
 应用树阶段自动运行 `patches/patch-system-proxy.py`，补充 Desktop Host 的系统代理读取和动态更新。范围、环境覆盖规则及测试见 [SYSTEM_PROXY.md](SYSTEM_PROXY.md)。新补丁对未知或重复匹配中止，不直接改用户插件目录。
 
-2026-10-28 用户确认代理修复可用并要求清理缓存：本机 dl/、out-x64/、解包及打包暂存已清理，dist/ 成品与校验文件保留。后续完整构建需要重新准备下载依赖，不应假设旧应用树仍在。
 
-## 官方桌面 ZIP 载荷（2026-10-30）
+## 官方桌面 ZIP 载荷
 
 官方更新清单中的完整 macOS 应用 ZIP 也可构建，使用 `--archive /绝对路径/官方.zip`（`--dmg` 仍兼容）。先按对应官方清单校验文件大小及 SHA512，再解包核对应用 package.json 与 runtime.json 的版本；文件名或 HEAD 不代表版本。当前构建入口不会自动读取更新清单或验证它的 SHA512，该步骤需在构建前完成。7z 自动识别归档格式，按内容 SHA256 复用/刷新解包缓存。运行时版本仍读取该载荷，不采用旧包版本顶替。
 
-本轮 rc.5 成品与验证边界见 [兼容性记录](COMPATIBILITY-2026-10-30.md)。
+
+2026-11-05 更新清单已提供 0.2.2-rc.1，核对时默认 DMG 尚未提供本版；本轮使用清单对应的 ZIP 完成全流程。Electron 默认同步为官方载荷的 44.7.0，Node/Python/pnpm 与原生依赖继续读取载荷指定版本。来源、校验及验证范围见 [rc.1 兼容性记录](COMPATIBILITY.md)。在默认 DMG 更新前，构建新版须显式传入已校验的新版归档。
 
 ## libc 探测补丁
 
@@ -283,5 +280,3 @@ DSH_DESKTOP_RESOURCES_DIR="$PWD/out-arm64/resources" ELECTRON_RUN_AS_NODE=1 \
 ## Desktop Cookie 累积补丁
 
 应用树阶段自动运行 `patches/patch-desktop-auth-cookie.py`。欢迎页 RPC 和账户 WebSocket 复用主进程已有的当前 Host 内存 Cookie，不再通过 Electron 持久 Cookie 库进行第二次认证，避免随机端口留下的 30 天 Cookie 堆积并触发 HTTP 431。旧条目可自然过期；构建和首次启动都不删除用户 Cookie 或登录状态，不改变通用 Web 认证、签名和端口隔离。用途与官方核对见 [补丁说明](patches/patch-desktop-auth-cookie.md)。安装包必须重新构建后才包含该修复，既有 dist 成品不会自动更新。
-
-2026-11-02 已从默认官方下载 DMG 运行完整 prepare/tree/package 并交付 Cookie 修复包，用户反馈可用。随后按要求清理下载、解包、out-x64 和打包/测试暂存，保留 dist 当前及回退包；后续完整构建需要重新下载和生成应用树，不应假设缓存仍在。

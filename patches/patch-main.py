@@ -3,7 +3,7 @@
 
 Usage: patch-main.py <path-to-resources/app/lib/main.js>
 
-Patches (verified against the 0.2.0-rc.2 and 0.2.1-rc.2 bundles):
+Patches (verified against the 0.2.0-rc.2, 0.2.1-rc.2/rc.5 and 0.2.2-rc.1 bundles):
   1. platform allowlist: accept linux (was win32/darwin only -> threw on Linux)
   2. x-client-platform: report desktop-linux instead of falling through to mac
   3. DesktopPlatformView platform argument: pass linux through
@@ -14,6 +14,24 @@ Patches (verified against the 0.2.0-rc.2 and 0.2.1-rc.2 bundles):
   8. command manager: keep the CLI installer on the overridden resources root
 """
 import sys
+
+
+def rewrite_platform_view(src: str) -> str:
+    """Preserve rc.1's mandatory-update guard while passing Linux through."""
+    prefix = ('const platformView = new DesktopPlatformView('
+              'join(app.getAppPath(), "lib", "preload-platform-account.cjs"), '
+              '() => locale.id === "zh-CN" ? "zh_CN" : "en_US", ')
+    platform = 'process.platform === "win32" ? "win32" : "darwin"'
+    calls = tuple(prefix + platform + ending for ending in (
+        ');',
+        ', (owner) => isMandatory() || updateOverlays.input(owner).blocked);',
+    ))
+    count = sum(src.count(call) for call in calls)
+    if count != 1 or src.count('new DesktopPlatformView(') != 1:
+        raise ValueError(f'PlatformView 平台参数透传 (found {count}, expected 1 known caller)')
+    call = next(call for call in calls if call in src)
+    return src.replace(call, call.replace(platform,
+        'process.platform === "win32" ? "win32" : process.platform === "linux" ? "linux" : "darwin"'))
 
 
 def rewrite_pnpm_path(src: str) -> str:
@@ -61,11 +79,11 @@ def main() -> int:
     )
 
     # 3) platform view argument ---------------------------------------------
-    sub(
-        'process.platform === "win32" ? "win32" : "darwin");',
-        'process.platform === "win32" ? "win32" : process.platform === "linux" ? "linux" : "darwin");',
-        'PlatformView 平台参数透传',
-    )
+    try:
+        src = rewrite_platform_view(src)
+        done.append('PlatformView 平台参数透传（保留上游更新输入守卫）')
+    except ValueError as error:
+        missing.append(str(error))
 
     # 4) + 5) helpers --------------------------------------------------------
     anchor = None

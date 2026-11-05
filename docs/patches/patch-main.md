@@ -1,6 +1,6 @@
 # patch-main.py：Linux 主进程适配
 
-文档调整：2026-11-01。官方核对日期：2026-10-31。源码：[查看文件](../../patches/patch-main.py)。
+源码：[查看文件](../../patches/patch-main.py)。
 
 ## 用途与目标
 
@@ -10,15 +10,11 @@
 
 ## 官方是否已有等价修复
 
-**未发现等价修复。**
+**官方载荷和所查源码均未发现等价修复。**
 
-rc.5 的预期替换点仍存在；所查 main.ts 仍将平台准入限制为 win32/darwin，PlatformView 将非 Windows 映射为 darwin，托盘创建仍限 Windows。
+Linux 仍不在桌面策略准入列表。账户视图仍将非 Windows 映射为 darwin，并保留更新输入守卫。托盘创建仍限 Windows，系统 Electron 所需的资源根覆盖亦未提供。 [apps/desktop/src/main.ts](https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/apps/desktop/src/main.ts)
 
-核对范围：官方桌面载荷 `0.2.1-rc.5`，以及官方源码快照 `ce7073d51254c26cd63b22a60835b8f948deb447`（Desktop package.json 为 `0.2.2-alpha.2`）。源码版本存在不等于桌面载荷已发布；本结论只适用于已核对的版本，不代表后续版本。完整载荷校验信息见 [总览](README.md#核对基线)。
-
-官方源码依据：
-
-- [apps/desktop/src/main.ts](https://github.com/deepseek-ai/deepseek-harness/blob/ce7073d51254c26cd63b22a60835b8f948deb447/apps/desktop/src/main.ts)
+核对范围见 [补丁总览](README.md#核对基线)。
 
 ## 后续核对条件
 

@@ -97,8 +97,12 @@ phase_prepare() {
   # 2) 读上游 pinned 的版本（node/python/站点包都在 runtime.json 里）
   local pyver nodever appver
   read -r pyver nodever appver < <(upstream_versions)
-  step "上游载荷：dsh-desktop $appver / node $nodever / python $pyver"
-  [ "$DRY_RUN" -eq 1 ] || printf '%s\n' "$appver" > "$OTHERS/.app-version"
+  if [ "$DRY_RUN" -eq 1 ]; then
+    step "[dry-run] Electron $ELECTRON_VERSION / Node $nodever / Python $pyver（Node/Python 仅为计划值，未读取归档）"
+  else
+    step "上游载荷：dsh-desktop $appver / node $nodever / python $pyver"
+    printf '%s\n' "$appver" > "$OTHERS/.app-version"
+  fi
 
   # 3) Electron / Node / Python 载荷：每个都给「代理 + 直连」两个地址
   local groups=() arch node_file url

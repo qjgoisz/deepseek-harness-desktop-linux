@@ -171,7 +171,7 @@ print(data["python"], data["node"], data["desktopVersion"], sep="\t")
 # 否则上游换了新 dmg 就会「新 dmg 配旧运行时」。
 upstream_versions() {  # → "pyver nodever appver"
   if [ "$DRY_RUN" -eq 1 ]; then
-    printf '%s\t%s\t%s\n' "$FALLBACK_PY_VERSION" "$FALLBACK_NODE_VERSION" "0.2.0-rc.2"
+    printf '%s\t%s\n' "$FALLBACK_PY_VERSION" "$FALLBACK_NODE_VERSION"
     return 0
   fi
   local resources runtime

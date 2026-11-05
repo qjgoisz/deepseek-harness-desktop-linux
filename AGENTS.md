@@ -1,9 +1,19 @@
 # 项目维护约定
 
+## 2026-11-05 当前适配状态
+
+- 官方清单及完整 ZIP 内应用/runtime 均为 `0.2.2-rc.1`，核对时默认滚动 DMG 尚未提供本版。本轮先核对新版 ZIP 大小和 SHA512，再由 auto-build.sh 完成全流程；不要将默认 DMG 或旧缓存视为新版。
+- patch-main.py 支持新旧两个完整 PlatformView 调用，透传 Linux 时保留 rc.1 新增的第四参数更新输入守卫；未知/重复调用拒绝且不部分写入。Electron 默认同步官方载荷 44.7.0；Node 24.21.0、Python 3.12.14、pnpm 11.28.5、Sharp 0.35.5 及其他载荷依赖无版本漂移。
+- 新 bundled amd64 deb SHA256 为 `22343671318810dd0d48e57cdf79df865431a5e9fcc2f4dd758bf0be8b70f54a`。构建树与成品各 81 项回归：79 通过、2 RPM/pacman 工具缺失跳过；144 侧栏组合、CLI/pnpm、运行时/13 Python 包、图片隔离、133 ELF、29379 资源文件一致性及 SHA256 通过。
+- 最终包隔离 Wayland/XWayland 各启动/重启一次，约 2–3 秒进入可见主界面，100 个合成 Cookie 不增长、均退出 0；侧栏切换、原生最大化/还原及全屏切换通过。8 张整屏截图成功，普通窗口部分边缘受多显示器放置影响，不视为完整圆角/拖动验收。no-sandbox/disable-gpu/Inspector 不进入成品，无真实登录、用户插件/模型、GPU 或长会话测试。
+- 详见 docs/COMPATIBILITY.md。现用安装和数据未改。当前 dist/ 只含 rc.1 及校验文件。用户反馈修复预设后界面恢复，隔离复查通过。本轮源码交付目标为 origin/codex/personal-desktop。测试实例已关闭，无临时 worktree。按用户要求清理了本轮缓存与测试暂存。
+
+- 交付前对照实际发布包与固定官方源码快照复核全部补丁。官方 master 已修复 Cookie 累积，核对的 rc.1 ZIP 仍需此补丁。后续先确认修复进入发布包，再决定是否移除。
+
 ## 分支与范围
 
 - 默认维护用户自用分支 `codex/personal-desktop`。除非用户另有说明，不把自用圆角、实色策略或自动构建工具链混入上游 GUI 分支与 PR。
-- 自用外观约定见 `PERSONAL.md`；构建方法见 `docs/AUTO_BUILD.md`；历史适配和验证范围见 `docs/CHANGELOG.md`。先核对当前分支与工作区状态，再修改文件。
+- 自用外观约定见 `PERSONAL.md`；构建方法见 `docs/AUTO_BUILD.md`；最新适配和验证范围见 `docs/COMPATIBILITY.md`。先核对当前分支与工作区状态，再修改文件。
 - 用 `git worktree list` 确认检出位置，不假设旧 `/tmp` 工作树仍然存在。临时目录可能在重启后消失；提交保存在仓库，交付的安装包应放到持久项目目录的 `dist/`。
 - 保留用户已有修改。提交、推送及交付时明确说明分支、提交号和是否已推送。
 - 每一次 Git 提交前都必须更新 `AGENTS.md`，并将更新随本次改动一起提交；纯文档提交也适用。更新应记录本次改动涉及的维护约定、当前状态或验证结论；若未改变功能或验证基线，也应如实注明本次维护事项，不能仅阅读检查或制造无意义的格式改动来代替更新。
@@ -19,20 +29,23 @@
 
 ## DSH 更新适配
 
+- 兼容性检测保留当前和紧邻的上一版。适配新版本时，将原 `docs/COMPATIBILITY.md` 移为 `docs/COMPATIBILITY-PREVIOUS.md`，覆盖更早归档，再写入当前报告。其他文档聚焦当前版本的产物、用法和验证范围。
+
 - 官方滚动下载地址为 `https://download.deepseek.com/desktop/dsh-latest-macos-arm64.dmg`。下载地址和文件名不能证明版本；解包后核对应用 `package.json` 与 `runtime/primary-runtime/runtime.json`。
 - Node、Python、Python 包、pnpm 及原生 npm 包使用载荷中的版本；不要独立升级或为了构建成功静默使用其他版本。原生模块默认同版本替换，版本漂移必须明确说明。
-- pnpm 在旧版位于 `runtime/pnpm`，在 `0.2.1-rc.2` 位于 `runtime/primary-runtime/dependencies/pnpm`。资源根覆盖应保留对应载荷的实际布局，并验证 GUI 包管理入口与内置 CLI。
+- 当前 pnpm 位于 `runtime/primary-runtime/dependencies/pnpm`。资源根覆盖应保留对应载荷的实际布局，并验证 GUI 包管理入口与内置 CLI。
 - `patches/patch-main.py` 遇到未知或重复匹配时应失败，且不写入部分补丁。维护其他补丁时也应避免匹配失败后悄悄交付半成品；同时检查主进程与两个 preload。
 - 保留 Sharp 的独立 Node worker 隔离方案。facade 的版本信息应读取实际 worker 原包，不能写死旧版版本号。
 - 不把插件自身的性能问题或协作桥改动夹带进桌面重打包；发现相关问题可记录诊断，按用户指定范围另行处理。
-- `local-fixes/dsh-usage-settings/` 单独保存用户授权纳入自用分支的插件导航修复；仅显式运行 `apply-fix.py --apply` 时修改本机插件，不接入 Desktop 打包流程。2026-10-18 纳入版本管理时 Python 与 JavaScript 语法检查通过；DOM 回归测试因缺少 `chromium` 未运行成功，未应用到已安装实例，桌面构建与 GUI 验证基线不变。
+- `local-fixes/dsh-usage-settings/` 单独保存用户授权纳入自用分支的插件导航修复；仅显式运行 `apply-fix.py --apply` 时修改本机插件，不接入 Desktop 打包流程。
 
 ## 构建与产物
 
 自用 x86_64 bundled deb 的常用命令：
 
 ```sh
-./auto-build.sh --arch x64 --formats deb --electron bundled --package-jobs 4
+./auto-build.sh --arch x64 --formats deb --electron bundled --package-jobs 4 \
+  --archive /绝对路径/已校验的/deepseek-harness-0.2.2-rc.1-mac-arm64.zip
 ```
 
 - 默认保留下载缓存、解包文件和构建暂存。清理使用显式选项或按用户指定范围执行；不要在构建脚本中加入默认删除行为。
@@ -59,68 +72,3 @@ for script in scripts/build/*.sh; do bash -n "$script"; done
 - 验证最终安装包：检查包元数据、解包后运行内置 CLI 与 pnpm 的 `--version`、运行 `image-worker-src/verify-image-worker.cjs`，并在校验文件所在目录执行 `sha256sum -c`。
 - 确认打包中的 GUI 文件与已验证的应用树一致。测试后关闭自己创建的实例，清理仅按已授权范围执行；不使用会误杀其他 DSH 实例的宽泛进程匹配。
 - 日志可能包含本地认证 token 或用户数据；输出和交付前应筛除，不把凭据或真实会话内容放进文档、Git 或 PR。
-
-## 最近验证基线
-
-截至 2026-10-18，自用分支已适配 DSH `0.2.1-rc.2`：Node 24.21.0、Python 3.12.14、pnpm 11.28.5、Sharp 0.35.5，bundled Electron 44.4.5。
-
-- 已构建并验证 x86_64 bundled deb；离线测试 44 项通过，2 项因缺少 RPM/pacman 工具跳过。
-- KDE KWin 6.7.4 下已验证 Wayland/XWayland 的欢迎页、主界面、实色圆角、最大化/还原和合成器全屏布局同步，以及 Wayland 顶栏双击还原。
-- 新版其他包格式、ARM64、其他桌面环境和带用户插件的长会话未重新验证。旧版多格式验证记录不代表新版已通过这些检查；后续更新应刷新本节与变更记录。
-
-2026-10-20 自用交通灯改为始终显示：48 项离线测试中 46 项通过，2 项因缺少 RPM/pacman 工具跳过；构建脚本语法检查通过。隔离无头 Chrome 验证主界面/欢迎页注入样式的 16 种全屏、悬停、失焦组合，交通灯可见且命中测试通过、侧栏按钮无重叠、插件按钮未位移。已覆盖旧版自用样式升级及未知样式不部分写入；未重新构建安装包，未进行本次改动后的 Desktop Wayland/XWayland 实机窗口验收，以上历史 GUI 记录不代表本次验收。
-
-同日后续修正侧栏按钮位置：移除 76px 让位位移，统一普通、最大化及全屏的定位；`tests/personal-sidebar-layout.py` 使用真实载荷侧栏 CSS 验证 144 种组合坐标，并确认旧版会在最大化状态下失败。48 项离线测试仍为 46 项通过、2 项跳过；已重新生成 `0.2.1-rc.2` x86_64 bundled deb，最终包的主进程和两个 preload 与应用树一致，CLI、pnpm、Node/Python 版本、图片隔离和 SHA256 检查均通过。尚未重新进行 Desktop Wayland/XWayland 原生窗口与整屏视觉验收，不将浏览器坐标检查视为完整 GUI 验收。
-
-2026-10-20 用户确认交付的侧栏按钮位置修正版视觉验收通过，并授权推送自用分支。该结论为用户实测反馈，未分别标注 Wayland/XWayland、页面及窗口状态的覆盖范围；本次仅补充验收记录，不改变代码或自动化验证基线。
-
-2026-10-24 交接：用户将“检测最新 DSH 是否适配”留待另一个会话继续，本次未查询、下载或测试最新载荷；交接状态和下一步见 `HANDOFF.md`。交接以当前交通灯始终显示、侧栏按钮固定的自用策略为准；`dist/` 仅剩旧版校验文件，对应 deb 和临时应用树已不存在。此项为文档维护，不改变代码或既有验证结论。
-
-2026-10-24 最新载荷检测：官方 dmg 的应用与 runtime 版本均为 `0.2.1-rc.3`。独立副本的主进程、标题栏及完整自用外观补丁成功，主进程与两个 preload 语法检查通过；x64 原生依赖同版本实际转换 9 项成功，实际 ELF 指纹补丁成功。离线测试 46 项通过、2 项跳过，新载荷侧栏 CSS 的 144 种组合通过。未修改适配代码，未构建安装包或运行新版 CLI/图片 worker，未进行 Desktop Wayland/XWayland 验收，旧 GUI 验证基线不扩展到新版。详细记录见 `docs/COMPATIBILITY-2026-10-24.md`。
-
-2026-10-24 后续构建与修正：已生成 `0.2.1-rc.3` x86_64 bundled deb（Electron 44.4.5）。用户指出侧栏收起后新会话按钮附近有底色分界，实测侧栏宽度为 0、背景变量残留 123px；在 `patch-personal-rounded.py` 独立同步背景宽度，保留按钮坐标及配色策略，并支持已有 v3 树升级。50 项离线测试中 48 项通过、2 项跳过，新增回归确认旧逻辑失败；144 种侧栏布局通过。修正版成品的主进程/两个 preload 与应用树一致，CLI、pnpm、Node/Python、13 项 Python 包版本、图片 worker 隔离、133 个 ELF 架构检查及 SHA256 均通过。KWin 6.7.4 下从成品解包运行隔离 Wayland/XWayland 实例，各 8 个欢迎页/主界面窗口与侧栏状态检查通过，保存整屏截图并确认收起后背景宽度为 0、底色分界消失。窗口拖动、顶栏双击还原、登录后会话/插件及长会话仍待用户人工验收；未修改已安装实例。两后端的颜色深浅差异按用户指示保留观察记录，不调整配色或系统设置。本机检测报告 `docs/COMPATIBILITY-2026-10-24.md` 按用户要求加入 `.gitignore`，不随提交交付。
-
-
-2026-10-28 KDE/v2rayN 代理适配：构建流程新增 `patch-system-proxy.py`，仅 Linux KDE Desktop Host 默认读取系统手动 HTTP/HTTPS 代理，并监听 KDE 通知与配置替换；显式代理环境覆盖保留，CLI/worker 维持原行为。代理切换采用单一控制器，新请求切换、旧流式响应排空；用户插件目录不安装核心覆盖包，不改系统设置。规则和边界见 `docs/SYSTEM_PROXY.md`。56 项离线测试中 54 项通过、2 项因 RPM/pacman 工具缺失跳过，包含真实载荷副本的本机 HTTP 代理切换与私有 D-Bus 集成；脚本语法检查通过。该结论不代表真实 v2rayN GUI、远程 HTTPS/模型调用或长会话已经人工验收。
-
-本次另从已安装的 `0.2.1-rc.3` 复制独立应用树，仅应用系统代理补丁后增量生成 bundled x86_64 deb；未重新下载官方 dmg 或重跑 macOS 载荷转换。成品解包后的 56 项测试仍为 54 通过、2 跳过，包含本机 HTTPS CONNECT（临时测试 CA）、新 Node 子进程代理继承及私有 KDE D-Bus 信号；独立空 HOME 的完整 Desktop Host 启动/优雅退出通过。成品 CLI/pnpm、Node/Python、Sharp worker 隔离、133 个 ELF 架构、GUI/代理文件与应用树一致性及 SHA256 检查通过。已安装实例未替换或重启；真实 v2rayN/模型服务人工验收待用户完成。
-
-
-2026-10-28 用户反馈本次 KDE/v2rayN 代理修复“可以了”，并授权清理缓存及推送。此为用户人工使用反馈，未逐项说明开关、端口修改、模型/插件、Wayland/XWayland 或长会话覆盖范围；不扩展为完整测试矩阵通过。 本次更新 README、交接、产物与代理说明，修正当前 rc.3 基线及历史记录边界；仅文档维护，不改变功能或 56 项测试（54 通过、2 跳过）基线。按用户指示清理项目下载缓存、独立应用树、解包/打包暂存、测试 HOME 与 Python 缓存，保留 dist/ 成品、校验和及小体积诊断记录；未清理系统/用户全局缓存或现用 DSH 数据。原始 dmg 和应用树目前均不存在，后续构建需重新准备依赖。
-
-
-2026-10-29 npm Web 迁移实验（已取消）：此前曾在工作区副本验证 npm rc.3 的安装、数据读取和插件原生模块重建，未正式迁移或改动现用 Desktop。用户后续确认资源节省有限，决定继续使用 Desktop 并要求清理迁移部分；已移除迁移专用脚本、迁移说明、dist 工具包及校验和、剩余测试结果。今后不再维护 Web 迁移流程。Desktop 的 MCP 启动优化、现用配置、新旧 deb 和回退能力保持不变；本次清理未改变代码或既有测试基线，未提交或推送。
-
-2026-10-29 MCP 启动优化：用户明确授权先实现按服务协商和固定 mcp-remote 本地入口。应用树构建接入 patch-mcp-negotiation.py，默认 auto，支持显式 legacy，未知布局拒绝写入；不改变重连/取消/严格失败策略。local-fixes/mcp-startup/ 单独维护 mcp-remote 0.15.1 锁文件和显式配置工具，仅修改 Wolfram/OpenAlex/Exa；不将核心包安装到用户插件目录。59 项回归中 57 通过、2 项缺少 RPM/pacman 工具跳过，包含真实载荷的进程数、重连、工具同步及取消回归；shell/JS 语法通过。完整配置副本中 OpenAlex 与 OCR 成功，Exa 需登录，Wolfram 隔离初始化未通过；不可宣称整体启动提速或全部 MCP 兼容通过。详见 docs/MCP_STARTUP.md。未修改正式安装或原配置、未重新打包、未提交推送。用户随后授权清理约 55G 的工作区缓存/测试数据，保留源码、dist 成品及小体积脱敏报告；本节早前关于私有现场仍保留的描述仅为清理前历史状态，后续测试须重新准备副本。
-
-2026-10-29 用户随后要求先打包试用：从旧 rc.3 成品解包独立树，仅增加协商补丁，生成 x86_64 bundled deb，未更新官方载荷或运行时。新包 SHA256 为 f38c1204e8c32cfff149833ee56c35bcc9c990baa079cdca1f8cd33f77417460；旧包移至 dist/previous-20261028/。成品解包后的 59 项测试仍为 57 通过、2 缺少 RPM/pacman 跳过；CLI/pnpm、13 项 Python 包、Sharp worker、133 ELF、GUI/代理/MCP 一致性与 SHA256 通过。空 HOME Desktop Host 就绪/优雅退出通过，不扩展为带用户插件的完整启动或原生 GUI 验收。deb 不自动修改现用配置或安装 mcp-remote；需显式应用 local-fixes/mcp-startup/ 配套步骤，不能将仅安装 deb 描述为全部优化已生效。未安装、提交或推送。本轮临时应用树/解包/打包目录和测试 HOME 按既有清理授权移除，保留成品、回退旧包及脱敏记录。
-
-2026-10-29 额度恢复后第三步：用户明确确认可选 MCP 后台初始化。MCP 补丁升级为 v2，startupMode 默认 blocking，显式 background 且非严格服务才释放启动屏障；failOnStartupError 为 true 仍等待并传播启动错误。后台使用原连接的工具/指令/资源同步、通知、重连与生命周期，禁止以预注册占位工具代替真实就绪。v1→v2 升级、v2 幂等、未知/部分补丁拒绝及旧核心配置保护已覆盖。62 项测试中 60 通过、2 缺少 RPM/pacman 跳过，包含 12 个后台/取消/重连/热重载场景。Wayland/XWayland 各通过完整 Desktop 的受控慢 MCP 就绪、退出取消和严格等待，共六项；空 HOME、独立端口、本地假 MCP，无用户凭据、真实工具或模型调用。整屏截图已保存为私有材料；原生窗口显示以 BrowserWindow 状态/事件和截图核对，不能用 DOM visibility 判断隐藏窗口是否显示。测试启用 no-sandbox/disable-gpu，不写入成品启动参数，不扩展为用户插件或 GPU/窗口外观全矩阵验收。
-
-本轮从前两步 rc.3 deb 独立解包升级 v2 后重新打包，当前成品 SHA256 为 42ccb7170636f94bf0423eed0f53dc5345299ae64b62bf723c4cad206ddcfcae，前两步包移至 dist/previous-mcp-step12-20261029/。配置工具给已知非严格服务启用 background，严格者保留 blocking；默认阻塞以保持其他调用方语义。用户安装新包后仍需显式应用配置，不能把安装包存在描述为现用优化已经生效。打包前恢复所有测试用主进程观测/退出注入；真实 Exa 登录和 Wolfram 隔离问题不算本步修复成果。未修改正式安装、原配置或会话，未提交或推送。沿用用户清理授权，测试/打包大目录及 HOME 在验收后移除，保留成品、回退包、小体积脱敏结果和私有截图，不恢复已取消的 Web 迁移内容。
-
-2026-10-29 源码交付整理：按用户要求将三项 MCP 启动优化、独立配置工具及公共锁文件、必要回归和最终说明纳入自用分支维护提交；README、构建说明、变更记录和交接统一为 v2 的默认 auto/blocking 与显式启用语义。保留真实服务验收边界，不把受控两秒窗口测试宣传为用户全插件冷启动性能。测试临时目录改为系统临时目录，避免新检出缺少被忽略的 others/ 时失败；不改变成品代码或 SHA256。Web 迁移取消状态保留，不提交安装包、载荷、node_modules、真实配置、凭据、日志、截图或本机兼容性报告。本次仅提交并按授权推送 codex/personal-desktop，不创建上游 GUI PR 或远端 release。
-
-2026-10-30 rc.5 ZIP 适配：按用户授权使用官方桌面更新清单中的完整 macOS arm64 ZIP，校验 SHA512 并核对应用/runtime 均为 rc.5。构建支持 --archive（兼容 --dmg），复用原有 7z 与内容哈希缓存；归档 SHA512 仍须构建前按官方清单显式验证，不宣称构建器自动校验。运行时/原生包同版本转换，无漂移，现有 GUI、代理与 MCP v2 补丁直接适配。63 项测试 61 通过、2 RPM/pacman 工具缺失跳过；侧栏 144 组合通过。成品 CLI/pnpm、Node/Python、13 项 Python 包、Sharp worker、133 ELF、26565 资源文件一致性及 SHA256 通过。从成品解包的隔离 Wayland/XWayland 欢迎页/主界面、原生最大化/还原和全屏、退出通过，保存整屏截图，未扩展为用户插件/模型/GPU/长会话验收。测试使用 no-sandbox/disable-gpu 和 Inspector，仅测试参数，无成品观测注入。rc.5 页面采用 dsh-app://app/，测试须识别该协议；退出前断开 Inspector，避免调试器等待造成假超时。新成品及边界见 docs/COMPATIBILITY-2026-10-30.md；本轮开始时旧 rc.3 deb 已不存在，仅剩校验文件。未安装、改现用配置、提交或推送。
-
-2026-10-30 用户反馈 rc.5 测试正常（未逐项标明范围），并要求清理测试记录；本机测试/构建日志、结果 JSON、截图及临时验证脚本已移除，保留源码回归测试、公开兼容性结论、官方下载缓存与 dist 成品。此前记录中“截图/日志已保存”为清理前历史状态，不再假设文件存在。本次未提交或推送。
-
-2026-10-30 交付提交：用户确认测试正常并授权推送，纳入 rc.5 ZIP 构建入口、必要测试、版本基线与清理记录；仅提交源码和脱敏文档，不包含下载物、安装包、日志、截图或真实配置。实际提交与远端同步以 Git 结果为准。
-
-2026-10-31 libc 探测修复：实际会话首次写锁的 loadBinding() 调用完整诊断报告，采样中 getReport() 阻塞约 50 秒。构建新增 patch-flock-libc.py，仅该同步探测暂时排除网络并在 finally 恢复原值，保留原生锁、延迟加载及缓存；未知/部分补丁、重复匹配、语法错误拒绝替换。不使用用户级核心覆盖包或全局代理/环境变量绕过。67 项回归 65 通过、2 RPM/pacman 工具缺失跳过，含实际跨进程锁冲突/正常和异常退出释放；musl 仅模拟分支。由已安装 rc.5 独立复制树增量生成 bundled amd64 deb，只有 flock.js 与来源不同，无运行时升级或载荷重转换。成品 CLI/pnpm、Node/Python、13 项 Python 包、Sharp worker、133 ELF、26565 资源文件一致性及校验通过。隔离 Wayland/XWayland Desktop 持有外网连接时，首次加载锁模块并取得锁均约 2ms，设置恢复、正常退出；无用户凭据/真实模型任务，不代替原数据全插件人工验收。详见 docs/STARTUP_LIBC.md。现用安装与配置未修改，未提交或推送。
-
-2026-10-31 用户授权将 libc 探测修复单独提交且暂不推送；本地提交包括构建接入、严格补丁、真实锁回归及验证文档，不包含 dist、载荷或本机诊断资料。补丁全量审计与逐项文档作为后续独立维护事项，避免混入本次功能修复提交。
-
-2026-11-01 titlebar 重复应用安全修复提交：验证主窗口/欢迎窗口的完整原始、overlay、chrome 状态；完整已处理状态跳过，部分/重复/未知布局拒绝写入。两个改动校验后原子替换并保留权限，失败清理临时文件。新增 6 项回归（含真实 Linux 成品和替换失败），完整 73 项测试 71 通过、2 RPM/pacman 工具缺失跳过；官方 rc.5 首次应用与旧版逐字节一致，独立 GUI 组合链及主进程/两个 preload 语法通过。未重打包或修改现用实例，未扩展原生 GUI 验收。本提交仅纳入标题栏脚本、测试和本维护记录；用户要求的补丁文档另作下一提交，随后一并推送 codex/personal-desktop。
-
-2026-11-01 补丁文档交付提交：为 patches/ 全部 12 个 Python 脚本、2 个代理辅助源码分别提供说明及总览；按用户要求，docs/patches/ 不描述自用分支行为，审计仅判断 DeepSeek 官方所查载荷/源码是否已有等价实现。核对基线为官方 rc.5 完整 ZIP 与固定快照 ce7073d51254c26cd63b22a60835b8f948deb447（源码 Desktop 0.2.2-alpha.2），未重新查询发布状态。适用功能未确认整份等价替代；界面定制与旧树迁移记为不适用，代理辅助文件依据对应功能，不重复计算缺陷。补齐 MCP 第三步的启动等待/真实工具就绪/清理语义，纠正 README 手工构建顺序和过时标题栏/指纹描述。文档覆盖及本地链接检查通过；仅文档维护，不改变 73 项回归（71 通过、2 工具缺失跳过）或成品/GUI 基线。用户已授权先提交标题栏修复 fd6702e，再提交这些文档，随后推送自用分支；此前 libc 本地提交 e744487 一并进入本次推送，不创建上游 PR、标签或 release。
-
-2026-11-01 npm 前缀适配：local-fixes/mcp-startup 新增显式安装工具与共享路径检测，要求 npm user/global/env/cli 明确设置 prefix，并检查 prefix、安装父目录及已有目标的写入/遍历权限；缺省、系统路径、非目录或不可写时退出，不设置 npm 配置或提权。沿用精确锁文件，npm ci 在前缀 lib 下独立临时运行目录安装，验证后改名，失败清理，已有 manifest/lock 不符拒绝覆盖。配置工具默认读取该路径，保留显式 --runtime 兼容；迁移仅接受显式验证的 previous-runtime/previous-node，不猜测旧命令。按用户授权，实际已在 /home/debian/.local/lib/dsh-mcp-remote-0.15.1 安装，并备份后将 OpenAlex/Exa 两个入口由旧 share 路径迁移；核对 YAML 语义除两个入口外完全一致，旧运行目录保留供回退。未重启 DSH、调用远端 MCP 或改会话/凭据，未改变 Desktop 核心补丁或安装包。74 项回归 72 通过、2 RPM/pacman 工具缺失跳过；新增显式/缺省前缀、不可写各级路径、安装失败清理、已有锁拒绝、迁移幂等与折行 YAML 路径回归。未提交或推送。
-
-2026-11-01 npm 前缀适配交付：用户授权提交并推送；本次提交仅纳入 local-fixes/mcp-startup 的显式前缀/权限检查、锁定安装与明确旧入口迁移工具，以及相关回归和文档。不纳入用户配置、配置备份、npm 缓存或已安装 runtime，不修改 Desktop 打包链和成品；沿用 74 项回归（72 通过、2 工具缺失跳过）及本机安装/配置幂等验证结论。目标分支为 codex/personal-desktop，仅推送 origin，不创建标签、release 或上游 PR。
-
-2026-11-02 Desktop Cookie 累积修复：构建新增 patch-desktop-auth-cookie.py，欢迎页 RPC 与账户 WebSocket 复用当前 Host 的内存 Cookie，停止通过 net.fetch 重复认证和读取 Chromium 持久 Cookie；按每次 backend 启动捕获凭据，HTTP 请求校验 origin、拒绝 URL 用户信息与重定向，认证/RPC 错误保留状态码。不改变通用 Web 认证、签名、有效期、端口隔离或 16KiB 上限，不主动删除旧 Cookie、登录凭据、配置或会话。未知/重复/部分补丁与语法错误拒绝替换；已完成状态不重写，原子替换保留权限。80 项回归 78 通过、2 RPM/pacman 工具缺失跳过；新增真实载荷函数的本地 HTTP/WebSocket、100 次新端口/密钥启动、并存 Host、签名/有效期、跨 origin、重定向、取消和 431 回归。隔离完整 Desktop 在 Wayland/XWayland 各启动和重启一次，均保留预置的 100 个合成旧 Cookie、主窗口可见、主页面完成加载并退出 0；测试使用 no-sandbox/disable-gpu 和仅限临时副本的播种/观测注入，不写入生产补丁，不包含用户凭据、插件或模型调用，不扩展为全 GUI/长会话验收。本轮未重打包、安装、提交或推送；dist 现有成品不含本修复。
-
-2026-11-02 Cookie 修复验收包：用户明确要求从默认官方下载 DMG 开始运行原始 auto-build.sh，而非旧 deb 增量或 ZIP 构建；已完成全部 prepare/tree/package。DMG 应用/runtime 均为 rc.5，SHA256 7f387a78a7800de26af98a796c833295ebe57ee72f1f36a0810f296c871c2baf；Node/Python/pnpm/原生包无版本漂移，Electron 仍为 44.4.5。当前 bundled amd64 deb SHA256 为 32d34addc782227b49d0c251ccaf253aa14d10be13cbd40da2d18c87ae970af6，旧包移至 dist/previous-20261102-before-cookie/。最终成品解包后 80 项测试 78 通过、2 工具缺失跳过；测试夹具兼容已完成补丁状态，仍覆盖首次写入失败不替换文件。CLI/pnpm、13 Python 包、Sharp 隔离、133 ELF、26565 资源文件一致性与校验通过。原始成品文件未注入调试代码，隔离 Wayland/XWayland 各启动与重启一次，经 Inspector 在测试会话预置 100 个合成 Cookie，主界面可见/完成加载、条目数不增长、退出 0；no-sandbox/disable-gpu 和 Inspector 仅用于测试，不改变成品参数。未覆盖真实登录/用户插件/模型/长会话；未安装、修改用户数据、提交或推送。按默认保留下载/应用树/暂存，测试实例已关闭，无临时 worktree 绑定。
-
-2026-11-02 Cookie 修复验收交付：用户反馈“好了”，授权清理工作区、提交并推送；记录为用户使用验收反馈，未逐项标明登录、插件、模型或长会话覆盖，不扩大自动化基线。确认无进程占用后清理下载物、DMG/ZIP 解包、out-x64、打包暂存、测试 HOME/原始日志、废弃增量产物和 Python 缓存，保留 dist 当前及回退包/校验文件、源码和小体积脱敏摘要；不清用户全局缓存、现用 DSH 配置/会话/Cookie 或已安装 runtime。两份保留 deb 的 SHA256 再次通过。提交仅包含 Cookie 补丁、构建接入、回归与必要说明，目标 codex/personal-desktop，仅推送 origin，不创建标签、release 或上游 PR；提交号和推送结果以 Git 实际输出为准。

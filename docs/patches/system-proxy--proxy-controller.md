@@ -1,6 +1,6 @@
 # system-proxy/proxy-controller.js：动态代理连接池控制器
 
-文档调整：2026-11-01。官方核对日期：2026-10-31。源码：[查看文件](../../patches/system-proxy/proxy-controller.js)。
+源码：[查看文件](../../patches/system-proxy/proxy-controller.js)。
 
 ## 用途与目标
 
@@ -10,15 +10,11 @@
 
 ## 官方是否已有等价修复
 
-**对应动态切换能力未发现官方等价实现。**
+**官方载荷和所查源码均未发现等价修复。**
 
-官方 rc.5 与所查 install.ts 仍提供环境安装生命周期，未提供此 Desktop 动态控制器。对环境代理的既有支持不等于运行中读取 KDE 变化。
+官方环境代理安装器未提供由 KDE 代理配置变化触发的连接池切换和旧流排空。 [packages/util/http-proxy/src/install.ts](https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/packages/util/http-proxy/src/install.ts)
 
-核对范围：官方桌面载荷 `0.2.1-rc.5`，以及官方源码快照 `ce7073d51254c26cd63b22a60835b8f948deb447`（Desktop package.json 为 `0.2.2-alpha.2`）。源码版本存在不等于桌面载荷已发布；本结论只适用于已核对的版本，不代表后续版本。完整载荷校验信息见 [总览](README.md#核对基线)。
-
-官方源码依据：
-
-- [packages/util/http-proxy/src/install.ts](https://github.com/deepseek-ai/deepseek-harness/blob/ce7073d51254c26cd63b22a60835b8f948deb447/packages/util/http-proxy/src/install.ts)
+核对范围见 [补丁总览](README.md#核对基线)。
 
 ## 后续核对条件
 
