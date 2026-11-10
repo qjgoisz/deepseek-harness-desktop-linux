@@ -18,6 +18,8 @@ DeepSeek Harness — Linux 一键构建
 选项:
   --formats 格式[,格式] appimage / deb / pacman / rpm / all（默认 appimage）
   --electron 模式        bundled / system / both（默认 both）；筛选相应类型的安装包
+  --system-runtime       仅 deb：使用系统 Python 和 Node，内置 python-pptx 和 pnpm
+                         兼容旧选项 --system-python
   --package-jobs N       打包压缩线程数（正整数；默认沿用各格式设置）
   --arch x64|arm64|all   目标架构（默认：本机架构）
   --only 阶段[,阶段]     prepare / tree / package 的子集（默认全跑）

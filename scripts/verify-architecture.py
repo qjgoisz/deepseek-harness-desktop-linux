@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Validate all active ELF payloads, including Python extensions and npm addons."""
 import argparse
+import json
 import os
 from pathlib import Path
 from elf_payload import machine, MACHINES
@@ -8,12 +9,25 @@ from elf_payload import machine, MACHINES
 def audit(root, arch):
     errors, count = [], 0
     root = Path(root)
-    required = ["deepseek-harness", "resources/runtime/primary-runtime/dependencies/node/bin/node",
-                "resources/runtime/primary-runtime/dependencies/python/bin/python3"]
-    for name in required:
-        path = root / name
+    runtime = root / "resources/runtime/primary-runtime"
+    manifest = runtime / "runtime.json"
+    modes = json.loads(manifest.read_text(encoding="utf8")) if manifest.is_file() else {}
+    python = runtime / "dependencies/python"
+    node = runtime / "dependencies/node/bin/node"
+    required = [root / "deepseek-harness"]
+    if modes.get("nodeMode") == "system":
+        if not node.is_symlink() or os.readlink(node) != "/usr/bin/node":
+            errors.append("expected Node launcher symlink to /usr/bin/node")
+    else:
+        required.append(node)
+    if modes.get("pythonMode") == "system":
+        if python.exists() or python.is_symlink():
+            errors.append("unexpected bundled Python in the system Python package")
+    else:
+        required.append(python / "bin/python3")
+    for path in required:
         if not path.exists() or path.read_bytes()[:4] != b"\x7fELF":
-            errors.append(f"missing ELF runtime: {name}")
+            errors.append(f"missing ELF runtime: {path.relative_to(root)}")
     for directory, dirs, files in os.walk(root):
         dirs[:] = [name for name in dirs if name != ".sharp-native-backup"]
         # node-pty keeps upstream prebuilds for other OS/architectures. They are

@@ -52,6 +52,7 @@ DMG_URL_OVERRIDE=""
 FORMATS=appimage
 ELECTRON_MODE=both
 PACKAGE_JOBS=""
+SYSTEM_RUNTIME=0
 
 for module in common download prepare tree package native-packages; do
   source "$ROOT/scripts/build/$module.sh"
@@ -59,6 +60,7 @@ done
 
 while [ $# -gt 0 ]; do
   case "$1" in
+    --system-runtime|--system-python) SYSTEM_RUNTIME=1; shift ;;
     --electron) ELECTRON_MODE="${2:?--electron 需要一个值}"; shift 2 ;;
     --package-jobs) PACKAGE_JOBS="${2:?--package-jobs 需要一个值}"; shift 2 ;;
     --formats)  FORMATS="${2:?--formats 需要一个值}"; shift 2 ;;
@@ -132,6 +134,9 @@ for format in "${selected_formats[@]}"; do
 done
 FORMATS="${FORMATS#,}"; FORMATS="${FORMATS%,}"
 [ -n "$FORMATS" ] || die "所选格式不提供 $ELECTRON_MODE 包（AppImage/RPM: bundled；pacman: system；deb: 两者）"
+if [ "$SYSTEM_RUNTIME" -eq 1 ] && { [ "$FORMATS" != deb ] || ! want_phase package; }; then
+  die "--system-runtime 需要 --formats deb 并执行 package 阶段"
+fi
 if want_phase package; then check_package_tools; fi
 
 # --store：把依赖下载（dl/）、官方 dmg 与解包物（others/）、工具（tools/）整体搬到别处。
@@ -190,6 +195,7 @@ step "架构:   ${ARCHES[*]}（host=$HOST_ARCH）"
 step "阶段:   $ONLY"
 step "格式:   $FORMATS"
 step "Electron: $ELECTRON_MODE"
+[ "$SYSTEM_RUNTIME" -eq 0 ] || step "deb 使用系统 Python 和 Node，内置 python-pptx 和 pnpm"
 step "打包线程: ${PACKAGE_JOBS:-各格式默认}"
 step "加速:   ${GH_PROXY:-（直连 GitHub）}"
 step "暂存:   $WORK_BASE/<arch>"

@@ -1,12 +1,17 @@
 # 项目维护约定
 
+## 2026-11-10 自用系统运行时交付状态
+
+- 用户已在日常桌面环境验收 `0.2.2-rc.1+systemruntime2`。`dist/` 仅保留该 amd64 bundled deb 和校验文件，SHA256 为 `22619c6f3aea7586194c413bc295de5a5b254665f027679336d36565d8084091`。
+- 系统 Node 模式下，`load_workspace_dependencies` 只返回实际可用的 Node 路径，不返回占位的 `nodePackages`。成品回归 81 项通过，2 项因缺少 RPM/pacman 工具跳过。详见 `HANDOFF.md`。
+
 ## 2026-11-05 当前适配状态
 
 - 官方清单及完整 ZIP 内应用/runtime 均为 `0.2.2-rc.1`，核对时默认滚动 DMG 尚未提供本版。本轮先核对新版 ZIP 大小和 SHA512，再由 auto-build.sh 完成全流程；不要将默认 DMG 或旧缓存视为新版。
 - patch-main.py 支持新旧两个完整 PlatformView 调用，透传 Linux 时保留 rc.1 新增的第四参数更新输入守卫；未知/重复调用拒绝且不部分写入。Electron 默认同步官方载荷 44.7.0；Node 24.21.0、Python 3.12.14、pnpm 11.28.5、Sharp 0.35.5 及其他载荷依赖无版本漂移。
 - 新 bundled amd64 deb SHA256 为 `22343671318810dd0d48e57cdf79df865431a5e9fcc2f4dd758bf0be8b70f54a`。构建树与成品各 81 项回归：79 通过、2 RPM/pacman 工具缺失跳过；144 侧栏组合、CLI/pnpm、运行时/13 Python 包、图片隔离、133 ELF、29379 资源文件一致性及 SHA256 通过。
 - 最终包隔离 Wayland/XWayland 各启动/重启一次，约 2–3 秒进入可见主界面，100 个合成 Cookie 不增长、均退出 0；侧栏切换、原生最大化/还原及全屏切换通过。8 张整屏截图成功，普通窗口部分边缘受多显示器放置影响，不视为完整圆角/拖动验收。no-sandbox/disable-gpu/Inspector 不进入成品，无真实登录、用户插件/模型、GPU 或长会话测试。
-- 详见 docs/COMPATIBILITY.md。现用安装和数据未改。当前 dist/ 只含 rc.1 及校验文件。用户反馈修复预设后界面恢复，隔离复查通过。本轮源码交付目标为 origin/codex/personal-desktop。测试实例已关闭，无临时 worktree。按用户要求清理了本轮缓存与测试暂存。
+- 详见 docs/COMPATIBILITY.md。现用安装和数据未改。用户反馈修复预设后界面恢复，隔离复查通过。本轮源码交付目标为 origin/codex/personal-desktop。测试实例已关闭，无临时 worktree。按用户要求清理了本轮缓存与测试暂存。
 
 - 交付前对照实际发布包与固定官方源码快照复核全部补丁。官方 master 已修复 Cookie 累积，核对的 rc.1 ZIP 仍需此补丁。后续先确认修复进入发布包，再决定是否移除。
 
@@ -33,6 +38,7 @@
 
 - 官方滚动下载地址为 `https://download.deepseek.com/desktop/dsh-latest-macos-arm64.dmg`。下载地址和文件名不能证明版本；解包后核对应用 `package.json` 与 `runtime/primary-runtime/runtime.json`。
 - Node、Python、Python 包、pnpm 及原生 npm 包使用载荷中的版本；不要独立升级或为了构建成功静默使用其他版本。原生模块默认同版本替换，版本漂移必须明确说明。
+- 自用 deb 可用 `--system-runtime` 在打包阶段改用系统 Python 和 Node，保留内置 pnpm、LibreOffice Kit 和私有的 `python-pptx`。该模式绕过旧用户运行时缓存。适配新版本时复核工作区依赖工具、Office 技能、Desktop Host 和 CLI 的路径。
 - 当前 pnpm 位于 `runtime/primary-runtime/dependencies/pnpm`。资源根覆盖应保留对应载荷的实际布局，并验证 GUI 包管理入口与内置 CLI。
 - `patches/patch-main.py` 遇到未知或重复匹配时应失败，且不写入部分补丁。维护其他补丁时也应避免匹配失败后悄悄交付半成品；同时检查主进程与两个 preload。
 - 保留 Sharp 的独立 Node worker 隔离方案。facade 的版本信息应读取实际 worker 原包，不能写死旧版版本号。
@@ -44,7 +50,7 @@
 自用 x86_64 bundled deb 的常用命令：
 
 ```sh
-./auto-build.sh --arch x64 --formats deb --electron bundled --package-jobs 4 \
+./auto-build.sh --arch x64 --formats deb --electron bundled --system-runtime --package-jobs 4 \
   --archive /绝对路径/已校验的/deepseek-harness-0.2.2-rc.1-mac-arm64.zip
 ```
 

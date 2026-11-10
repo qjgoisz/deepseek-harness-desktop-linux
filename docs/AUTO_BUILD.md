@@ -87,6 +87,31 @@ Electron 描述读取应用树的 `version` 文件。deb 保留应用版本；pa
 Version `0.2.2`、Release `0.rc.1.1`）。不符合支持的版本形式会明确报错。
 每个安装包均附带使用相对文件名的 `.sha256`。
 
+### 自用 deb 使用系统运行时
+
+`--system-runtime` 仅用于 `--formats deb`，支持两种 Electron 包型。已有应用树时可直接打包：
+
+```sh
+./auto-build.sh --only package --formats deb --electron bundled --arch x64 --system-runtime
+```
+
+旧选项 `--system-python` 仍可使用，行为与 `--system-runtime` 相同。打包阶段保留原应用树，
+在成品中用 `/usr/bin/python3` 和 `/usr/bin/node` 代替内置解释器。deb 版本增加
+`+systemruntime2`，应用仍显示上游版本。可在 Debian forky 安装单个本地 deb：
+
+```sh
+cd dist
+sudo apt install --no-install-recommends ./deepseek-harness_0.2.2-rc.1+systemruntime2_amd64.bundled.deb
+```
+
+APT 管理 Node、Python、NumPy、pandas、python-docx、openpyxl、XlsxWriter、Pillow、lxml
+和 typing-extensions。Node 的最低版本来自应用树运行时清单，并限定在同一主版本。
+pnpm 和 LibreOffice Kit 继续使用安装包内的固定版本。PPTX 技能单独将 DSH 内置的
+`python-pptx` 加入本次脚本的 Python 搜索路径。项目显式指定的环境仍优先。
+
+系统模式绕过旧的 `$DSH_HOME/dsh-runtimes/dsh-primary-runtime` 缓存。该缓存可留作回退，
+清理时应以整个运行时目录为单位，以免内置版读到残缺的旧缓存。
+
 ## 分阶段构建
 
 | 阶段 | 内容 |

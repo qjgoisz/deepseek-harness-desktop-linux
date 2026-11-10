@@ -84,3 +84,21 @@ class ArchitectureTests(unittest.TestCase):
             (root / 'bad.node').write_bytes(payload(62))
             with self.assertRaisesRegex(ValueError, 'bad.node'):
                 AUDIT.audit(root, 'arm64')
+
+    def test_audit_system_runtime_package(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            runtime = root / 'resources/runtime/primary-runtime'
+            node = runtime / 'dependencies/node/bin/node'
+            node.parent.mkdir(parents=True)
+            (runtime / 'runtime.json').write_text('{"pythonMode": "system", "nodeMode": "system"}')
+            node.write_bytes(payload(183))
+            (root / 'deepseek-harness').write_bytes(payload(183))
+            with self.assertRaisesRegex(ValueError, 'expected Node launcher symlink'):
+                AUDIT.audit(root, 'arm64')
+            node.unlink()
+            node.symlink_to('/usr/bin/node')
+            self.assertEqual(AUDIT.audit(root, 'arm64'), 1)
+            (runtime / 'dependencies/python').mkdir()
+            with self.assertRaisesRegex(ValueError, 'unexpected bundled Python'):
+                AUDIT.audit(root, 'arm64')

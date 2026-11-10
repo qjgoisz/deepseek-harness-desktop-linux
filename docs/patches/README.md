@@ -1,6 +1,6 @@
 # 补丁总览与官方修复核对
 
-本目录覆盖 `patches/` 全部 15 个源码文件（13 个 Python 脚本、2 个运行时辅助文件），每个文件均有独立说明。
+本目录覆盖 `patches/` 全部 16 个源码文件（14 个 Python 脚本、2 个运行时辅助文件），每个文件均有独立说明。
 
 审计仅回答：**DeepSeek 官方在所查载荷或源码中，是否已有补丁所解决问题的等价实现。** 补丁的用途与目标单独说明；本地脚本维护、分支叠加和测试成绩不作为官方修复证据。
 
@@ -25,6 +25,7 @@
 | [patch-personal-rounded.py](patch-personal-rounded.md) | 不适用：不纳入官方缺陷是否修复的判定。 |
 | [patch-fingerprint.py](patch-fingerprint.md) | 所核对的 Linux x64 同版本依赖仍有门禁。 |
 | [patch-system-proxy.py](patch-system-proxy.md) | 未发现等价修复。 |
+| [patch-system-runtime.py](patch-system-runtime.md) | 不适用，Debian 打包策略无对应的官方缺陷。 |
 | [patch-mcp-negotiation.py](patch-mcp-negotiation.md) | 未发现等价修复。 |
 | [patch-flock-libc.py](patch-flock-libc.md) | 未发现等价修复。 |
 | [patch-desktop-auth-cookie.py](patch-desktop-auth-cookie.md) | master 已有等价修复，发布 ZIP 仍需补丁。 |

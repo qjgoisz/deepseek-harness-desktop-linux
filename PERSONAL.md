@@ -11,7 +11,7 @@
 构建 bundled x64 deb：
 
 ```sh
-./auto-build.sh --arch x64 --formats deb --electron bundled --package-jobs 4
+./auto-build.sh --arch x64 --formats deb --electron bundled --system-runtime --package-jobs 4
 ```
 
 默认保留构建缓存；如需在成功后删除解包、打包暂存和应用树，增加 `--clean`。下载缓存仍保留，可在确认成品可用后删除构建存储目录。

@@ -95,6 +95,18 @@ class BuildCLI(unittest.TestCase):
         self.assertNotIn('下载 https://download.deepseek.com/', result.stdout)
         self.assertFalse(self.marker.exists())
 
+    def test_system_runtime_is_a_deb_packaging_option(self):
+        args = ('--system-runtime', '--only', 'package', '--dry-run')
+        result = self.run_cli(*args, '--formats', 'deb', '--arch', 'all')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('系统 Python 和 Node', result.stdout)
+        self.assertNotIn('python3-pptx_', result.stdout)
+        for formats in ('appimage', 'deb,rpm'):
+            result = self.run_cli(*args, '--formats', formats)
+            self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(self.marker.exists())
+        self.assertFalse((self.root / 'dist').exists())
+
     def package_fixture(self, fail=False):
         shutil.copytree(ROOT / 'icons', self.root / 'icons')
         tree = self.root / 'out-x64'

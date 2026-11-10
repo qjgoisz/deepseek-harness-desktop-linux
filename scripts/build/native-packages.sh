@@ -82,23 +82,32 @@ build_deb() {
   local variant="$1"
   local d="$WORK/deb-$variant"
   local deps="" rec=""
+  local deb_version="$VER"
   drop "$d"; mkdir -p "$d/control" "$d/data"
   local D="$d/data"
   mkdir -p "$D/usr/lib/deepseek-harness" "$D/usr/bin" "$D/usr/share/applications" "$D/usr/share/icons/hicolor"
   if [ "$variant" = bundled ]; then
     copy_tree "$SRC" "$D/usr/lib/deepseek-harness" .sharp-native-backup
-    normalize_modes "$D/usr/lib/deepseek-harness"
     printf '#!/bin/sh\nexec /usr/lib/deepseek-harness/deepseek-harness "$@"\n' > "$D/usr/bin/deepseek-harness"
     deps="libgtk-3-0, libnotify4, libnss3, libxss1, libxtst6, xdg-utils, libatspi2.0-0, libuuid1, libsecret-1-0, libgbm1, libasound2, libdrm2, libxkbcommon0, libxcomposite1, libxdamage1, libxfixes3, libxrandr2, libcups2, libx11-xcb1, libxcb-dri3-0"
   else
     copy_tree "$SRC/resources" "$D/usr/lib/deepseek-harness/resources" .sharp-native-backup
-    normalize_modes "$D/usr/lib/deepseek-harness"
     rm -f "$D/usr/lib/deepseek-harness/resources/app-update.yml"
     cp "$META/launcher" "$D/usr/bin/deepseek-harness"
     deps="libgtk-3-0, libnotify4, libnss3, libxss1, libxtst6, xdg-utils, libatspi2.0-0, libuuid1, libsecret-1-0, libgbm1, libasound2, libdrm2, libxkbcommon0, libxcomposite1, libxdamage1, libxfixes3, libxrandr2, libcups2, libx11-xcb1, libxcb-dri3-0"
     # Debian/Ubuntu ship no electron package: a hard dependency would fail apt.
     rec="electron | electron44 | electron43 | electron42 | electron41 | nodejs-electron"
   fi
+  if [ "$SYSTEM_RUNTIME" -eq 1 ]; then
+    local resources="$D/usr/lib/deepseek-harness/resources"
+    local node_version node_major
+    node_version="$(python3 "$ROOT/patches/patch-system-runtime.py" "$resources")"
+    node_major="${node_version%%.*}"
+    drop "$resources/runtime/primary-runtime/dependencies/python"
+    deb_version="$VER+systemruntime2"
+    deps+=", nodejs (>= $node_version), nodejs (<< $((node_major + 1))), python3, python3-numpy, python3-pandas, python3-docx, python3-openpyxl, python3-xlsxwriter, python3-pil, python3-lxml, python3-typing-extensions (>= 4.9.0)"
+  fi
+  normalize_modes "$D/usr/lib/deepseek-harness"
   chmod 755 "$D/usr/bin/deepseek-harness"
   cp "$META/deepseek-harness.desktop" "$D/usr/share/applications/"
   for s in 16 24 32 48 64 128 256 512; do
@@ -117,7 +126,7 @@ build_deb() {
   fi
   cat > "$d/control/control" <<EOF
 Package: deepseek-harness
-Version: $VER
+Version: $deb_version
 Section: utils
 Priority: optional
 Architecture: $DEBARCH
@@ -149,11 +158,13 @@ exit 0
 P
   chmod 755 "$d/control/postinst" "$d/control/postrm"
   echo "2.0" > "$d/debian-binary"
+  local filename="deepseek-harness_${deb_version}_${DEBARCH}.${variant}.deb"
   ( cd "$d" && XZ_OPT="$(package_xz_options)" tar --owner=0 --group=0 --numeric-owner -cJf data.tar.xz -C data . \
     && XZ_OPT="$(package_xz_options)" tar --owner=0 --group=0 --numeric-owner -cJf control.tar.xz -C control . \
-    && ar rc "$OUT/deepseek-harness_${VER}_${DEBARCH}.${variant}.deb" debian-binary control.tar.xz data.tar.xz )
-  write_package_checksum "deepseek-harness_${VER}_${DEBARCH}.${variant}.deb"
-  echo "  ✓ deb ($variant): $(du -h "$OUT/deepseek-harness_${VER}_${DEBARCH}.${variant}.deb" | cut -f1)"
+    && ar rc "$filename" debian-binary control.tar.xz data.tar.xz )
+  mv -f -- "$d/$filename" "$OUT/$filename"
+  write_package_checksum "$filename"
+  echo "  ✓ deb ($variant): $(du -h "$OUT/$filename" | cut -f1)"
 }
 
 # -------------------------------------------------------------------- rpm ----
