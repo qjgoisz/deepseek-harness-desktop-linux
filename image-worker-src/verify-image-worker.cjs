@@ -8,6 +8,7 @@
  *   2. libvips never appears in this process's memory map
  *   3. every API call the attachment pipeline makes actually works
  *   4. malformed input raises an error instead of crashing the process
+ *   5. concurrent reads and cache evictions preserve valid images
  */
 const { readFileSync } = require('node:fs');
 const { spawnSync } = require('node:child_process');
@@ -35,6 +36,21 @@ function sourceImage(script) {
   });
   if (r.status !== 0) throw new Error(`source generation failed: ${r.stderr?.toString().slice(0, 300)}`);
   return new Uint8Array(r.stdout);
+}
+
+/** Generate distinct valid PNGs in one standalone Node process. */
+function cacheTestImages(count) {
+  const lines = Buffer.from(sourceImage(`
+    (async () => {
+      for (let index = 0; index < ${count}; index++) {
+        const png = await s({
+          create: { width: 32 + index, height: 32, channels: 3, background: 'blue' },
+        }).png().toBuffer();
+        console.log(png.toString('base64'));
+      }
+    })().catch(error => { console.error(error); process.exitCode = 1; });
+  `)).toString('utf8').trim();
+  return lines.split('\n').map(line => Buffer.from(line, 'base64'));
 }
 
 (async () => {
@@ -88,7 +104,28 @@ function sourceImage(script) {
     check(`${label} 可解码`, typeof meta.width === 'number' && meta.width > 0, `${meta.format} ${meta.width}x${meta.height}`);
   }
 
-  // 5) bad input raises instead of crashing
+  // 5) Concurrent reads of the same source must not displace an older live handle.
+  const cacheImages = cacheTestImages(28);
+  const [oldest, duplicate, ...others] = cacheImages.slice(0, 8);
+  await sharp(oldest).metadata();
+  await Promise.all([sharp(duplicate).metadata(), sharp(Buffer.from(duplicate)).metadata()]);
+  for (const bytes of others) await sharp(bytes).metadata();
+  const [reopened] = await Promise.allSettled([sharp(oldest).metadata()]);
+  check('同图并发读取后仍可读取旧图', reopened.status === 'fulfilled' && reopened.value.width === 32,
+    reopened.status === 'rejected' ? reopened.reason.message : '');
+
+  // 6) Cold uploads beyond the worker's cache capacity can be evicted before use.
+  const burst = await Promise.allSettled(cacheImages.slice(8).map(async (bytes, index) => {
+    const width = 40 + index;
+    const image = sharp(bytes);
+    const metadata = await image.metadata();
+    const encoded = await image.resize({ width: width - 8 }).webp().toBuffer({ resolveWithObject: true });
+    return metadata.width === width && encoded.info.width === width - 8 && encoded.info.format === 'webp';
+  }));
+  const completed = burst.filter(result => result.status === 'fulfilled' && result.value).length;
+  check('并发读取和缩放 20 张图', completed === burst.length, `${completed}/${burst.length}`);
+
+  // 7) Bad input raises instead of crashing.
   let threw = false;
   try {
     await sharp(Buffer.from('not an image at all')).metadata();
@@ -97,7 +134,7 @@ function sourceImage(script) {
   }
   check('坏数据抛错而非崩溃', threw);
 
-  // 6) the isolation invariant that matters
+  // 8) The isolation invariant that matters.
   check('全程本进程始终无 libvips', mapsHasVips() === false);
 
   const status = typeof sharp.__dshWorkerStatus === 'function' ? sharp.__dshWorkerStatus() : null;

@@ -97,11 +97,11 @@ Version `0.2.2`、Release `0.rc.2.1`）。不符合支持的版本形式会明�
 
 旧选项 `--system-python` 仍可使用，行为与 `--system-runtime` 相同。打包阶段保留原应用树，
 在成品中用 `/usr/bin/python3` 和 `/usr/bin/node` 代替内置解释器。deb 版本增加
-`+systemruntime2`，应用仍显示上游版本。可在 Debian forky 安装单个本地 deb：
+`+systemruntime3`，应用仍显示上游版本。可在 Debian forky 安装单个本地 deb：
 
 ```sh
 cd dist
-sudo apt install --no-install-recommends ./deepseek-harness_0.2.2-rc.2+systemruntime2_amd64.bundled.deb
+sudo apt install --no-install-recommends ./deepseek-harness_0.2.2-rc.2+systemruntime3_amd64.bundled.deb
 ```
 
 APT 管理 Node、Python、NumPy、pandas、python-docx、openpyxl、XlsxWriter、Pillow、lxml

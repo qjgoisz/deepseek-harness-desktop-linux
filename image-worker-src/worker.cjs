@@ -144,7 +144,12 @@ async function handleFrame(header, payload) {
   }
   if (header.kind !== 'run') throw new Error(`image worker: unsupported request kind ${String(header.kind)}`);
   const buffer = header.uploaded === true ? HANDLES.get(header.handle) : payload;
-  if (!Buffer.isBuffer(buffer)) throw new Error('image worker: source bytes are no longer available');
+  if (buffer === undefined) {
+    // This failure is safe to retry because no terminal operation has started.
+    const error = new Error('image worker: source bytes are no longer available');
+    error.code = 'DSH_IMAGE_SOURCE_MISSING';
+    throw error;
+  }
   const result = await runTerminal(header, buffer);
   return {
     header: {

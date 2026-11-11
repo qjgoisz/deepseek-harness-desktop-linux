@@ -3,8 +3,8 @@
 ## 2026-11-11 自用交付状态
 
 - 官方 macOS arm64 开发版清单已提供 `0.2.2-rc.2`，核对时分发比例为 10%。ZIP 大小、SHA512、应用和 runtime 版本均已核对。构建和验证记录见 `docs/COMPATIBILITY.md`。
-- 自用 amd64 包为 `0.2.2-rc.2+systemruntime2`。构建沿用 Electron 44.7.0、Node 24.21.0、Python 3.12.14、pnpm 11.28.5 的官方基线。成品使用 Debian Node/Python，并内置 pnpm、私有 python-pptx 和 LibreOffice WASM 0.2.3。
-- 用户已确认 `0.2.2-rc.2+systemruntime2` 验收正常。成品复测 76 项通过、2 项因缺少 RPM/pacman 工具跳过。验收后清理本轮缓存和测试暂存，`dist/` 保留新版 deb 及校验文件。SHA256 为 `3e020287d75aa7ddf6b4ce6a32ed7332058cc960fa940bd22fca9792ad1ad1c7`。
+- 自用 amd64 包为 `0.2.2-rc.2+systemruntime3`。构建沿用 Electron 44.7.0、Node 24.21.0、Python 3.12.14、pnpm 11.28.5 的官方基线。成品使用 Debian Node/Python，并内置 pnpm、私有 python-pptx 和 LibreOffice WASM 0.2.3。
+- `+systemruntime3` 修复图片并发处理的缓存引用失效。用户桌面验收未复现原 `INVALID_IMAGE` 问题。成品图片自检、三轮各 20 张附件的模型请求图片准备及 APT 升级模拟通过。成品复测 76 项通过、2 项因缺少 RPM/pacman 工具跳过。验收后已清理本轮缓存、暂存和旧 deb，`dist/` 仅保留当前 deb 及校验文件。SHA256 为 `ff31934cae39957721e50c008c142f987620c4b2ce68eab5dd969034172b1049`。
 - 官方 rc.2 桌面载荷已修复本地 Host Cookie 累积，当前构建沿用官方实现。代理、MCP 和 libc 探测的官方复核见 `docs/patches/README.md`。
 - rc.2 Office 技能由插件加载时附加 Python 环境说明。系统运行时模式应更新该说明，保留项目或用户显式选择，并只在 PPTX 默认流程加入私有库。LibreOffice WASM 使用适配层声明的确切版本。
 - 交付前对照实际发布包与固定官方源码快照复核补丁。官方源码中的修复须确认进入发布包后再移除本地替代。
@@ -37,6 +37,7 @@
 - 当前 pnpm 位于 `runtime/primary-runtime/dependencies/pnpm`。资源根覆盖应保留对应载荷的实际布局，并验证 GUI 包管理入口与内置 CLI。
 - `patches/patch-main.py` 遇到未知或重复匹配时应失败，且不写入部分补丁。维护其他补丁时也应避免匹配失败后悄悄交付半成品；同时检查主进程与两个 preload。
 - 保留 Sharp 的独立 Node worker 隔离方案。facade 的版本信息应读取实际 worker 原包，不能写死旧版版本号。
+- 图片 worker 客户端按源字节的 SHA-256 合并并发上传。若 worker 在开始处理前报告缓存引用失效，客户端携带源字节重试一次。成品自检应覆盖同图并发、淘汰后重读及超出缓存容量的并发处理。
 - 不把插件自身的性能问题或协作桥改动夹带进桌面重打包；发现相关问题可记录诊断，按用户指定范围另行处理。
 - `local-fixes/dsh-usage-settings/` 单独保存用户授权纳入自用分支的插件导航修复；仅显式运行 `apply-fix.py --apply` 时修改本机插件，不接入 Desktop 打包流程。
 

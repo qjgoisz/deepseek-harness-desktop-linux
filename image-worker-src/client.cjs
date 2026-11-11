@@ -32,6 +32,7 @@ const state = {
   pending: new Map(),
   inbound: Buffer.alloc(0),
   handles: new Map(),
+  uploads: new Map(),
   failures: 0,
   tail: [],
 };
@@ -141,6 +142,7 @@ function failAll(error) {
   }
   state.pending.clear();
   state.handles.clear();
+  state.uploads.clear();
 }
 
 function drain() {
@@ -227,20 +229,28 @@ function request(kind, body, payload) {
   });
 }
 
-/** Upload source bytes once, then address them by handle while a ladder runs. */
-async function upload(buffer) {
-  const key = createHash('sha256').update(buffer).digest('hex');
+/** Share in-flight uploads as well as cached handles for identical source bytes. */
+async function upload(key, buffer) {
   const cached = state.handles.get(key);
   if (cached !== undefined) return cached;
-  const { json } = await request('upload', {}, buffer);
-  const handle = json?.handle;
-  if (!Number.isInteger(handle)) throw new Error('image worker did not return a source handle');
-  if (state.handles.size >= HANDLE_LIMIT) {
-    const oldest = state.handles.keys().next();
-    if (!oldest.done) state.handles.delete(oldest.value);
+  const pending = state.uploads.get(key);
+  if (pending !== undefined) return pending;
+
+  const task = request('upload', {}, buffer).then(({ json }) => {
+    const handle = json?.handle;
+    if (!Number.isInteger(handle)) throw new Error('image worker did not return a source handle');
+    if (state.handles.size >= HANDLE_LIMIT) {
+      state.handles.delete(state.handles.keys().next().value);
+    }
+    state.handles.set(key, handle);
+    return handle;
+  });
+  state.uploads.set(key, task);
+  try {
+    return await task;
+  } finally {
+    if (state.uploads.get(key) === task) state.uploads.delete(key);
   }
-  state.handles.set(key, handle);
-  return handle;
 }
 
 /** Options must survive JSON; reject anything that cannot cross the wire. */
@@ -276,20 +286,25 @@ function terminalArgs(name, args) {
 function createPipeline(source, inputOptions, ops, format) {
   const finish = async (terminal, args) => {
     if (state.failures >= MAX_CONSECUTIVE_FAILURES) throw new Error('image worker unavailable');
-    const handle = await upload(source);
+    const key = createHash('sha256').update(source).digest('hex');
+    const handle = await upload(key, source);
     const descriptor = { name: terminal, ...terminalArgs(terminal, args) };
     if (format !== null) {
       descriptor.format = format.name;
       descriptor.formatOptions = format.options ?? {};
     }
     const started = Date.now();
-    const { json, payload } = await request('run', {
-      uploaded: true,
-      handle,
-      ops,
-      terminal: descriptor,
-      inputOptions,
-    });
+    const body = { ops, terminal: descriptor, inputOptions };
+    let result;
+    try {
+      result = await request('run', { ...body, uploaded: true, handle });
+    } catch (error) {
+      if (error.code !== 'DSH_IMAGE_SOURCE_MISSING') throw error;
+      if (state.handles.get(key) === handle) state.handles.delete(key);
+      // Sending the bytes with the operation avoids another eviction before it runs.
+      result = await request('run', body, source);
+    }
+    const { json, payload } = result;
     if (DEBUG) note(`timing: ${terminal} ${String(Date.now() - started)}ms`);
     if (terminal === 'metadata' || terminal === 'stats' || terminal === 'toFile') return json;
     if (terminal === 'toBuffer') {

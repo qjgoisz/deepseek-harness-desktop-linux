@@ -104,7 +104,7 @@ build_deb() {
     node_version="$(python3 "$ROOT/patches/patch-system-runtime.py" "$resources")"
     node_major="${node_version%%.*}"
     drop "$resources/runtime/primary-runtime/dependencies/python"
-    deb_version="$VER+systemruntime2"
+    deb_version="$VER+systemruntime3"
     deps+=", nodejs (>= $node_version), nodejs (<< $((node_major + 1))), python3, python3-numpy, python3-pandas, python3-docx, python3-openpyxl, python3-xlsxwriter, python3-pil, python3-lxml, python3-typing-extensions (>= 4.9.0)"
   fi
   normalize_modes "$D/usr/lib/deepseek-harness"
