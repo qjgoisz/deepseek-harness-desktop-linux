@@ -12,7 +12,7 @@
 
 **官方载荷和所查源码均未发现等价修复。**
 
-Linux 仍不在桌面策略准入列表。账户视图仍将非 Windows 映射为 darwin，并保留更新输入守卫。托盘创建仍限 Windows，系统 Electron 所需的资源根覆盖亦未提供。 [apps/desktop/src/main.ts](https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/apps/desktop/src/main.ts)
+Linux 仍不在桌面策略准入列表。账户视图仍将非 Windows 映射为 darwin，并保留更新输入守卫。托盘创建仍限 Windows，系统 Electron 所需的资源根覆盖亦未提供。 [apps/desktop/src/main.ts](https://github.com/deepseek-ai/deepseek-harness/blob/ddac96760b6edf8fa0fe17cbdcf0b512f4c12b2c/apps/desktop/src/main.ts)
 
 核对范围见 [补丁总览](README.md#核对基线)。
 

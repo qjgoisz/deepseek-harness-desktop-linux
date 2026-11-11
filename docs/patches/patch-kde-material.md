@@ -12,7 +12,7 @@
 
 **官方载荷和所查源码均未发现等价实现。**
 
-可见的原生材质分支是 macOS vibrancy 和 Windows acrylic。Desktop 目标文件未提供 X11 窗口归属验证、KWin blur 请求或 Linux 材质协商。 [apps/desktop/src/main.ts](https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/apps/desktop/src/main.ts) [apps/desktop/src/welcome-window.ts](https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/apps/desktop/src/welcome-window.ts)
+可见的原生材质分支是 macOS vibrancy 和 Windows acrylic。Desktop 目标文件未提供 X11 窗口归属验证、KWin blur 请求或 Linux 材质协商。 [apps/desktop/src/main.ts](https://github.com/deepseek-ai/deepseek-harness/blob/ddac96760b6edf8fa0fe17cbdcf0b512f4c12b2c/apps/desktop/src/main.ts) [apps/desktop/src/welcome-window.ts](https://github.com/deepseek-ai/deepseek-harness/blob/ddac96760b6edf8fa0fe17cbdcf0b512f4c12b2c/apps/desktop/src/welcome-window.ts)
 
 核对范围见 [补丁总览](README.md#核对基线)。
 

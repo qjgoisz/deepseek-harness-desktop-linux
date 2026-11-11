@@ -17,4 +17,4 @@
 默认保留构建缓存；如需在成功后删除解包、打包暂存和应用树，增加 `--clean`。下载缓存仍保留，可在确认成品可用后删除构建存储目录。
 
 
-当前适配基线为 DSH `0.2.2-rc.1`，保留 KDE/v2rayN 系统代理、MCP v2 启动优化、libc 探测及 Desktop Cookie 修复，窗口策略不变。2026-11-05 从已校验的官方更新 ZIP 构建 x86_64 bundled deb，Electron 同步至载荷的 44.7.0；用户反馈修复本机预设后界面恢复。具体测试范围见 [兼容性记录](docs/COMPATIBILITY.md)。
+当前适配基线为 DSH `0.2.2-rc.2`。自用 deb 继续使用系统 Node 和 Python，内置 pnpm、私有 python-pptx 和 LibreOffice WASM。KDE/v2rayN 代理、MCP 启动与 libc 探测补丁仍适用。Desktop Cookie 修复由官方载荷提供。测试范围见 [兼容性记录](docs/COMPATIBILITY.md)。

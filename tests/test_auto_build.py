@@ -401,6 +401,17 @@ class NpmConversion(unittest.TestCase):
         package['name'] = '@deepseek-ai/libreoffice-kit-darwin-arm64'
         plan = NPM.plan_for(package, 'arm64', {'wasm': '0.1.0'})
         self.assertEqual((plan['name'], plan['version']), ('@deepseek-ai/libreoffice-kit-wasm', '0.1.0'))
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            native = root / package['name']
+            (native / 'bin').mkdir(parents=True)
+            (native / 'bin/dsoffice').touch()
+            (native / 'package.json').write_text(json.dumps(package))
+            adapter = native.with_name('libreoffice-kit')
+            adapter.mkdir()
+            (adapter / 'package.json').write_text(json.dumps({'optionalDependencies': {NPM.WASM_PACKAGE: '0.2.3'}}))
+            self.assertEqual([item['name'] for item in NPM.find_packages(temporary)], [package['name']])
+            self.assertEqual(NPM.engine_versions(temporary), {'wasm': '0.2.3'})
 
     def test_tar_extraction_rejects_escape_and_links(self):
         with tempfile.TemporaryDirectory() as temporary:

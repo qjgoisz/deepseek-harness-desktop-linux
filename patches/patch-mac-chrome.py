@@ -27,6 +27,7 @@
 """
 import sys
 import subprocess
+import re
 from pathlib import Path
 
 TITLEBAR_HEIGHT = 48
@@ -360,23 +361,23 @@ MAIN_MARK_CALL = 'syncNativeTheme();\n'
 WELCOME_MARK_CALL = 'electron.contextBridge.exposeInMainWorld("dshWelcome", api);\n'
 
 
-def inject_preload(path: str, call_anchor: str, extra_css: str) -> str:
-    src = open(path, encoding='utf8').read()
+def patch_preload(path: Path, call_anchor: str, extra_css: str, *, fullscreen: bool) -> str:
+    src = path.read_text(encoding='utf8')
     if 'installLinuxChrome' in src:
-        return f'  · 已注入过，跳过: {path}'
-    if call_anchor not in src:
-        return f'  ✗ 找不到锚点: {path}'
-    src = src.replace(PRELOAD_FULLSCREEN_OLD, PRELOAD_FULLSCREEN_NEW, 1)
+        if src.count('function installLinuxChrome(') != 1 or src.count('\ninstallLinuxChrome();') != 1:
+            raise ValueError(f'未知的 Linux preload 补丁状态: {path}')
+        return src
+    if src.count(call_anchor) != 1 or src.count(PRELOAD_FULLSCREEN_OLD) != int(fullscreen):
+        raise ValueError(f'未知或重复的 preload 锚点: {path}')
+    if fullscreen:
+        src = src.replace(PRELOAD_FULLSCREEN_OLD, PRELOAD_FULLSCREEN_NEW, 1)
     block = PRELOAD_FN.replace('__TITLEBAR_HEIGHT__', str(TITLEBAR_HEIGHT)).replace('__EXTRA_CSS__', extra_css)
-    src = src.replace(call_anchor, call_anchor + '\n' + block + '\ninstallLinuxChrome();\n', 1)
-    open(path, 'w', encoding='utf8').write(src)
-    return f'  ✓ 注入 installLinuxChrome(): {path}'
+    return src.replace(call_anchor, call_anchor + '\n' + block + '\ninstallLinuxChrome();\n', 1)
 
 
 def replace_once(src: str, old: str, new: str, label: str, notes: list) -> str:
-    if old not in src:
-        notes.append(f'  ✗ 未匹配: {label}')
-        return src
+    if src.count(old) != 1:
+        raise ValueError(f'未知或重复的主进程锚点: {label}')
     notes.append(f'  ✓ {label}')
     return src.replace(old, new, 1)
 
@@ -435,13 +436,13 @@ def main(app_dir: str) -> int:
     )
 
     # --- 2b) 确保 screen 模块可用（maximize 兜底需要判断工作区）---
-    src = replace_once(
-        src,
-        'import { BrowserWindow, Menu, Notification, Tray, WebContentsView, app, clipboard, dialog, ipcMain, nativeImage, nativeTheme, net, powerMonitor, protocol, session, shell, systemPreferences } from "electron"',
-        'import { BrowserWindow, Menu, Notification, Tray, WebContentsView, app, clipboard, dialog, ipcMain, nativeImage, nativeTheme, net, powerMonitor, protocol, screen, session, shell, systemPreferences } from "electron"',
-        '导入 screen 模块',
-        notes,
-    )
+    imports = re.findall(r'^import \{ ([\w, ]+) \} from "electron";$', src, re.M)
+    if len(imports) != 1 or 'BrowserWindow' not in imports[0].split(', '):
+        raise ValueError('未知或重复的 Electron 主进程导入')
+    if 'screen' not in imports[0].split(', '):
+        old_import = f'import {{ {imports[0]} }} from "electron";'
+        new_import = f'import {{ {imports[0]}, screen }} from "electron";'
+        src = replace_once(src, old_import, new_import, '导入 screen 模块', notes)
 
     # --- 4) Linux 全屏事件（data-fullscreen 的来源）---
     src = replace_once(
@@ -517,12 +518,17 @@ def main(app_dir: str) -> int:
     else:
         src = replace_once(src, anchor, handler + anchor, '窗口控制 IPC 处理器', notes)
 
-    open(main_js, 'w', encoding='utf8').write(src)
+    app_preload = Path(app_dir) / 'lib/preload-app.cjs'
+    welcome_preload = Path(app_dir) / 'lib/preload-welcome.cjs'
+    app_source = patch_preload(app_preload, MAIN_MARK_CALL, MAIN_EXTRA_CSS, fullscreen=True)
+    welcome_source = patch_preload(welcome_preload, WELCOME_MARK_CALL, WELCOME_EXTRA_CSS, fullscreen=False)
+    Path(main_js).write_text(src, encoding='utf8')
+    app_preload.write_text(app_source, encoding='utf8')
+    welcome_preload.write_text(welcome_source, encoding='utf8')
     print(f'== {main_js}')
     notes.append(f'  · IPC 处理器共 {src.count("dsh-desktop:linux-window-control")} 处（应为 1）')
     print('\n'.join(notes))
-    print(inject_preload(f'{app_dir}/lib/preload-app.cjs', MAIN_MARK_CALL, MAIN_EXTRA_CSS))
-    print(inject_preload(f'{app_dir}/lib/preload-welcome.cjs', WELCOME_MARK_CALL, WELCOME_EXTRA_CSS))
+    print(f'  ✓ Linux 窗口装饰已应用到 {app_preload.name} 和 {welcome_preload.name}')
     upgrade_welcome_surface(app_dir)
     status = subprocess.call([sys.executable, str(Path(__file__).with_name("patch-kde-material.py")), app_dir])
     if status:
@@ -537,4 +543,7 @@ def main(app_dir: str) -> int:
 
 
 if __name__ == '__main__':
-    raise SystemExit(main(sys.argv[1]))
+    try:
+        raise SystemExit(main(sys.argv[1]))
+    except (OSError, ValueError) as error:
+        raise SystemExit(f'Linux 窗口装饰补丁失败: {error}')

@@ -10,10 +10,12 @@ MARKER = '/* dsh-linux-system-proxy-v1:'
 IMPORT = 'import { installProxyFromEnvironment } from "@deepseek-ai/dsh-http-proxy";'
 CALL = 'const disposeProxy = await installProxyFromEnvironment(options.environment,'
 EXPORT = 'export { clearedProxyEnv, installProxyFromEnvironment, proxyEnvironmentForChild, proxyRouteFor };'
+ROUTE_EXPORT = EXPORT.replace('clearedProxyEnv,', 'clearedProxyEnv, createRouteDispatcher,')
 BYPASS = 'return bypassesProxy(policy.noProxy, url) ? void 0 : proxy;'
 NEW_IMPORT = IMPORT.replace('installProxyFromEnvironment', 'installDesktopProxyFromEnvironment')
 NEW_CALL = CALL.replace('installProxyFromEnvironment', 'installDesktopProxyFromEnvironment')
 NEW_EXPORT = EXPORT.replace('clearedProxyEnv,', 'clearedProxyEnv, installDesktopProxyFromEnvironment,')
+NEW_ROUTE_EXPORT = ROUTE_EXPORT.replace('installProxyFromEnvironment,', 'installDesktopProxyFromEnvironment, installProxyFromEnvironment,')
 NEW_BYPASS = ('return (bypassesProxy(policy.noProxy, url) || '
               '(policy.desktopSystem && desktopIpv4Bypass(policy.noProxy, url))) ? void 0 : proxy;')
 
@@ -22,6 +24,16 @@ def unique_replace(source, old, new):
     if source.count(old) != 1:
         raise ValueError(f'expected one upstream match: {old[:90]}')
     return source.replace(old, new)
+
+
+def replace_export(source, reverse=False):
+    variants = ((EXPORT, NEW_EXPORT), (ROUTE_EXPORT, NEW_ROUTE_EXPORT))
+    if reverse:
+        variants = tuple((new, old) for old, new in variants)
+    matches = [(old, new) for old, new in variants if old in source]
+    if len(matches) != 1:
+        raise ValueError('expected one known proxy export list')
+    return unique_replace(source, *matches[0])
 
 
 def transformations(app):
@@ -41,7 +53,7 @@ def transformations(app):
         original, tail = source.split(MARKER, 1)
         if MARKER + tail != controller or not adapter.exists() or adapter.read_text() != adapter_source:
             raise ValueError('existing system-proxy bridge differs from this patch')
-        unique_replace(original, NEW_EXPORT, EXPORT)
+        replace_export(original, reverse=True)
         unique_replace(original, NEW_BYPASS, BYPASS)
         unique_replace(entry, NEW_IMPORT, IMPORT)
         unique_replace(entry, NEW_CALL, CALL)
@@ -52,7 +64,7 @@ def transformations(app):
                                        'function createDesktopProxyController(',
                                        'function installDesktopProxyFromEnvironment(')):
         raise ValueError('upstream proxy controller layout is unknown')
-    source = unique_replace(source, EXPORT, NEW_EXPORT)
+    source = replace_export(source)
     source = unique_replace(source, BYPASS, NEW_BYPASS)
     entry = unique_replace(entry, IMPORT, NEW_IMPORT)
     entry = unique_replace(entry, CALL, NEW_CALL)

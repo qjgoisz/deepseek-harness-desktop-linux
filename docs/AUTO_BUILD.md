@@ -83,8 +83,8 @@ Electron，避免 Debian 官方仓库没有 Electron 时阻止安装。这些格
 
 应用版本从每棵应用树的 `resources/runtime/primary-runtime/runtime.json` 读取，
 Electron 描述读取应用树的 `version` 文件。deb 保留应用版本；pacman 用下划线替换
-版本中的连字符；RPM 将预发布部分放入 Release（例如 `0.2.2-rc.1` 转为
-Version `0.2.2`、Release `0.rc.1.1`）。不符合支持的版本形式会明确报错。
+版本中的连字符；RPM 将预发布部分放入 Release（例如 `0.2.2-rc.2` 转为
+Version `0.2.2`、Release `0.rc.2.1`）。不符合支持的版本形式会明确报错。
 每个安装包均附带使用相对文件名的 `.sha256`。
 
 ### 自用 deb 使用系统运行时
@@ -101,7 +101,7 @@ Version `0.2.2`、Release `0.rc.1.1`）。不符合支持的版本形式会明�
 
 ```sh
 cd dist
-sudo apt install --no-install-recommends ./deepseek-harness_0.2.2-rc.1+systemruntime2_amd64.bundled.deb
+sudo apt install --no-install-recommends ./deepseek-harness_0.2.2-rc.2+systemruntime2_amd64.bundled.deb
 ```
 
 APT 管理 Node、Python、NumPy、pandas、python-docx、openpyxl、XlsxWriter、Pillow、lxml
@@ -188,7 +188,7 @@ appimagetool 解包暂存，以及本次已打包架构的应用树。
 ## 版本与验证
 
 Node、Python 与 Python 包版本来自官方归档的 `runtime.json`，pnpm 沿用归档内置版本。
-`--dry-run` 不读取归档，显示所选 Electron 及 Node/Python 计划值。Electron 默认 44.7.0，与官方 0.2.2-rc.1
+`--dry-run` 不读取归档，显示所选 Electron 及 Node/Python 计划值。Electron 默认 44.7.0，与官方 0.2.2-rc.2
 的 Electron Framework 版本一致，可配置；现有二进制
 指纹补丁与应用布局针对已支持的载荷，其他版本仍需验证。
 
@@ -296,12 +296,12 @@ DSH_DESKTOP_RESOURCES_DIR="$PWD/out-arm64/resources" ELECTRON_RUN_AS_NODE=1 \
 官方更新清单中的完整 macOS 应用 ZIP 也可构建，使用 `--archive /绝对路径/官方.zip`（`--dmg` 仍兼容）。先按对应官方清单校验文件大小及 SHA512，再解包核对应用 package.json 与 runtime.json 的版本；文件名或 HEAD 不代表版本。当前构建入口不会自动读取更新清单或验证它的 SHA512，该步骤需在构建前完成。7z 自动识别归档格式，按内容 SHA256 复用/刷新解包缓存。运行时版本仍读取该载荷，不采用旧包版本顶替。
 
 
-2026-11-05 更新清单已提供 0.2.2-rc.1，核对时默认 DMG 尚未提供本版；本轮使用清单对应的 ZIP 完成全流程。Electron 默认同步为官方载荷的 44.7.0，Node/Python/pnpm 与原生依赖继续读取载荷指定版本。来源、校验及验证范围见 [rc.1 兼容性记录](COMPATIBILITY.md)。在默认 DMG 更新前，构建新版须显式传入已校验的新版归档。
+2026-11-11 使用开发版更新清单提供的 rc.2 ZIP 完成自用 deb 构建。Electron 默认 44.7.0，Node、Python、pnpm 与原生依赖沿用该载荷的版本，LibreOffice 使用同版本 WASM。来源、校验及验证范围见 [rc.2 兼容性记录](COMPATIBILITY.md)。
 
 ## libc 探测补丁
 
 应用树构建会运行 patch-flock-libc.py，避免首次会话写锁加载 Linux 原生模块时，完整诊断报告的网络查询同步阻塞后台。补丁只在 libc 探测调用期间排除网络并恢复原设置；不依赖 NODE_OPTIONS，不改变代理或锁策略。验证记录见 [STARTUP_LIBC.md](STARTUP_LIBC.md)。
 
-## Desktop Cookie 累积补丁
+## Desktop Host Cookie
 
-应用树阶段自动运行 `patches/patch-desktop-auth-cookie.py`。欢迎页 RPC 和账户 WebSocket 复用主进程已有的当前 Host 内存 Cookie，不再通过 Electron 持久 Cookie 库进行第二次认证，避免随机端口留下的 30 天 Cookie 堆积并触发 HTTP 431。旧条目可自然过期；构建和首次启动都不删除用户 Cookie 或登录状态，不改变通用 Web 认证、签名和端口隔离。用途与官方核对见 [补丁说明](patches/patch-desktop-auth-cookie.md)。安装包必须重新构建后才包含该修复，既有 dist 成品不会自动更新。
+rc.2 官方桌面 ZIP 已将本地 Host 认证 Cookie 改为内存存储，并按名称清理同一主机的遗留认证条目。当前构建直接使用该实现。复核见 [兼容性记录](COMPATIBILITY.md)。

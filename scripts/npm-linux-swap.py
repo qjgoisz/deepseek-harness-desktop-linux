@@ -14,7 +14,7 @@ registry 取对应 Linux 包（默认国内镜像 registry.npmmirror.com）就�
   * 只处理“原生平台包”（名字带平台标记且目录里确有 .node/.dylib/.dll/.so
     或 bin/ 可执行文件）；纯 JS 的 win32 辅助包会被原样保留。
   * LibreOffice 引擎在 Linux 上没有官方原生包，按应用自身的回退逻辑
-    换成 @deepseek-ai/libreoffice-kit-wasm（版本取自应用代码里的 ENGINE_VERSIONS）。
+    换成 @deepseek-ai/libreoffice-kit-wasm，沿用应用适配层指定的版本。
   * node-pty 是同一包内的多平台 prebuilds，只补充 prebuilds/linux-<arch>。
 """
 from __future__ import annotations
@@ -54,7 +54,7 @@ def has_native_artifact(directory: str) -> bool:
         for name in files:
             if name.endswith(NATIVE_SUFFIXES):
                 return True
-            if os.path.basename(root) == 'bin' and name in ('rg', 'node', 'libreoffice-kit'):
+            if os.path.basename(root) == 'bin' and name in ('rg', 'node', 'libreoffice-kit', 'dsoffice', 'dsoffice.exe'):
                 return True
         if root.count(os.sep) - directory.count(os.sep) > 3:
             dirs[:] = []
@@ -96,10 +96,18 @@ def find_packages(app: str) -> list[dict]:
 
 
 def engine_versions(app: str) -> dict:
-    """从应用自带的 libreoffice-kit 适配层里读取它期望的引擎版本表。"""
+    """从应用自带的 libreoffice-kit 适配层里读取它期望的引擎版本。"""
     for root, dirs, files in os.walk(app):
         if os.path.basename(root) != 'libreoffice-kit':
             continue
+        if 'package.json' in files:
+            with open(os.path.join(root, 'package.json'), encoding='utf8') as handle:
+                dependencies = json.load(handle).get('optionalDependencies', {})
+            if WASM_PACKAGE in dependencies:
+                version = dependencies[WASM_PACKAGE]
+                if not isinstance(version, str) or not re.fullmatch(r'\d+\.\d+\.\d+(?:-[\w.-]+)?', version):
+                    raise ValueError(f'LibreOffice WASM 应使用确切版本，实际为 {version!r}')
+                return {'wasm': version}
         for name in files:
             if not name.endswith(('.js', '.cjs', '.mjs')):
                 continue

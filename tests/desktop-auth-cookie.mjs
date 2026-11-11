@@ -20,16 +20,26 @@ const newAuth = () => new authContext.Auth({}, crypto.randomBytes(32), 30);
 let requests = [];
 let mode = 'ok';
 let expectedCookie;
+const storedCookies = new Set(['unrelated']);
+const cookieJar = {
+  async get({ url }) {
+    assert.equal(new URL(url).hostname, '127.0.0.1');
+    return [...storedCookies].map(name => ({ name }));
+  },
+  async remove(url, name) {
+    assert.equal(new URL(url).hostname, '127.0.0.1');
+    storedCookies.delete(name);
+  },
+};
 const context = vm.createContext({
   URL, Headers, AbortSignal, Buffer, setTimeout, clearTimeout, WebSocket,
   randomUUID: crypto.randomUUID,
   REMOTE_STREAM_MUX_PATH: '/api/remote.stream.mux',
   parseRemoteStreamServerMessage: JSON.parse,
-  // Neither legacy cookie reader nor Electron fetch may be used after patching.
-  session: { defaultSession: { cookies: { get() { throw Error('persistent cookie jar read'); } } } },
+  session: { defaultSession: { cookies: cookieJar } },
   net: { fetch() { throw Error('Electron cookie-jar fetch'); } },
   fetch: async (input, init) => {
-    requests.push({ url: new URL(input), cookie: new Headers(init?.headers).get('cookie'), credentials: init?.credentials, redirect: init?.redirect });
+    requests.push({ url: new URL(input), cookie: new Headers(init?.headers).get('cookie'), redirect: init?.redirect });
     return fetch(input, init);
   },
 });
@@ -42,8 +52,7 @@ function between(source, start, end) {
 }
 vm.runInContext(
   between(main, 'async function authenticateWebHost(', '/**\n* Response headers not relayed') +
-  between(main, 'function accountView(', '//#region lib/types/welcome-backend.js') +
-  between(main, 'function record$3(', '//#region lib/types/update-journal.js'), context);
+  between(main, 'function accountView(', '//#region lib/types/update-journal.js'), context);
 const boot = between(main, '\t\t\t\tconst ready = await host.start();', '\n\t\t\t\tanalyticsEnabled =');
 vm.runInContext(`async function start(host) {
   let hostCookie, hostUrl, injections, welcomeBackend;
@@ -66,7 +75,6 @@ async function host() {
     if (!auth.isAuthenticated(req)) { res.writeHead(401); res.end(); return; }
     if (mode === 'redirect') { res.writeHead(302, { location: 'http://127.0.0.1:1/should-not-follow' }); res.end(); return; }
     if (mode === '431') { res.writeHead(431); res.end(); return; }
-    if (mode === 'hang') return;
     let body = '';
     for await (const data of req) body += data;
     const frame = JSON.parse(body);
@@ -89,7 +97,10 @@ async function host() {
       ws.on('close', () => sockets.delete(ws));
       ws.on('message', raw => {
         const message = JSON.parse(raw.toString());
-        if (message.endpoint === 'account/watch') ws.send(JSON.stringify({ type: 'item', streamId: message.streamId, value: fakeAccount }));
+        if (message.endpoint === 'account/watch') {
+          const value = { type: 'snapshot', state: fakeAccount };
+          ws.send(JSON.stringify({ type: 'item', streamId: message.streamId, value }));
+        }
       });
     });
   });
@@ -124,6 +135,7 @@ try {
     return cookie;
   });
   assert(new Set(stale.map(value => value.split('=')[0])).size === 100);
+  for (const value of stale) storedCookies.add(value.split('=')[0]);
   const before = old.rootCalls;
   const crowded = await fetch(old.url, { redirect: 'manual', headers: { Cookie: stale.join('; ') } });
   assert.equal(crowded.status, 431); await crowded.body?.cancel();
@@ -135,16 +147,13 @@ try {
   assert.equal(await first.backend.analyticsEnabled(), false);
   assert.equal((await first.backend.read()).loggedIn, false);
   await watch(first.backend);
-  // The adapter cannot leak the cookie through another origin, userinfo or redirects.
-  const send = context.createDesktopHostFetch(old.url, first.cookie);
+  assert.deepEqual([...storedCookies], ['unrelated']);
+  // Each Host uses its own cookie, and RPC rejects redirects.
   const other = await host();
   const second = await context.start({ start: async () => ({ url: other.url, injections: [] }) });
   assert.equal(await second.backend.analyticsEnabled(), false);
   assert.equal(await first.backend.analyticsEnabled(), false, 'a new backend must not replace the old adapter cookie');
   await watch(first.backend);
-  assert.throws(() => send(other.url), /outside the owned Host/);
-  const userInfo = new URL(old.url); userInfo.username = 'user';
-  assert.throws(() => send(userInfo.href), /outside the owned Host/);
   const mismatch = await fetch(new URL('/', other.url), { headers: { cookie: first.cookie } });
   assert.equal(mismatch.status, 401); await mismatch.body?.cancel();
   assert.equal(old.auth.isAuthenticated({ headers: { host: new URL(old.url).host, cookie: first.cookie } }, true), false);
@@ -154,10 +163,11 @@ try {
   assert.equal(old.auth.isAuthenticated({ headers: { host: new URL(old.url).host, cookie: first.cookie } }), false);
   Clock.offset = 0;
   mode = 'redirect'; await assert.rejects(first.backend.analyticsEnabled(), /fetch failed/);
-  mode = '431'; await assert.rejects(first.backend.analyticsEnabled(), /HTTP 431/);
-  mode = 'hang'; await assert.rejects(send(new URL('/api/wait', old.url), { signal: AbortSignal.timeout(20) }), /abort|timeout/i);
+  mode = '431'; await assert.rejects(first.backend.analyticsEnabled(), /Web request failed/);
   mode = 'ok';
-  assert(requests.filter(r => r.url.origin === new URL(old.url).origin && r.url.pathname.startsWith('/api/')).every(r => r.cookie === first.cookie && r.credentials === 'omit' && r.redirect === 'error'));
+  const firstHostRequests = requests.filter(r => r.url.origin === new URL(old.url).origin && r.url.pathname.startsWith('/api/'));
+  assert(firstHostRequests.length > 0);
+  assert(firstHostRequests.every(r => r.cookie === first.cookie && r.redirect === 'error'));
   await other.stop(); await old.stop();
 
   // New port and signing secret each time; old adapters keep their captured cookie.
@@ -172,10 +182,10 @@ try {
     await next.stop();
   }
   context.fetch = async () => new Response('', { status: 431 });
-  await assert.rejects(context.authenticateWebHost('http://127.0.0.1/'), /HTTP 431/);
+  await assert.rejects(context.authenticateWebHost('http://127.0.0.1/'), /Desktop Host authentication failed/);
   context.fetch = async () => new Response('', { status: 303 });
-  await assert.rejects(context.authenticateWebHost('http://127.0.0.1/'), /HTTP 303; missing session cookie/);
-  console.log('Desktop auth: overflow reproduced; HTTP, WebSocket, 100 starts, isolation, expiry, redirects and cancellation passed');
+  await assert.rejects(context.authenticateWebHost('http://127.0.0.1/'), /Desktop Host authentication failed/);
+  console.log('Desktop auth: HTTP, WebSocket, 100 starts, isolation, expiry and redirects passed');
 } finally {
   for (const socket of sockets) socket.terminate();
   for (const server of servers) { server.closeAllConnections(); server.close(); }

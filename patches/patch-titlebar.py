@@ -29,6 +29,11 @@ WINDOWS = (
         '\t\t} : {},'
     ),
 )
+WINDOWS_PRIMARY_WITH_FILL = WINDOWS[0].replace(
+    '\t\t\ttitleBarStyle: "hidden",',
+    '\t\t\tbackgroundColor: chromeFallbackFill(),\n\t\t\ttitleBarStyle: "hidden",',
+    1,
+)
 OVERLAY = (
     (
         '\t\t...process.platform === "linux" && primary ? {\n'
@@ -74,8 +79,12 @@ def transform(source):
     linux_spreads = re.findall(r"\.\.\.\s*(?:process\.)?platform\s*===\s*[\"']linux[\"']", source)
     if len(linux_spreads) != sum(source.count(block.split(' {', 1)[0] + ' {') for block in OVERLAY):
         raise ValueError('Unknown Linux titlebar condition')
+    primary_variants = (WINDOWS[0], WINDOWS_PRIMARY_WITH_FILL)
+    if sum(source.count(block) for block in primary_variants) != 1:
+        raise ValueError('Unknown or duplicate Windows main window titlebar anchor')
+    windows_blocks = (next(block for block in primary_variants if block in source), WINDOWS[1])
     states = []
-    for windows, overlay, chrome in zip(WINDOWS, OVERLAY, CHROME):
+    for windows, overlay, chrome in zip(windows_blocks, OVERLAY, CHROME):
         if source.count(windows) != 1:
             raise ValueError('Unknown or duplicate Windows titlebar anchor')
         prefix = overlay.split(' {', 1)[0] + ' {'
@@ -94,7 +103,7 @@ def transform(source):
         raise ValueError('Partially patched titlebar windows')
     if states[0] != 'original':
         return source
-    for windows, overlay in zip(WINDOWS, OVERLAY):
+    for windows, overlay in zip(windows_blocks, OVERLAY):
         source = source.replace(windows, windows + '\n' + overlay)
     return source
 

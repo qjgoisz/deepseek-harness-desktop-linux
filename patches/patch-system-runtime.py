@@ -48,6 +48,20 @@ OFFICE_GUIDANCE = {
     "office-xlsx": ("Follow an explicit user or applicable AGENTS.md requirement", "openpyxl and pandas"),
     "office-pptx": ("Follow an explicit user or applicable AGENTS.md requirement", "python-pptx"),
 }
+PPTX_GUIDANCE = (
+    'Follow an explicit user or applicable AGENTS.md requirement for an environment or library. '
+    'Otherwise call `load_workspace_dependencies` and run each PPTX script as '
+    '`PYTHONPATH="<pythonPptxPackages>" "<python>" script.py`, substituting the returned paths. '
+    'This loads the DSH-supplied python-pptx library with system Python for that command.'
+)
+
+
+def system_office_guidance(libraries):
+    return (
+        'Follow an explicit user or applicable AGENTS.md requirement for an environment or library. '
+        'Otherwise call `load_workspace_dependencies` and use its system Python path with '
+        f'{libraries}. If a required library is missing, report the missing Debian package.'
+    )
 
 
 def replace_once(source, old, new):
@@ -124,6 +138,37 @@ def adapt_cli(source):
                         'exec /usr/bin/node')
 
 
+def office_updates(resources, package):
+    entry = package / 'lib/index.js'
+    source = entry.read_text(encoding='utf8')
+    if 'const PYTHON_ENVIRONMENT_SECTIONS =' in source:
+        defaults = re.findall(r'^\t"workspace-dependencies": "[^"\n]+",$', source, re.M)
+        if len(defaults) != 1 or 'load_workspace_dependencies' not in defaults[0]:
+            raise ValueError(f'Unexpected Python environment section in {entry}')
+        source = replace_once(source, defaults[0],
+                              '\t"workspace-dependencies": ' + json.dumps(system_office_guidance('the Debian libraries')) + ',')
+        source = replace_once(source, '${PYTHON_ENVIRONMENT_SECTIONS[config.pythonEnvironment]}',
+                              '${config.pythonEnvironment === "workspace-dependencies" && candidate.name === "office-pptx" '
+                              '? ' + json.dumps(PPTX_GUIDANCE) + ' : PYTHON_ENVIRONMENT_SECTIONS[config.pythonEnvironment]}')
+        return {entry: source}
+
+    updates = {}
+    asset_roots = [package / 'assets']
+    runtime_assets = resources / 'runtime/office-skills'
+    if runtime_assets.exists():
+        asset_roots.append(runtime_assets)
+    for asset_root in asset_roots:
+        for skill, (prefix, libraries) in OFFICE_GUIDANCE.items():
+            path = asset_root / skill / 'SKILL.md'
+            source = path.read_text(encoding='utf8')
+            paragraphs = [line for line in source.splitlines() if line.startswith(prefix)]
+            if len(paragraphs) != 1 or 'load_workspace_dependencies' not in paragraphs[0]:
+                raise ValueError(f"Unexpected Python guidance in {path}")
+            guidance = PPTX_GUIDANCE if skill == 'office-pptx' else system_office_guidance(libraries)
+            updates[path] = replace_once(source, paragraphs[0], guidance)
+    return updates
+
+
 def patch(resources):
     runtime = resources / 'runtime/primary-runtime/runtime.json'
     data = json.loads(runtime.read_text(encoding='utf8'))
@@ -162,26 +207,7 @@ def patch(resources):
                            host.replace('node: process.execPath,', 'node: development ? process.execPath : "/usr/bin/node",')),
         cli: adapt_cli(cli.read_text(encoding='utf8')),
     }
-    for asset_root in (resources / 'runtime/office-skills', packages / 'dsh-skill-office/assets'):
-        for skill, (prefix, libraries) in OFFICE_GUIDANCE.items():
-            path = asset_root / skill / 'SKILL.md'
-            source = path.read_text(encoding='utf8')
-            paragraphs = [line for line in source.splitlines() if line.startswith(prefix)]
-            if len(paragraphs) != 1 or 'load_workspace_dependencies' not in paragraphs[0]:
-                raise ValueError(f"Unexpected Python guidance in {path}")
-            guidance = (
-                "Follow an explicit user or applicable AGENTS.md requirement for an environment or library. "
-                "Otherwise call \x60load_workspace_dependencies\x60 and use its system Python path with "
-                f"{libraries}. If a required library is missing, report the missing Debian package."
-            )
-            if skill == 'office-pptx':
-                guidance = (
-                    "Follow an explicit user or applicable AGENTS.md requirement for an environment or library. "
-                    "Otherwise call \x60load_workspace_dependencies\x60 and run each PPTX script as "
-                    '\x60PYTHONPATH="<pythonPptxPackages>" "<python>" script.py\x60, substituting the returned paths. '
-                    "This loads the DSH-supplied python-pptx library with system Python for that command."
-                )
-            updates[path] = replace_once(source, paragraphs[0], guidance)
+    updates.update(office_updates(resources, packages / 'dsh-skill-office'))
     for entry in pptx_entries:
         copytree(source_site / entry, pptx_site / entry, ignore=ignore_patterns('__pycache__', '*.pyc'))
     node_binary.unlink()

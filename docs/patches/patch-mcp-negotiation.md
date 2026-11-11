@@ -12,7 +12,7 @@
 
 **官方载荷和所查源码均未发现等价修复。**
 
-MCP 客户端固定使用 auto 协商，插件启动时等待 connection.ready，未提供按服务选择协商方式和可选后台连接。 [packages/mcp/mcp-client/src/connection.ts](https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/packages/mcp/mcp-client/src/connection.ts) [packages/mcp/mcp-client/src/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/packages/mcp/mcp-client/src/index.ts)
+MCP 客户端固定使用 auto 协商，插件启动时等待 connection.ready，未提供按服务选择协商方式和可选后台连接。 [packages/mcp/mcp-client/src/connection.ts](https://github.com/deepseek-ai/deepseek-harness/blob/ddac96760b6edf8fa0fe17cbdcf0b512f4c12b2c/packages/mcp/mcp-client/src/connection.ts) [packages/mcp/mcp-client/src/index.ts](https://github.com/deepseek-ai/deepseek-harness/blob/ddac96760b6edf8fa0fe17cbdcf0b512f4c12b2c/packages/mcp/mcp-client/src/index.ts)
 
 核对范围见 [补丁总览](README.md#核对基线)。
 

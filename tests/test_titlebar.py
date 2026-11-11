@@ -21,9 +21,11 @@ def fixture(blocks=None):
 
 class Titlebar(unittest.TestCase):
     def test_first_application_and_repeat(self):
-        result = patch.transform(fixture())
-        self.assertEqual(result, fixture(patch.OVERLAY))
-        self.assertEqual(patch.transform(result), result)
+        for primary in (patch.WINDOWS[0], patch.WINDOWS_PRIMARY_WITH_FILL):
+            with self.subTest(primary=primary):
+                result = patch.transform(fixture().replace(patch.WINDOWS[0], primary))
+                self.assertEqual(result, fixture(patch.OVERLAY).replace(patch.WINDOWS[0], primary))
+                self.assertEqual(patch.transform(result), result)
 
     def test_completed_chrome_is_unchanged(self):
         source = fixture(patch.CHROME)
@@ -33,6 +35,7 @@ class Titlebar(unittest.TestCase):
         sources = [
             patch.WINDOWS[0],
             fixture() + patch.WINDOWS[0],
+            fixture() + patch.WINDOWS_PRIMARY_WITH_FILL,
             fixture((patch.OVERLAY[0], '')),
             fixture((patch.OVERLAY[0], patch.CHROME[1])),
             fixture(patch.CHROME) + patch.OVERLAY[0],

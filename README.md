@@ -5,7 +5,7 @@
 
 工具链支持 **x86_64** 与 **aarch64** 的多种包型；当前实测范围见下文。
 
-自用分支当前适配基线：`@deepseek-ai/dsh-desktop 0.2.2-rc.1`，用户反馈修复本机预设后界面恢复。
+自用分支当前适配基线：`@deepseek-ai/dsh-desktop 0.2.2-rc.2`。
 本分支使用实色背景与普通窗口圆角，保留全屏交通灯及窗口控件修复。
 当前验证范围为 x86_64 bundled deb。
 已加入 KDE/v2rayN 系统代理自动读取和动态切换。
@@ -17,7 +17,7 @@
 启用、回退与验证边界见 [MCP 启动说明](docs/MCP_STARTUP.md)。
 
 全部补丁的用途、目标文件及官方载荷/源码对照见 [补丁总览与逐项文档](docs/patches/README.md)。
-2026-11-05 已适配官方更新 ZIP 的 rc.1，Electron 同步至 44.7.0，保留新版更新输入守卫；主进程、代理、MCP、libc 和 Cookie 仍需相应补丁。来源、成品和验证边界见 [本轮兼容性记录](docs/COMPATIBILITY.md)。
+2026-11-11 从官方 rc.2 ZIP 构建系统运行时 deb。Electron 44.7.0 与载荷一致，Cookie 修复沿用官方实现。来源、成品和验证边界见 [本轮兼容性记录](docs/COMPATIBILITY.md)。
 
 > 本仓库只包含**移植补丁与打包脚本**，不含任何官方二进制载荷（体积与授权原因）。
 > 详细的中文使用教程见 **[README.zh.md](README.zh.md)**。
@@ -50,7 +50,6 @@
 │   ├── system-proxy/           系统代理适配模块及连接池控制器
 │   ├── patch-mcp-negotiation.py MCP 协商方式与可选后台初始化（默认行为不变）
 │   ├── patch-flock-libc.py      会话锁 libc 探测排除网络诊断
-│   ├── patch-desktop-auth-cookie.py Desktop Host 认证保存在内存，避免 Cookie 累积
 │   ├── patch-mac-chrome.py      左置交通灯、窗口控制及 GUI 补丁组合入口
 │   ├── patch-kde-material.py    KDE 材质基础层（自用层禁用 blur）
 │   ├── patch-fullscreen-reveal.py 全屏指针桥、焦点、状态及 Wayland 双击
@@ -80,8 +79,8 @@
 
 ```bash
 ./auto-build.sh --dry-run
-./auto-build.sh --arch x64 --formats deb --electron bundled --package-jobs 4 \
-  --archive /绝对路径/已校验的/deepseek-harness-0.2.2-rc.1-mac-arm64.zip
+./auto-build.sh --arch x64 --formats deb --electron bundled --system-runtime --package-jobs 4 \
+  --archive /绝对路径/已校验的/deepseek-harness-0.2.2-rc.2-mac-arm64.zip
 ```
 
 默认保留缓存、解包文件、构建目录和历史产物；`--clean` 显式清理中间文件。

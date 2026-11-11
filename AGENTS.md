@@ -1,19 +1,13 @@
 # 项目维护约定
 
-## 2026-11-10 自用系统运行时交付状态
+## 2026-11-11 自用交付状态
 
-- 用户已在日常桌面环境验收 `0.2.2-rc.1+systemruntime2`。`dist/` 仅保留该 amd64 bundled deb 和校验文件，SHA256 为 `22619c6f3aea7586194c413bc295de5a5b254665f027679336d36565d8084091`。
-- 系统 Node 模式下，`load_workspace_dependencies` 只返回实际可用的 Node 路径，不返回占位的 `nodePackages`。成品回归 81 项通过，2 项因缺少 RPM/pacman 工具跳过。详见 `HANDOFF.md`。
-
-## 2026-11-05 当前适配状态
-
-- 官方清单及完整 ZIP 内应用/runtime 均为 `0.2.2-rc.1`，核对时默认滚动 DMG 尚未提供本版。本轮先核对新版 ZIP 大小和 SHA512，再由 auto-build.sh 完成全流程；不要将默认 DMG 或旧缓存视为新版。
-- patch-main.py 支持新旧两个完整 PlatformView 调用，透传 Linux 时保留 rc.1 新增的第四参数更新输入守卫；未知/重复调用拒绝且不部分写入。Electron 默认同步官方载荷 44.7.0；Node 24.21.0、Python 3.12.14、pnpm 11.28.5、Sharp 0.35.5 及其他载荷依赖无版本漂移。
-- 新 bundled amd64 deb SHA256 为 `22343671318810dd0d48e57cdf79df865431a5e9fcc2f4dd758bf0be8b70f54a`。构建树与成品各 81 项回归：79 通过、2 RPM/pacman 工具缺失跳过；144 侧栏组合、CLI/pnpm、运行时/13 Python 包、图片隔离、133 ELF、29379 资源文件一致性及 SHA256 通过。
-- 最终包隔离 Wayland/XWayland 各启动/重启一次，约 2–3 秒进入可见主界面，100 个合成 Cookie 不增长、均退出 0；侧栏切换、原生最大化/还原及全屏切换通过。8 张整屏截图成功，普通窗口部分边缘受多显示器放置影响，不视为完整圆角/拖动验收。no-sandbox/disable-gpu/Inspector 不进入成品，无真实登录、用户插件/模型、GPU 或长会话测试。
-- 详见 docs/COMPATIBILITY.md。现用安装和数据未改。用户反馈修复预设后界面恢复，隔离复查通过。本轮源码交付目标为 origin/codex/personal-desktop。测试实例已关闭，无临时 worktree。按用户要求清理了本轮缓存与测试暂存。
-
-- 交付前对照实际发布包与固定官方源码快照复核全部补丁。官方 master 已修复 Cookie 累积，核对的 rc.1 ZIP 仍需此补丁。后续先确认修复进入发布包，再决定是否移除。
+- 官方 macOS arm64 开发版清单已提供 `0.2.2-rc.2`，核对时分发比例为 10%。ZIP 大小、SHA512、应用和 runtime 版本均已核对。构建和验证记录见 `docs/COMPATIBILITY.md`。
+- 自用 amd64 包为 `0.2.2-rc.2+systemruntime2`。构建沿用 Electron 44.7.0、Node 24.21.0、Python 3.12.14、pnpm 11.28.5 的官方基线。成品使用 Debian Node/Python，并内置 pnpm、私有 python-pptx 和 LibreOffice WASM 0.2.3。
+- 用户已确认 `0.2.2-rc.2+systemruntime2` 验收正常。成品复测 76 项通过、2 项因缺少 RPM/pacman 工具跳过。验收后清理本轮缓存和测试暂存，`dist/` 保留新版 deb 及校验文件。SHA256 为 `3e020287d75aa7ddf6b4ce6a32ed7332058cc960fa940bd22fca9792ad1ad1c7`。
+- 官方 rc.2 桌面载荷已修复本地 Host Cookie 累积，当前构建沿用官方实现。代理、MCP 和 libc 探测的官方复核见 `docs/patches/README.md`。
+- rc.2 Office 技能由插件加载时附加 Python 环境说明。系统运行时模式应更新该说明，保留项目或用户显式选择，并只在 PPTX 默认流程加入私有库。LibreOffice WASM 使用适配层声明的确切版本。
+- 交付前对照实际发布包与固定官方源码快照复核补丁。官方源码中的修复须确认进入发布包后再移除本地替代。
 
 ## 分支与范围
 
@@ -34,6 +28,7 @@
 
 ## DSH 更新适配
 
+- 自用分支持续跟进新的 RC 载荷。旧版构建源码保留在相应提交，已验收的 rc.1 系统运行时版见 `personal-dsh-v0.2.2-rc.1`。
 - 兼容性检测保留当前和紧邻的上一版。适配新版本时，将原 `docs/COMPATIBILITY.md` 移为 `docs/COMPATIBILITY-PREVIOUS.md`，覆盖更早归档，再写入当前报告。其他文档聚焦当前版本的产物、用法和验证范围。
 
 - 官方滚动下载地址为 `https://download.deepseek.com/desktop/dsh-latest-macos-arm64.dmg`。下载地址和文件名不能证明版本；解包后核对应用 `package.json` 与 `runtime/primary-runtime/runtime.json`。
@@ -51,7 +46,7 @@
 
 ```sh
 ./auto-build.sh --arch x64 --formats deb --electron bundled --system-runtime --package-jobs 4 \
-  --archive /绝对路径/已校验的/deepseek-harness-0.2.2-rc.1-mac-arm64.zip
+  --archive /绝对路径/已校验的/deepseek-harness-0.2.2-rc.2-mac-arm64.zip
 ```
 
 - 默认保留下载缓存、解包文件和构建暂存。清理使用显式选项或按用户指定范围执行；不要在构建脚本中加入默认删除行为。

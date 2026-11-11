@@ -12,7 +12,7 @@
 
 **官方载荷和所查源码均未发现等价修复。**
 
-官方启动路径从环境读取代理，未提供 kioslaverc 读取与 KDE 会话总线通知监听。 [apps/cli/src/profile-boot.ts](https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/apps/cli/src/profile-boot.ts) [packages/util/http-proxy/src/install.ts](https://github.com/deepseek-ai/deepseek-harness/blob/fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159/packages/util/http-proxy/src/install.ts)
+官方启动路径从环境读取代理，未提供 kioslaverc 读取与 KDE 会话总线通知监听。 [apps/cli/src/profile-boot.ts](https://github.com/deepseek-ai/deepseek-harness/blob/ddac96760b6edf8fa0fe17cbdcf0b512f4c12b2c/apps/cli/src/profile-boot.ts) [packages/util/http-proxy/src/install.ts](https://github.com/deepseek-ai/deepseek-harness/blob/ddac96760b6edf8fa0fe17cbdcf0b512f4c12b2c/packages/util/http-proxy/src/install.ts)
 
 核对范围见 [补丁总览](README.md#核对基线)。
 

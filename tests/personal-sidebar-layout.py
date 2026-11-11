@@ -16,8 +16,17 @@ for extra in (chrome.MAIN_EXTRA_CSS,chrome.WELCOME_EXTRA_CSS):
     source=rounded.transform_preload(reveal.transform(material.transform_preload(chrome.PRELOAD_FN.replace('__TITLEBAR_HEIGHT__','48').replace('__EXTRA_CSS__',extra))))
     css_sources.append(source.split('\tconst CSS = `',1)[1].split('`;',1)[0])
 sidebar=(args.app / 'dsh/node_modules/@deepseek-ai/dsh-client-ui-sidebar/lib/client.js').read_text()
-base_css=json.loads(re.search(r'const css = ("(?:[^"\\]|\\.)*");',sidebar)[1])
-classes={key:re.search(r'"'+key+r'": "([^"]+)"',sidebar)[1] for key in ('root','collapsed','toggle','newSession')}
+css_match = re.search(r'const css\s*=\s*("(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`);', sidebar)
+assert css_match, 'No known sidebar stylesheet in the client bundle'
+css_literal = css_match[1]
+if css_literal.startswith('`'):
+    assert '${' not in css_literal, 'Expected a static sidebar stylesheet'
+    base_css = subprocess.run(['node', '-e', 'process.stdout.write(eval(process.argv[1]))', css_literal],
+                              check=True, capture_output=True, text=True).stdout
+else:
+    base_css = json.loads(css_literal)
+classes = {key: re.search(r'"'+key+r'":\s*["`]([\w-]+)["`]', sidebar)[1]
+           for key in ('root', 'collapsed', 'toggle', 'newSession')}
 js=r'''
 const root=document.documentElement, passed=[];
 try {
