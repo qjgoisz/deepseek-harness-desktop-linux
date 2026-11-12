@@ -4,12 +4,12 @@
 
 本次维护包含三项：对已知服务选择单次 legacy 协商；固定本地 mcp-remote 入口，去掉启动时的 npx 查询。第三项为可选 MCP 后台初始化。没有实施按需才启动、提前显示加载窗口或其他启动策略。
 
-配套工具要求明确配置且可写的 npm 全局前缀，在 `<prefix>/lib/dsh-mcp-remote-0.15.1` 通过锁文件安装；缺省或权限不足退出。已有配置可显式迁移旧入口，详情见 [配套工具](../local-fixes/mcp-startup/README.md)。不改变 Desktop 核心补丁。
+配套工具要求明确配置且可写的 npm 全局前缀，执行 `npm install -g mcp-remote@0.15.1`。已有配置可迁移到全局包入口。安装、迁移和 CC Switch 同步见 [配套工具](../local-fixes/mcp-startup/README.md)。
 
 ## 实现及生效范围
 
 - `patches/patch-mcp-negotiation.py` 已接入应用树构建，stdio/HTTP 均可设置 `versionNegotiation`，默认 `auto`，只允许 `auto`、`legacy`。每次重连继续使用服务配置，其他生命周期保持上游行为。未知、重复或不完整补丁拒绝写入；语法检查通过后原子替换单一模块。
-- `local-fixes/mcp-startup/` 保存独立 mcp-remote 0.15.1 的 manifest/公共锁文件及显式配置工具。仅 Wolfram、OpenAlex、Exa 配置 legacy；后两者改为固定 Node 直接运行本地 proxy.js。额外命令参数、env、超时、失败策略及其他服务不变，不安装用户级 DSH 核心覆盖包。
+- `local-fixes/mcp-startup/` 提供全局安装及显式配置工具。Wolfram、OpenAlex、Exa 配置 legacy，后两者用固定 Node 直接运行全局包的 `proxy.js`。保留额外命令参数、环境变量、超时、失败策略及其他服务设置。
 - 配置工具在核心补丁未安装时拒绝修改配置，并校验安装的 mcp-remote 版本和目标入口。完整验证后备份并替换 YAML，保留非目标内容和 `!js` 标签。
 - v2 增加 `startupMode: blocking | background`，默认 blocking，只有显式 background 且非严格服务才释放 Loader 启动屏障。后台连接完成后继续由原有真实工具注册表和通知机制提供工具、指令和资源；退出仍关闭并等待同一连接，不另建失去归属的任务。`failOnStartupError: true` 无论模式如何都保留原来的等待和失败语义。
 - 配置工具为三个已知可选服务开启 background，严格服务保持 blocking；v1 核心拒绝新配置。已有前两项设置可在升级后原路重跑配置工具。只需第三步时，也可单独给相应服务设置 `startupMode: background`，无需改远端命令、协商策略或安装新的 npm 包。

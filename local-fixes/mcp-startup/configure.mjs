@@ -5,7 +5,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { isDeepStrictEqual } from 'node:util';
 import { fileURLToPath } from 'node:url';
-import {configuredRuntime, verifyRuntime} from './npm-runtime.mjs';
+import {configuredGlobalPackage, REMOTE_VERSION, verifyPackage, verifyRuntime} from './npm-runtime.mjs';
 
 export function configure(source, yaml, node, entry, previous) {
   const schema = yaml.DEFAULT_SCHEMA.extend([
@@ -26,7 +26,7 @@ export function configure(source, yaml, node, entry, previous) {
       c.versionNegotiation = 'legacy';
       c.startupMode = c.failOnStartupError ? 'blocking' : 'background';
       if (x.id !== 'mcp-wolfram') {
-        if (c.command === 'npx' && c.args?.[0] === '-y' && c.args?.[1] === 'mcp-remote@0.15.1') c.args = [entry, ...c.args.slice(2)];
+        if (c.command === 'npx' && c.args?.[0] === '-y' && c.args?.[1] === 'mcp-remote@' + REMOTE_VERSION) c.args = [entry, ...c.args.slice(2)];
         else if (previous && c.command === previous.node && c.args?.[0] === previous.entry) c.args = [entry, ...c.args.slice(1)];
         else if (c.command !== node || c.args?.[0] !== entry) throw Error('Remote command differs from expected version; inspect before changing');
         c.command = node;
@@ -72,11 +72,13 @@ export function configure(source, yaml, node, entry, previous) {
 function main() {
   const args = process.argv.slice(2), apply = args.includes('--apply');
   function flag(name) { const i = args.indexOf(name); if (i < 0 || !args[i + 1]) throw Error('Required ' + name); return path.resolve(args[i + 1]); }
-  const app = flag('--app'), profile = flag('--profile'), runtime = args.includes('--runtime') ? flag('--runtime') : configuredRuntime(), node = flag('--node');
+  const app = flag('--app'), profile = flag('--profile'), node = flag('--node');
   fs.accessSync(node, fs.constants.X_OK);
   const module = path.join(app, 'dsh/node_modules/@deepseek-ai/dsh-mcp-client/lib/index.js');
   if (!fs.readFileSync(module, 'utf8').startsWith('// dsh-linux-mcp-negotiation:v2\n')) throw Error('Install/apply the v2 MCP startup patch first; configuration has not changed');
-  const entry = verifyRuntime(runtime);
+  const entry = args.includes('--runtime')
+    ? verifyRuntime(flag('--runtime'))
+    : verifyPackage(configuredGlobalPackage().packageDirectory);
   let previous;
   if (args.includes('--previous-runtime') || args.includes('--previous-node')) {
     const oldRuntime = flag('--previous-runtime'), oldNode = flag('--previous-node');
