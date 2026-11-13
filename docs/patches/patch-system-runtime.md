@@ -10,4 +10,4 @@ PPTX 技能只在执行 PPTX 脚本时将私有的 `python-pptx` 加入搜索路
 
 ## 官方修复核对
 
-不适用。系统解释器的选择属于 Debian 打包策略。核对的官方 `0.2.2-rc.2` 载荷由 `load_workspace_dependencies` 选择随附的解释器，Office 编辑技能默认使用该工具返回的路径。
+不适用。系统解释器的选择属于 Debian 打包策略。核对的官方 `0.2.2-rc.3` 载荷由 `load_workspace_dependencies` 选择随附的解释器，Office 编辑技能默认使用该工具返回的路径。

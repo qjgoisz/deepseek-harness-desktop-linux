@@ -4,11 +4,11 @@
 
 审计仅回答：**DeepSeek 官方在所查载荷或源码中，是否已有补丁所解决问题的等价实现。** 补丁的用途与目标单独说明；本地脚本维护、分支叠加和测试成绩不作为官方修复证据。
 
-官方 rc.2 源码及发布 ZIP 均已修复 Desktop Cookie 累积，欢迎页和账户连接使用内存 Cookie，启动时清理同一主机的旧认证条目。当前构建已移除相应补丁。界面定制和旧树迁移标为“不适用”。 [官方主进程源码](https://github.com/deepseek-ai/deepseek-harness/blob/ddac96760b6edf8fa0fe17cbdcf0b512f4c12b2c/apps/desktop/src/main.ts)
+官方 rc.3 源码及发布 ZIP 保留了 Desktop Cookie 累积修复，欢迎页和账户连接使用内存 Cookie，启动时清理同一主机的旧认证条目。界面定制和旧树迁移标为“不适用”。 [官方主进程源码](https://github.com/deepseek-ai/deepseek-harness/blob/38a6a5c965aa99ab525161efb7cc5cf1fe62fced/apps/desktop/src/main.ts)
 
 ## 核对基线
 
-2026-11-11 复核官方发布 ZIP `0.2.2-rc.2` 和 [官方 rc.2 标签快照 ddac967](https://github.com/deepseek-ai/deepseek-harness/tree/ddac96760b6edf8fa0fe17cbdcf0b512f4c12b2c)。ZIP 大小与 SHA512 符合清单，应用与 runtime 均为 rc.2。应用记录的构建提交为 `a6b1b85`。发布包来源见 [兼容性记录](../COMPATIBILITY.md)。
+2026-11-13 复核官方发布 ZIP `0.2.2-rc.3` 和 [官方 rc.3 标签快照 38a6a5c](https://github.com/deepseek-ai/deepseek-harness/tree/38a6a5c965aa99ab525161efb7cc5cf1fe62fced)。ZIP 大小与 SHA512 符合清单，应用与 runtime 均为 rc.3。应用记录的构建提交为 `6b729fe`。发布包来源见 [兼容性记录](../COMPATIBILITY.md)。
 
 逐项对照了原始发布包与源码中的适用路径，并在发布包副本验证构建补丁链及主进程和两个 preload 的语法。指纹门禁核对使用发布包所需版本的 Linux x64 npm 原生包。
 

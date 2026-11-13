@@ -29,14 +29,14 @@ NODE_MIRROR="${DSH_NODE_MIRROR:-https://registry.npmmirror.com/-/binary/node}"
 ELECTRON_MIRROR="${DSH_ELECTRON_MIRROR:-https://registry.npmmirror.com/-/binary/electron}"
 PYPI_MIRROR="${DSH_PYPI_MIRROR:-https://pypi.tuna.tsinghua.edu.cn/simple}"
 PBS_TAGS=(${DSH_PBS_TAGS:-20260924 20260901 20260825 20260812})   # python-build-standalone 标签，按序探测
-ELECTRON_VERSION="${DSH_ELECTRON_VERSION:-44.7.0}"        # 官方 0.2.2-rc.2 载荷；44.0.0 有 Linux 托盘回归
+ELECTRON_VERSION="${DSH_ELECTRON_VERSION:-44.7.0}"        # 官方 0.2.2-rc.3 载荷；44.0.0 有 Linux 托盘回归
 DMG_OFFICIAL="${DSH_DMG_URL:-https://download.deepseek.com/desktop/dsh-latest-macos-arm64.dmg}"
 DMG_MIRROR_TAG="${DSH_DMG_MIRROR_TAG:-v0.2.0-rc.2}"
 DMG_MIRROR="${DSH_DMG_MIRROR:-https://github.com/LinJianKun/deepseek-harness-desktop-mirror/releases/download}"
 RUNTIME_REPO="${DSH_RUNTIME_REPO:-https://github.com/AppImage/type2-runtime/releases/download/continuous}"
 APPIMAGETOOL_BASE="${DSH_APPIMAGETOOL_BASE:-https://github.com/AppImage/appimagetool/releases/download/continuous}"
-FALLBACK_NODE_VERSION="${DSH_NODE_VERSION:-24.21.0}"      # rc.2 基线，仅用于 --dry-run
-FALLBACK_PY_VERSION="${DSH_PY_VERSION:-3.12.14}"          # rc.2 基线，仅用于 --dry-run
+FALLBACK_NODE_VERSION="${DSH_NODE_VERSION:-24.21.0}"      # rc.3 基线，仅用于 --dry-run
+FALLBACK_PY_VERSION="${DSH_PY_VERSION:-3.12.14}"          # rc.3 基线，仅用于 --dry-run
 
 # 依赖与解包物的落点。默认全在仓库根（dl/ others/ tools/）；
 # --store DIR 可整体搬到别处（例如 /tmp/dsh-store），解析完参数后由 apply_store() 重算。

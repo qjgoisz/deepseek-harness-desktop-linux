@@ -83,8 +83,8 @@ Electron，避免 Debian 官方仓库没有 Electron 时阻止安装。这些格
 
 应用版本从每棵应用树的 `resources/runtime/primary-runtime/runtime.json` 读取，
 Electron 描述读取应用树的 `version` 文件。deb 保留应用版本；pacman 用下划线替换
-版本中的连字符；RPM 将预发布部分放入 Release（例如 `0.2.2-rc.2` 转为
-Version `0.2.2`、Release `0.rc.2.1`）。不符合支持的版本形式会明确报错。
+版本中的连字符；RPM 将预发布部分放入 Release（例如 `0.2.2-rc.3` 转为
+Version `0.2.2`、Release `0.rc.3.1`）。不符合支持的版本形式会明确报错。
 每个安装包均附带使用相对文件名的 `.sha256`。
 
 ### 自用 deb 使用系统运行时
@@ -101,7 +101,7 @@ Version `0.2.2`、Release `0.rc.2.1`）。不符合支持的版本形式会明�
 
 ```sh
 cd dist
-sudo apt install --no-install-recommends ./deepseek-harness_0.2.2-rc.2+systemruntime3_amd64.bundled.deb
+sudo apt install --no-install-recommends ./deepseek-harness_0.2.2-rc.3+systemruntime3_amd64.bundled.deb
 ```
 
 APT 管理 Node、Python、NumPy、pandas、python-docx、openpyxl、XlsxWriter、Pillow、lxml
@@ -188,7 +188,7 @@ appimagetool 解包暂存，以及本次已打包架构的应用树。
 ## 版本与验证
 
 Node、Python 与 Python 包版本来自官方归档的 `runtime.json`，pnpm 沿用归档内置版本。
-`--dry-run` 不读取归档，显示所选 Electron 及 Node/Python 计划值。Electron 默认 44.7.0，与官方 0.2.2-rc.2
+`--dry-run` 不读取归档，显示所选 Electron 及 Node/Python 计划值。Electron 默认 44.7.0，与官方 0.2.2-rc.3
 的 Electron Framework 版本一致，可配置；现有二进制
 指纹补丁与应用布局针对已支持的载荷，其他版本仍需验证。
 
@@ -296,7 +296,7 @@ DSH_DESKTOP_RESOURCES_DIR="$PWD/out-arm64/resources" ELECTRON_RUN_AS_NODE=1 \
 官方更新清单中的完整 macOS 应用 ZIP 也可构建，使用 `--archive /绝对路径/官方.zip`（`--dmg` 仍兼容）。先按对应官方清单校验文件大小及 SHA512，再解包核对应用 package.json 与 runtime.json 的版本；文件名或 HEAD 不代表版本。当前构建入口不会自动读取更新清单或验证它的 SHA512，该步骤需在构建前完成。7z 自动识别归档格式，按内容 SHA256 复用/刷新解包缓存。运行时版本仍读取该载荷，不采用旧包版本顶替。
 
 
-2026-11-11 使用开发版更新清单提供的 rc.2 ZIP 完成自用 deb 构建。Electron 默认 44.7.0，Node、Python、pnpm 与原生依赖沿用该载荷的版本，LibreOffice 使用同版本 WASM。来源、校验及验证范围见 [rc.2 兼容性记录](COMPATIBILITY.md)。
+2026-11-13 使用开发版更新清单提供的 rc.3 ZIP 完成自用 deb 构建。Electron 默认 44.7.0，Node、Python、pnpm 与原生依赖沿用该载荷的版本，LibreOffice 使用同版本 WASM。来源、校验及验证范围见 [rc.3 兼容性记录](COMPATIBILITY.md)。
 
 ## libc 探测补丁
 
@@ -304,4 +304,4 @@ DSH_DESKTOP_RESOURCES_DIR="$PWD/out-arm64/resources" ELECTRON_RUN_AS_NODE=1 \
 
 ## Desktop Host Cookie
 
-rc.2 官方桌面 ZIP 已将本地 Host 认证 Cookie 改为内存存储，并按名称清理同一主机的遗留认证条目。当前构建直接使用该实现。复核见 [兼容性记录](COMPATIBILITY.md)。
+rc.3 官方桌面 ZIP 继续使用内存中的本地 Host 认证 Cookie，并按名称清理同一主机的遗留认证条目。复核见 [兼容性记录](COMPATIBILITY.md)。

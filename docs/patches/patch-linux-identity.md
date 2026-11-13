@@ -12,7 +12,7 @@
 
 **官方载荷和所查源码均未发现等价修复。**
 
-发布包 package.json 未声明 desktopName。所查 Desktop 源码没有为 Linux 设置对应标识，也未提供对应的 Linux 桌面项打包配置。 [apps/desktop/package.json](https://github.com/deepseek-ai/deepseek-harness/blob/ddac96760b6edf8fa0fe17cbdcf0b512f4c12b2c/apps/desktop/package.json) [apps/desktop/src/main.ts](https://github.com/deepseek-ai/deepseek-harness/blob/ddac96760b6edf8fa0fe17cbdcf0b512f4c12b2c/apps/desktop/src/main.ts)
+发布包 package.json 未声明 desktopName。所查 Desktop 源码没有为 Linux 设置对应标识，也未提供对应的 Linux 桌面项打包配置。 [apps/desktop/package.json](https://github.com/deepseek-ai/deepseek-harness/blob/38a6a5c965aa99ab525161efb7cc5cf1fe62fced/apps/desktop/package.json) [apps/desktop/src/main.ts](https://github.com/deepseek-ai/deepseek-harness/blob/38a6a5c965aa99ab525161efb7cc5cf1fe62fced/apps/desktop/src/main.ts)
 
 核对范围见 [补丁总览](README.md#核对基线)。
 

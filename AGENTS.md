@@ -1,12 +1,13 @@
 # 项目维护约定
 
-## 2026-11-11 自用交付状态
+## 2026-11-13 自用交付状态
 
-- 官方 macOS arm64 开发版清单已提供 `0.2.2-rc.2`，核对时分发比例为 10%。ZIP 大小、SHA512、应用和 runtime 版本均已核对。构建和验证记录见 `docs/COMPATIBILITY.md`。
-- 自用 amd64 包为 `0.2.2-rc.2+systemruntime3`。构建沿用 Electron 44.7.0、Node 24.21.0、Python 3.12.14、pnpm 11.28.5 的官方基线。成品使用 Debian Node/Python，并内置 pnpm、私有 python-pptx 和 LibreOffice WASM 0.2.3。
-- `+systemruntime3` 修复图片并发处理的缓存引用失效。用户桌面验收未复现原 `INVALID_IMAGE` 问题。成品图片自检、三轮各 20 张附件的模型请求图片准备及 APT 升级模拟通过。成品复测 76 项通过、2 项因缺少 RPM/pacman 工具跳过。验收后已清理本轮缓存、暂存和旧 deb，`dist/` 仅保留当前 deb 及校验文件。SHA256 为 `ff31934cae39957721e50c008c142f987620c4b2ce68eab5dd969034172b1049`。
-- 官方 rc.2 桌面载荷已修复本地 Host Cookie 累积，当前构建沿用官方实现。代理、MCP 和 libc 探测的官方复核见 `docs/patches/README.md`。
-- rc.2 Office 技能由插件加载时附加 Python 环境说明。系统运行时模式应更新该说明，保留项目或用户显式选择，并只在 PPTX 默认流程加入私有库。LibreOffice WASM 使用适配层声明的确切版本。
+- 官方 macOS arm64 开发版清单已提供 `0.2.2-rc.3`，核对时分发比例为 10%。ZIP 大小、SHA512、应用和 runtime 版本均已核对。构建和验证记录见 `docs/COMPATIBILITY.md`。
+- 自用 amd64 包为 `0.2.2-rc.3+systemruntime3`。构建沿用 Electron 44.7.0、Node 24.21.0、Python 3.12.14、pnpm 11.28.5 的官方基线。成品使用 Debian Node/Python，并内置 pnpm、私有 python-pptx 和 LibreOffice WASM 0.2.3。
+- rc.3 成品已验证图片 worker 和三轮各 20 张附件的请求图片准备、APT 升级模拟及 76 项回归，2 项因缺少 RPM/pacman 工具跳过。SHA256 为 `b8d119061fc210a2b570415eae408a1b79c0276152c4c401f943df666cff26a8`。
+- rc.3 成品通过隔离 Wayland/XWayland 启动、侧栏、最大化与全屏检查，以及 Office 读写和 WASM 导出。用户已完成桌面验收，除上游侧边栏取消固定在重启后重置外，未报告其他问题。该行为暂按上游实现保留。
+- 官方 rc.3 桌面载荷保留本地 Host Cookie 累积修复，当前构建沿用官方实现。代理、MCP 和 libc 探测的官方复核见 `docs/patches/README.md`。
+- rc.3 Office 技能由插件加载时附加 Python 环境说明。系统运行时模式应更新该说明，保留项目或用户显式选择，并只在 PPTX 默认流程加入私有库。LibreOffice WASM 使用适配层声明的确切版本。
 - 交付前对照实际发布包与固定官方源码快照复核补丁。官方源码中的修复须确认进入发布包后再移除本地替代。
 
 ## 分支与范围
@@ -48,7 +49,7 @@
 
 ```sh
 ./auto-build.sh --arch x64 --formats deb --electron bundled --system-runtime --package-jobs 4 \
-  --archive /绝对路径/已校验的/deepseek-harness-0.2.2-rc.2-mac-arm64.zip
+  --archive /绝对路径/已校验的/deepseek-harness-0.2.2-rc.3-mac-arm64.zip
 ```
 
 - 默认保留下载缓存、解包文件和构建暂存。清理使用显式选项或按用户指定范围执行；不要在构建脚本中加入默认删除行为。

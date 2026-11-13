@@ -12,7 +12,7 @@
 
 **官方载荷和所查源码均未发现等价修复。**
 
-主窗口和欢迎窗口的 hidden/overlay 样式仍限定在 Windows 或 macOS 分支，没有 Linux 窗口配置。 [apps/desktop/src/main.ts](https://github.com/deepseek-ai/deepseek-harness/blob/ddac96760b6edf8fa0fe17cbdcf0b512f4c12b2c/apps/desktop/src/main.ts) [apps/desktop/src/welcome-window.ts](https://github.com/deepseek-ai/deepseek-harness/blob/ddac96760b6edf8fa0fe17cbdcf0b512f4c12b2c/apps/desktop/src/welcome-window.ts)
+主窗口和欢迎窗口的 hidden/overlay 样式仍限定在 Windows 或 macOS 分支，没有 Linux 窗口配置。 [apps/desktop/src/main.ts](https://github.com/deepseek-ai/deepseek-harness/blob/38a6a5c965aa99ab525161efb7cc5cf1fe62fced/apps/desktop/src/main.ts) [apps/desktop/src/welcome-window.ts](https://github.com/deepseek-ai/deepseek-harness/blob/38a6a5c965aa99ab525161efb7cc5cf1fe62fced/apps/desktop/src/welcome-window.ts)
 
 核对范围见 [补丁总览](README.md#核对基线)。
 

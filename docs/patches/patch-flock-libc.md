@@ -12,7 +12,7 @@
 
 **官方载荷和所查源码均未发现等价修复。**
 
-官方文件锁模块仍调用完整的 process.report.getReport() 来识别 libc，未排除网络诊断。 [native/system/packages/entry/src/flock.ts](https://github.com/deepseek-ai/deepseek-harness/blob/ddac96760b6edf8fa0fe17cbdcf0b512f4c12b2c/native/system/packages/entry/src/flock.ts)
+官方文件锁模块仍调用完整的 process.report.getReport() 来识别 libc，未排除网络诊断。 [native/system/packages/entry/src/flock.ts](https://github.com/deepseek-ai/deepseek-harness/blob/38a6a5c965aa99ab525161efb7cc5cf1fe62fced/native/system/packages/entry/src/flock.ts)
 
 核对范围见 [补丁总览](README.md#核对基线)。
 
