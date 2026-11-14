@@ -41,6 +41,7 @@
 - 图片 worker 客户端按源字节的 SHA-256 合并并发上传。若 worker 在开始处理前报告缓存引用失效，客户端携带源字节重试一次。成品自检应覆盖同图并发、淘汰后重读及超出缓存容量的并发处理。
 - 不把插件自身的性能问题或协作桥改动夹带进桌面重打包；发现相关问题可记录诊断，按用户指定范围另行处理。
 - `local-fixes/dsh-usage-settings/` 单独保存用户授权纳入自用分支的插件导航修复；仅显式运行 `apply-fix.py --apply` 时修改本机插件，不接入 Desktop 打包流程。
+- `local-fixes/dsh-qoder-sidebar/` 保存独立的 Qoder 底栏兼容修复。已在 DSH Desktop `0.2.2-rc.3` 与 `dsh-qoder-connect 0.2.16` 上验收，额度卡开关两种状态下「会话与工作区」入口均可显示。插件更新或重装后先检查已发布的客户端规则，仅用 `--apply` 备份并替换已知规则。脚本独立于 Desktop 打包流程。
 - `local-fixes/mcp-startup/` 通过 `npm -g` 安装固定版本 `mcp-remote@0.15.1`。安装前检查显式配置的 npm 全局前缀及目标目录的写权限，通过 `npm root -g` 定位全局包。OpenAlex 和 Exa 用固定 Node 路径直接执行包内的 `dist/proxy.js`。使用 CC Switch 时从其管理源更新入口并同步到已启用的客户端，保留各客户端的启用状态及 DSH 的协商和后台启动设置。
 
 ## 构建与产物
