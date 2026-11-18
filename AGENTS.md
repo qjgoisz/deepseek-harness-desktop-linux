@@ -35,6 +35,7 @@
 - 官方滚动下载地址为 `https://download.deepseek.com/desktop/dsh-latest-macos-arm64.dmg`。下载地址和文件名不能证明版本；解包后核对应用 `package.json` 与 `runtime/primary-runtime/runtime.json`。
 - Node、Python、Python 包、pnpm 及原生 npm 包使用载荷中的版本；不要独立升级或为了构建成功静默使用其他版本。原生模块默认同版本替换，版本漂移必须明确说明。
 - 自用 deb 可用 `--system-runtime` 在打包阶段改用系统 Python 和 Node，保留内置 pnpm、LibreOffice Kit 和私有的 `python-pptx`。该模式绕过旧用户运行时缓存。适配新版本时复核工作区依赖工具、Office 技能、Desktop Host 和 CLI 的路径。
+- Arch 自用 pacman 包同样使用 `--system-runtime`，依赖对应主版本的系统 Electron、系统 Node、Python、pnpm 和 Office Python 库（包括 `python-pptx`）。LibreOffice Kit WASM 和 Sharp worker 仍随包分发。升级时同时复核系统 pnpm 的插件管理与锁文件兼容性、原生模块和双显示协议启动。
 - 当前 pnpm 位于 `runtime/primary-runtime/dependencies/pnpm`。资源根覆盖应保留对应载荷的实际布局，并验证 GUI 包管理入口与内置 CLI。
 - `patches/patch-main.py` 遇到未知或重复匹配时应失败，且不写入部分补丁。维护其他补丁时也应避免匹配失败后悄悄交付半成品；同时检查主进程与两个 preload。
 - 保留 Sharp 的独立 Node worker 隔离方案。facade 的版本信息应读取实际 worker 原包，不能写死旧版版本号。
@@ -45,6 +46,9 @@
 - `local-fixes/mcp-startup/` 通过 `npm -g` 安装固定版本 `mcp-remote@0.15.1`。安装前检查显式配置的 npm 全局前缀及目标目录的写权限，通过 `npm root -g` 定位全局包。OpenAlex 和 Exa 用固定 Node 路径直接执行包内的 `dist/proxy.js`。使用 CC Switch 时从其管理源更新入口并同步到已启用的客户端，保留各客户端的启用状态及 DSH 的协商和后台启动设置。
 
 ## 构建与产物
+
+- Arch x86_64 可在仓库根目录用 `PKGDEST="$PWD/dist" makepkg -s` 构建。更新 `PKGBUILD` 后同步 `.SRCINFO`，核对上游 ZIP 校验和、版本及系统依赖。与 `auto-build.sh --formats pacman` 共用文件暂存逻辑。
+- 2026-11-18，Arch `0.2.2_rc.3+systemruntime1-2` 已通过用户验收。该包由 `makepkg` 生成，应用资源与手工打包的 `pkgrel=1` 一致，验收后保留当前 `pkgrel=2` 成品和校验文件。
 
 自用 x86_64 bundled deb 的常用命令：
 

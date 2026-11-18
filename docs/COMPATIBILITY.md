@@ -35,3 +35,17 @@
 
 - 用户完成桌面验收，除侧边栏应用入口取消固定后重启会恢复外，未报告其他问题。官方 rc.2 与 rc.3 均只在内存中保存未固定列表，侧边栏插件重新加载时会重置。rc.3 官方 ZIP 与自用 deb 的侧边栏模块逐字节一致，本次暂保留该行为。[官方侧边栏说明](https://github.com/deepseek-ai/deepseek-harness/blob/38a6a5c965aa99ab525161efb7cc5cf1fe62fced/packages/client/ui-sidebar/README.zh.md#L44)
 - 清理本轮下载、解包、构建及测试暂存和 rc.2 安装包。`dist/` 保留已验收的 rc.3 deb 及校验文件。
+
+## Arch Linux 迁移（2026-11-17）
+
+- 官方开发清单分发比例已达 100%，版本仍为 `0.2.2-rc.3`。重新校验同一 ZIP 并走完整 Linux 构建。pacman 成品为 `0.2.2_rc.3+systemruntime1-1` x86_64，90.78 MiB，包校验与 `pacman -U --print` 依赖解析通过。[安装包记录](ARTIFACTS.md)
+- 成品在隔离环境使用 Arch Electron 44.11.2、Node 26.13.1、Python 3.14.10、pnpm 12.21.0。Wayland 和 XWayland 均通过欢迎页并渲染主界面。CLI 和图片 worker 自检通过。
+- 工作区依赖工具返回系统 Node、Python、pnpm 路径和八个 Python 库，跳过旧运行时缓存。系统 Python 成功读写 DOCX、XLSX 和 PPTX，内嵌 LibreOffice Kit WASM 将三种格式导出 PDF。
+- Desktop CLI 使用系统 pnpm 完成离线添加、锁文件重放和移除。另用 pnpm 12 重放由 pnpm 11 生成的测试锁文件。成品回归 75 项通过，2 项 deb 和 1 项 RPM 因缺少构建工具跳过。
+- 迁移来的用户目录中已存在 Desktop 配置和插件。三个旧工作区路径仍可访问，22 个会话归档通过解压校验。隔离测试未使用真实账户和第三方插件。
+
+### PKGBUILD 验证（2026-11-18）
+
+- `makepkg` 完成源文件校验、构建和打包。验证时从签名通过的 Arch 包临时解出 `unzip`，以 `--nodeps` 运行，并用 `pacman -T` 单独确认运行时依赖。新成品的包名相同，`pkgrel` 为 2。包元数据、校验和及 `pacman -U --print` 升级解析均通过。
+- 新包的应用资源与 `pkgrel=1` 逐文件一致，内置 CLI、系统 pnpm 和图片 worker 复测通过。隔离 GUI 检查复用上一包的记录。自动回归 75 项通过，3 项因缺少 deb/RPM 工具跳过。[当前产物](ARTIFACTS.md#arch-linux-x86_64)
+- 用户确认 `pkgrel=2` 验收通过。清理构建暂存和旧 Arch 包，保留最新 Arch 包、Debian 包及各自的校验文件。

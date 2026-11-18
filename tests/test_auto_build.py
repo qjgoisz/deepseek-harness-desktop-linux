@@ -95,12 +95,16 @@ class BuildCLI(unittest.TestCase):
         self.assertNotIn('下载 https://download.deepseek.com/', result.stdout)
         self.assertFalse(self.marker.exists())
 
-    def test_system_runtime_is_a_deb_packaging_option(self):
+    def test_system_runtime_is_a_deb_and_pacman_packaging_option(self):
         args = ('--system-runtime', '--only', 'package', '--dry-run')
         result = self.run_cli(*args, '--formats', 'deb', '--arch', 'all')
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('系统 Python 和 Node', result.stdout)
         self.assertNotIn('python3-pptx_', result.stdout)
+        for formats in ('pacman', 'deb,pacman'):
+            result = self.run_cli(*args, '--formats', formats)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn('pacman 使用系统 Python 和 Node，以及系统 python-pptx 和 pnpm', result.stdout)
         for formats in ('appimage', 'deb,rpm'):
             result = self.run_cli(*args, '--formats', formats)
             self.assertNotEqual(result.returncode, 0)
@@ -302,8 +306,9 @@ class BuildCLI(unittest.TestCase):
         info = subprocess.check_output(['bsdtar', '-xOf', str(archive), '.PKGINFO'], text=True)
         self.assertIn('pkgver = 1.3.7_rc.4-1', info)
         self.assertIn('arch = x86_64', info)
+        self.assertIn('depend = electron44>=44.4.5', info)
         members = subprocess.check_output(['bsdtar', '-tf', str(archive)], text=True)
-        self.assertIn('.MTREE.gz', members)
+        self.assertIn('.MTREE\n', members)
         self.assertIn('-T1', log.read_text().splitlines())
         self.assertIn('.INSTALL', members)
         self.assertNotIn('.sharp-native-backup', members)

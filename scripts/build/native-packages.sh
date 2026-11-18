@@ -28,7 +28,7 @@ build_native_packages() {
   RPM_RELEASE="${RPM_RELEASE//-/.}"
   PACKAGED_ELECTRON_VERSION="$(cat "$SRC/version" 2>/dev/null || printf '%s' "$ELECTRON_VERSION")"
   mkdir -p "$WORK" "$OUT"
-  prepare_package_metadata
+  if want_format deb || want_format rpm; then prepare_package_metadata; fi
   say "阶段 3/3 打包发行包（$arch，应用版本 $VER）"
   if want_format deb; then
     if [ "$ELECTRON_MODE" != system ]; then build_deb bundled; fi
@@ -244,26 +244,62 @@ EOF
   echo "  ✓ rpm: $(du -h "$OUT/deepseek-harness-${RPM_VERSION}-${RPM_RELEASE}.${RPMARCH}.rpm" | cut -f1)"
 }
 
-# ------------------------------------------------------------------- Arch ----
+# Stage the shared pacman payload for both the portable builder and makepkg.
+stage_arch_package() {
+  local r="$1" tree="$2" electron_version="$3" system_runtime="$4"
+  local resources="$r/usr/lib/deepseek-harness/resources"
+  local electron_major="${electron_version%%.*}"
+  if [[ ! "$electron_version" =~ ^[1-9][0-9]*\.[0-9]+\.[0-9]+$ ]]; then
+    die "不支持的 Electron 版本：$electron_version"
+  fi
+  copy_tree "$tree/resources" "$resources" .sharp-native-backup
+  if [ "$system_runtime" -eq 1 ]; then
+    python3 "$ROOT/patches/patch-system-runtime.py" --arch-linux "$resources" >/dev/null
+    drop "$resources/runtime/primary-runtime/dependencies/python"
+    drop "$resources/runtime/primary-runtime/dependencies/pnpm"
+  fi
+  normalize_modes "$resources"
+  rm -f "$resources/app-update.yml"
+  mkdir -p "$r/usr/bin"
+  cat > "$r/usr/bin/deepseek-harness" <<EOF
+#!/bin/sh
+export DSH_DESKTOP_FORCE_PACKAGED=1
+export DSH_DESKTOP_RESOURCES_DIR=/usr/lib/deepseek-harness/resources
+export DSH_DESKTOP_NODE_EXECUTABLE=/usr/bin/electron$electron_major
+exec "\$DSH_DESKTOP_NODE_EXECUTABLE" "\$DSH_DESKTOP_RESOURCES_DIR/app" "\$@"
+EOF
+  chmod 755 "$r/usr/bin/deepseek-harness"
+  install -Dm644 "$ROOT/icons/deepseek-harness.desktop" "$r/usr/share/applications/deepseek-harness.desktop"
+  local s
+  for s in 16 24 32 48 64 128 256 512; do
+    install -Dm644 "$ROOT/icons/${s}x${s}/deepseek-harness.png" \
+      "$r/usr/share/icons/hicolor/${s}x${s}/apps/deepseek-harness.png"
+  done
+}
+
 build_pkgtar() {
   local r="$WORK/pkgroot"
-  drop "$r"; mkdir -p "$r/usr/lib/deepseek-harness" "$r/usr/bin" \
-    "$r/usr/share/applications" "$r/usr/share/icons/hicolor"
-  copy_tree "$SRC/resources" "$r/usr/lib/deepseek-harness/resources" .sharp-native-backup
-  normalize_modes "$r/usr/lib/deepseek-harness/resources"
-  rm -f "$r/usr/lib/deepseek-harness/resources/app-update.yml"
-  cp "$META/launcher" "$r/usr/bin/deepseek-harness"
-  chmod 755 "$r/usr/bin/deepseek-harness"
-  cp "$META/deepseek-harness.desktop" "$r/usr/share/applications/"
-  for s in 16 24 32 48 64 128 256 512; do
-    mkdir -p "$r/usr/share/icons/hicolor/${s}x${s}/apps"
-    cp "$META/icons/${s}x${s}/deepseek-harness.png" "$r/usr/share/icons/hicolor/${s}x${s}/apps/"
-  done
+  local version="$VER_PKG-1"
+  local -a deps=("electron${PACKAGED_ELECTRON_VERSION%%.*}>=$PACKAGED_ELECTRON_VERSION" xdg-utils)
+  drop "$r"
+  stage_arch_package "$r" "$SRC" "$PACKAGED_ELECTRON_VERSION" "$SYSTEM_RUNTIME"
+  if [ "$SYSTEM_RUNTIME" -eq 1 ]; then
+    local node_version node_major node_next
+    read -r _ node_version _ < <(runtime_json "$SRC/resources/runtime/primary-runtime/runtime.json")
+    node_major="${node_version%%.*}"
+    node_next=$((node_major + 1))
+    # rc.3 also works with Arch's current Node 26.
+    if [ "$node_major" -eq 24 ]; then node_next=27; fi
+    version="$VER_PKG+systemruntime1-1"
+    deps+=("nodejs>=$node_version" "nodejs<$node_next"
+      'pnpm>=12.21.0' 'pnpm<13' python python-numpy python-pandas python-docx
+      python-openpyxl python-xlsxwriter python-pillow python-lxml python-pptx)
+  fi
   local size; size=$(du -sb "$r" | cut -f1)
   cat > "$r/.PKGINFO" <<EOF
 pkgname = deepseek-harness-desktop
 pkgbase = deepseek-harness-desktop
-pkgver = ${VER_PKG}-1
+pkgver = $version
 pkgdesc = DeepSeek Harness desktop client (system-wide Electron build)
 url = https://harness.deepseek.com
 builddate = $(date +%s)
@@ -271,8 +307,8 @@ packager = DeepSeek Harness Linux port
 size = $size
 arch = $PKGARCH
 license = MIT
-depend = electron
 EOF
+  printf 'depend = %s\n' "${deps[@]}" >> "$r/.PKGINFO"
   cat > "$r/.INSTALL" <<'EOF'
 post_install() {
   update-desktop-database -q 2>/dev/null || true
@@ -287,11 +323,10 @@ post_remove() {
   gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor 2>/dev/null || true
 }
 EOF
-  ( cd "$r" && bsdtar -cf .MTREE --format=mtree --uid 0 --gid 0 --numeric-owner \
-      --options='!all,use-set,type,uid,gid,mode,size,md5,time,link' .PKGINFO .INSTALL usr \
-    && gzip -9 -f .MTREE )
-  local name="deepseek-harness-desktop-${VER_PKG}-1-${PKGARCH}.pkg.tar.zst"
-  ( cd "$r" && tar --owner=0 --group=0 --numeric-owner --sort=name -cf - .PKGINFO .INSTALL .MTREE.gz usr ) \
+  ( cd "$r" && bsdtar -cf - --format=mtree --uid 0 --gid 0 --numeric-owner \
+      --options='!all,use-set,type,uid,gid,mode,size,md5,time,link' .PKGINFO .INSTALL usr | gzip -9 > .MTREE )
+  local name="deepseek-harness-desktop-${version}-${PKGARCH}.pkg.tar.zst"
+  ( cd "$r" && tar --owner=0 --group=0 --numeric-owner --sort=name -cf - .PKGINFO .INSTALL .MTREE usr ) \
     | zstd -19 -T"$(package_threads 4)" -o "$OUT/$name" -q -f
   write_package_checksum "$name"
   echo "  ✓ pkg.tar.zst: $(du -h "$OUT/$name" | cut -f1)"

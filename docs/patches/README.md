@@ -25,7 +25,7 @@
 | [patch-personal-rounded.py](patch-personal-rounded.md) | 不适用：不纳入官方缺陷是否修复的判定。 |
 | [patch-fingerprint.py](patch-fingerprint.md) | 所核对的 Linux x64 同版本依赖仍有门禁。 |
 | [patch-system-proxy.py](patch-system-proxy.md) | 未发现等价修复。 |
-| [patch-system-runtime.py](patch-system-runtime.md) | 不适用，Debian 打包策略无对应的官方缺陷。 |
+| [patch-system-runtime.py](patch-system-runtime.md) | 不适用，发行包运行时策略无对应的官方缺陷。 |
 | [patch-mcp-negotiation.py](patch-mcp-negotiation.md) | 未发现等价修复。 |
 | [patch-flock-libc.py](patch-flock-libc.md) | 未发现等价修复。 |
 | [upgrade-mac-chrome.py](upgrade-mac-chrome.md) | 不适用：迁移工具不能按官方缺陷修复判定失效。 |

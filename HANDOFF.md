@@ -1,5 +1,15 @@
 # 自用 DSH Desktop 项目交接
 
+## 2026-11-18 · Arch PKGBUILD
+
+- 根目录 `PKGBUILD` 与 `.SRCINFO` 支持用 `makepkg` 构建系统运行时包。与原有 pacman 打包路径共用文件暂存逻辑。
+- `pkgrel=2` 已完成端到端构建、包校验和升级解析，应用资源与 `pkgrel=1` 一致。用户已验收，已清理本轮构建暂存及旧 Arch 包。[成品和用法](docs/ARTIFACTS.md#arch-linux-x86_64)
+
+## 2026-11-17 · Arch Linux
+
+- 同一 rc.3 载荷用 `--formats pacman --electron system --system-runtime` 构建了 x86_64 安装包。系统提供 Electron、Node、Python、pnpm 和 Office Python 库。LibreOffice Kit WASM 和 Sharp worker 保留。
+- 安装包、校验和、依赖与验证范围见 [产物](docs/ARTIFACTS.md) 和 [兼容性记录](docs/COMPATIBILITY.md#arch-linux-迁移2026-11-17)。旧工作区路径由 `/home/debian` 指向 `/home/arch` 的映射维持，已核对存量会话归档。
+
 ## 2026-11-13 · 0.2.2-rc.3
 
 - 分支 `codex/personal-desktop`。使用已核对的官方 macOS arm64 开发版 ZIP 构建 `0.2.2-rc.3+systemruntime3` amd64 bundled deb。来源、SHA512、构建步骤和安装包校验见 [兼容性记录](docs/COMPATIBILITY.md)。

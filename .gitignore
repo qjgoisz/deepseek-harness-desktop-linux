@@ -11,6 +11,11 @@
 /t-home/
 /armverify/
 /.pkgsrc/
+/src/
+/pkg/
+/*.pkg.tar.*
+/deepseek-harness-*-mac-arm64.zip
+/deepseek-harness-*-LICENSE
 
 # 系统文件
 .DS_Store

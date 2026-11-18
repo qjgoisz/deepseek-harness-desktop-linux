@@ -78,8 +78,9 @@ sudo apt install binutils rpm libarchive-tools zstd
 ```
 
 bundled deb、RPM 和 AppImage 内置 Electron；system deb 与 pacman 包需要另行安装
-兼容的系统 Electron。pacman 包依赖 `electron`；system deb 使用 Recommends 提示
-Electron，避免 Debian 官方仓库没有 Electron 时阻止安装。这些格式不会改变运行时载荷。
+兼容的系统 Electron。pacman 包依赖与构建基线同主版本的 Electron 包，例如
+`electron44>=44.7.0`，启动器调用 `/usr/bin/electron44`。system deb 使用 Recommends
+提示 Electron。默认保留随包分发的工作区运行时。
 
 应用版本从每棵应用树的 `resources/runtime/primary-runtime/runtime.json` 读取，
 Electron 描述读取应用树的 `version` 文件。deb 保留应用版本；pacman 用下划线替换
@@ -89,7 +90,7 @@ Version `0.2.2`、Release `0.rc.3.1`）。不符合支持的版本形式会明�
 
 ### 自用 deb 使用系统运行时
 
-`--system-runtime` 仅用于 `--formats deb`，支持两种 Electron 包型。已有应用树时可直接打包：
+`--system-runtime` 支持 deb 和 pacman。已有应用树时可直接打包，两种 deb Electron 包型均适用：
 
 ```sh
 ./auto-build.sh --only package --formats deb --electron bundled --arch x64 --system-runtime
@@ -111,6 +112,45 @@ pnpm 和 LibreOffice Kit 继续使用安装包内的固定版本。PPTX 技能�
 
 系统模式绕过旧的 `$DSH_HOME/dsh-runtimes/dsh-primary-runtime` 缓存。该缓存可留作回退，
 清理时应以整个运行时目录为单位，以免内置版读到残缺的旧缓存。
+
+### Arch Linux 迁移与系统运行时
+
+在完整仓库的根目录，用普通用户运行 `makepkg`：
+
+```sh
+mkdir -p dist
+PKGDEST="$PWD/dist" makepkg -s
+```
+
+需要 Arch 的 `base-devel`，并启用提供 `python-pptx` 的仓库，例如 Arch Linux CN。
+根目录的 `PKGBUILD` 固定官方 ZIP 和 SHA256，复用仓库的 Linux 构建脚本和补丁，
+由 `makepkg` 生成包索引和归档。`.SRCINFO` 用 `makepkg --printsrcinfo > .SRCINFO` 更新。
+当前成品为 `deepseek-harness-desktop-0.2.2_rc.3+systemruntime1-2-x86_64.pkg.tar.zst`。
+构建时，`makepkg` 仍会准备官方基线运行时用于 Linux 应用树与自检。
+
+也可以沿用跨发行版脚本，仍支持原来的 `pkgrel=1` 输出：
+
+```sh
+./auto-build.sh --arch x64 --formats pacman --electron system --system-runtime \
+  --package-jobs 4 --archive /绝对路径/已校验的/deepseek-harness-0.2.2-rc.3-mac-arm64.zip
+```
+
+确认校验文件后，在管理员 shell 中用 `pacman -U /绝对路径/安装包.pkg.tar.zst` 安装，
+让 pacman 解析依赖。
+
+- Desktop、Host、CLI 分别使用版本化的系统 Electron 和 `/usr/bin/node`。rc.3 成品允许
+  Node 24.21.0 至 26.x，包括 Arch 的 Node 24 LTS 和 Node 26。
+- Python 和 Office 库由 pacman 管理。工具调用 `/usr/bin/python3`，从系统解释器查询
+  site-packages；PPTX 技能直接导入系统 `python-pptx`。
+- 插件安装及工作区依赖工具直接调用 `/usr/bin/pnpm`。rc.3 适配 Arch 的 pnpm 12.21+（12.x）。
+- Office 内嵌预览与导出仍使用 DSH 的 LibreOffice Kit WASM。系统 `soffice`
+  可在工作区独立使用。图片处理仍使用 DSH 的 Sharp worker 及其同版本原生包。
+
+同一用户已经迁移家目录时，应用继续读取 `~/.dsh` 和
+`${XDG_CONFIG_HOME:-$HOME/.config}/@deepseek-ai/dsh-desktop`。首次启动前备份这两个目录。
+历史会话存储记录原工作区路径，切换系统时先保持该路径可访问。若家目录通过
+`/home/debian → /home/arch` 兼容旧路径，保持该映射并使用会话已有的工作区入口，
+避免同时用两个路径添加同一目录。按需要在新系统上重装依赖本机 ABI 的第三方插件。
 
 ## 分阶段构建
 

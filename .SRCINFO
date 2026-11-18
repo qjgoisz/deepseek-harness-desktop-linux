@@ -1,0 +1,34 @@
+pkgbase = deepseek-harness-desktop
+	pkgdesc = DeepSeek Harness Desktop with system Electron, Node.js, Python and pnpm
+	pkgver = 0.2.2_rc.3+systemruntime1
+	pkgrel = 2
+	url = https://harness.deepseek.com
+	arch = x86_64
+	license = MIT
+	makedepends = curl
+	makedepends = unzip
+	makedepends = 7zip
+	depends = electron44>=44.7.0
+	depends = nodejs>=24.21.0
+	depends = nodejs<27
+	depends = pnpm>=12.21.0
+	depends = pnpm<13
+	depends = xdg-utils
+	depends = python
+	depends = python-numpy
+	depends = python-pandas
+	depends = python-docx
+	depends = python-openpyxl
+	depends = python-xlsxwriter
+	depends = python-pillow
+	depends = python-lxml
+	depends = python-pptx
+	noextract = deepseek-harness-0.2.2-rc.3-mac-arm64.zip
+	options = !strip
+	options = !debug
+	source = https://download.deepseek.com/dsh-desk/bin/mac-arm64/deepseek-harness-0.2.2-rc.3-mac-arm64.zip
+	source = deepseek-harness-0.2.2-rc.3-LICENSE::https://raw.githubusercontent.com/deepseek-ai/deepseek-harness/38a6a5c965aa99ab525161efb7cc5cf1fe62fced/LICENSE
+	sha256sums = 1648a29609710d852f04fb3c50602ff37b1ed0def1d2aff65ce813daa5a4f4a4
+	sha256sums = ebb4f09972aee8608be255debaf78451a68e95c290f55c240dec2ecfa16ea6be
+
+pkgname = deepseek-harness-desktop

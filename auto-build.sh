@@ -134,8 +134,9 @@ for format in "${selected_formats[@]}"; do
 done
 FORMATS="${FORMATS#,}"; FORMATS="${FORMATS%,}"
 [ -n "$FORMATS" ] || die "所选格式不提供 $ELECTRON_MODE 包（AppImage/RPM: bundled；pacman: system；deb: 两者）"
-if [ "$SYSTEM_RUNTIME" -eq 1 ] && { [ "$FORMATS" != deb ] || ! want_phase package; }; then
-  die "--system-runtime 需要 --formats deb 并执行 package 阶段"
+if [ "$SYSTEM_RUNTIME" -eq 1 ]; then
+  case "$FORMATS" in deb|pacman|deb,pacman|pacman,deb) ;; *) die "--system-runtime 仅适用于 deb 和 pacman" ;; esac
+  want_phase package || die "--system-runtime 需要执行 package 阶段"
 fi
 if want_phase package; then check_package_tools; fi
 
@@ -195,7 +196,10 @@ step "架构:   ${ARCHES[*]}（host=$HOST_ARCH）"
 step "阶段:   $ONLY"
 step "格式:   $FORMATS"
 step "Electron: $ELECTRON_MODE"
-[ "$SYSTEM_RUNTIME" -eq 0 ] || step "deb 使用系统 Python 和 Node，内置 python-pptx 和 pnpm"
+if [ "$SYSTEM_RUNTIME" -eq 1 ]; then
+  want_format deb && step "deb 使用系统 Python 和 Node，内置 python-pptx 和 pnpm" || true
+  want_format pacman && step "pacman 使用系统 Python 和 Node，以及系统 python-pptx 和 pnpm" || true
+fi
 step "打包线程: ${PACKAGE_JOBS:-各格式默认}"
 step "加速:   ${GH_PROXY:-（直连 GitHub）}"
 step "暂存:   $WORK_BASE/<arch>"

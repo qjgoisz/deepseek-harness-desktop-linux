@@ -18,7 +18,8 @@ DeepSeek Harness — Linux 一键构建
 选项:
   --formats 格式[,格式] appimage / deb / pacman / rpm / all（默认 appimage）
   --electron 模式        bundled / system / both（默认 both）；筛选相应类型的安装包
-  --system-runtime       仅 deb：使用系统 Python 和 Node，内置 python-pptx 和 pnpm
+  --system-runtime       deb / pacman 使用系统 Python 和 Node
+                         deb 内置 python-pptx 和 pnpm；pacman 使用系统包
                          兼容旧选项 --system-python
   --package-jobs N       打包压缩线程数（正整数；默认沿用各格式设置）
   --arch x64|arm64|all   目标架构（默认：本机架构）
@@ -85,7 +86,7 @@ copy_tree() {
   mkdir -p "$dest"
   local args=() pattern
   for pattern in "$@"; do args+=("--exclude=$pattern"); done
-  ( cd "$src" && tar "${args[@]}" -cf - . ) | ( cd "$dest" && tar -xf - )
+  ( cd "$src" && tar "${args[@]}" -cf - . ) | ( cd "$dest" && tar --no-same-owner -xf - )
 }
 
 # Explicit cleanup runs only after every selected phase succeeds.
