@@ -11,4 +11,4 @@ Debian 使用内置 pnpm，并在默认 PPTX 命令中加入私有 `python-pptx`
 
 ## 官方修复核对
 
-不适用。系统解释器的选择属于发行包策略。核对的官方 `0.2.2-rc.3` 载荷由 `load_workspace_dependencies` 选择随附的解释器，Office 编辑技能默认使用该工具返回的路径。
+不适用。系统解释器的选择属于发行包策略。核对的官方 `0.2.2-rc.5` 载荷由 `load_workspace_dependencies` 选择随附的解释器，Office 编辑技能默认使用该工具返回的路径。

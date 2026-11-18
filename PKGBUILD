@@ -1,9 +1,9 @@
 pkgname=deepseek-harness-desktop
-_upstream_version=0.2.2-rc.3
+_upstream_version=0.2.2-rc.5
 _electron_version=44.7.0
 _node_version=24.21.0
 pkgver="${_upstream_version/-/_}+systemruntime1"
-pkgrel=2
+pkgrel=1
 pkgdesc='DeepSeek Harness Desktop with system Electron, Node.js, Python and pnpm'
 arch=('x86_64')
 url='https://harness.deepseek.com'
@@ -17,9 +17,9 @@ options=('!strip' '!debug')
 _archive="deepseek-harness-${_upstream_version}-mac-arm64.zip"
 _license_file="deepseek-harness-${_upstream_version}-LICENSE"
 source=("https://download.deepseek.com/dsh-desk/bin/mac-arm64/${_archive}"
-        "${_license_file}::https://raw.githubusercontent.com/deepseek-ai/deepseek-harness/38a6a5c965aa99ab525161efb7cc5cf1fe62fced/LICENSE")
+        "${_license_file}::https://raw.githubusercontent.com/deepseek-ai/deepseek-harness/9c2670d3bce5275e0d1610272958121af87787bb/LICENSE")
 noextract=("${_archive}")
-sha256sums=('1648a29609710d852f04fb3c50602ff37b1ed0def1d2aff65ce813daa5a4f4a4'
+sha256sums=('c169975831897ee0925dbc23a661893511eff29bf645a7842ae1c2d2b5d5b8a0'
             'ebb4f09972aee8608be255debaf78451a68e95c290f55c240dec2ecfa16ea6be')
 
 prepare() {

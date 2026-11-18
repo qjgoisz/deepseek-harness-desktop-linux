@@ -12,7 +12,7 @@
 
 **官方载荷和所查源码均未发现等价实现。**
 
-官方主进程只在 macOS/Windows 分支发布全屏事件。Linux 尚无配套的最大化、焦点同步或 Wayland 指针和双击还原路径。 [apps/desktop/src/main.ts](https://github.com/deepseek-ai/deepseek-harness/blob/38a6a5c965aa99ab525161efb7cc5cf1fe62fced/apps/desktop/src/main.ts)
+官方主进程只在 macOS/Windows 分支发布全屏事件。Linux 尚无配套的最大化、焦点同步或 Wayland 指针和双击还原路径。 [apps/desktop/src/main.ts](https://github.com/deepseek-ai/deepseek-harness/blob/9c2670d3bce5275e0d1610272958121af87787bb/apps/desktop/src/main.ts)
 
 核对范围见 [补丁总览](README.md#核对基线)。
 

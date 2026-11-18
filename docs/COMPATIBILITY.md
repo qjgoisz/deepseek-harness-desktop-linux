@@ -1,51 +1,28 @@
-# DSH 0.2.2-rc.3 Desktop 适配与验证
+# DSH 0.2.2-rc.5 Desktop 适配与验证
 
-2026-11-13（Asia/Shanghai），分支 `codex/personal-desktop`，基于 `6646115`。上一版见 [rc.2 兼容性归档](COMPATIBILITY-PREVIOUS.md)。
+2026-11-18（Asia/Shanghai），分支 `codex/personal-desktop`，基于 `21f5a7e`。上一适配版见 [rc.3 兼容性归档](COMPATIBILITY-PREVIOUS.md)。
 
 ## 官方来源
 
-- 核对时开发版清单分阶段比例为 10%，发布时间为 2026-11-13 15:40:14.455（Asia/Shanghai）。[官方桌面更新清单](https://download.deepseek.com/dsh-desk/feeds/mac-arm64/nightly-mac.yml)
-- ZIP 为 362840431 字节，SHA512 为 `UThWXKCqiiUnjFgij655+Gc1MgiSl+Ybl71jkQi48BhcBCN0XSDNT4GGmGJY3nvEqnkLT3LtWbL6wy6t/kRxIw==`，与清单一致。SHA256 为 `1648a29609710d852f04fb3c50602ff37b1ed0def1d2aff65ce813daa5a4f4a4`。[官方 macOS arm64 ZIP](https://download.deepseek.com/dsh-desk/bin/mac-arm64/deepseek-harness-0.2.2-rc.3-mac-arm64.zip)
-- 应用 `package.json` 和 `runtime/primary-runtime/runtime.json` 均为 `0.2.2-rc.3`。载荷记录的构建提交为 `6b729fedde0c8fd03af7afdf5a711aa64fe87c3b`。官方源码对照使用标签快照 `38a6a5c965aa99ab525161efb7cc5cf1fe62fced`。[官方发布说明](https://github.com/deepseek-ai/deepseek-harness/releases/tag/dsh-v0.2.2-rc.3)
-- 官方发布说明列出了实验性「DeepSeek 会话导入」插件及 Windows 更新修复。已在桌面 ZIP 确认实验性插件随载荷提供。[官方发布说明](https://github.com/deepseek-ai/deepseek-harness/releases/tag/dsh-v0.2.2-rc.3)
+- macOS arm64 开发版清单标为 rc.5，核对时分发比例为 30%，发布时间为 2026-11-18 19:45:57.670（Asia/Shanghai）。[官方清单](https://download.deepseek.com/dsh-desk/feeds/mac-arm64/nightly-mac.yml)
+- ZIP 为 362852032 字节，SHA512 为 `28C1+oaRcSjOwWvzqjXA4Cpic7bvTs++wOu3moAfRQMLhTPZv40G3GQTir0wuyuPGh/PsQH0ykb/qJD4pnWMxA==`，与清单一致。SHA256 为 `c169975831897ee0925dbc23a661893511eff29bf645a7842ae1c2d2b5d5b8a0`。[官方 ZIP](https://download.deepseek.com/dsh-desk/bin/mac-arm64/deepseek-harness-0.2.2-rc.5-mac-arm64.zip)
+- `app.asar` 内的应用 `package.json` 与 `runtime/primary-runtime/runtime.json` 均为 `0.2.2-rc.5`。应用记录的构建提交为 `3f85d888b1297107937d9bd5b853f7e733e179a4`，源码对照使用官方标签 `9c2670d3bce5275e0d1610272958121af87787bb`。[官方发布说明](https://github.com/deepseek-ai/deepseek-harness/releases/tag/dsh-v0.2.2-rc.5)
 
 ## 构建与补丁
 
-```sh
-./auto-build.sh --arch x64 --formats deb --electron bundled --system-runtime --package-jobs 4 \
-  --archive /绝对路径/已校验的/deepseek-harness-0.2.2-rc.3-mac-arm64.zip
-```
-
-- Electron Framework 为 44.7.0，载荷声明 Node 24.21.0、Python 3.12.14、pnpm 11.28.5 和 13 个 Python 包。Linux 构建沿用这些版本，8 项平台依赖和 node-pty prebuild 均同版本替换，包括 Sharp 0.35.5 和 LibreOffice WASM 0.2.3。
-- 官方 ZIP 保留内存 Host Cookie 及旧认证条目清理。KDE 动态代理、MCP 协商与后台启动、libc 探测和指纹门禁仍有对应缺口，现有补丁可应用。Linux 窗口和系统运行时适配通过原补丁链。逐项核对见 [补丁总览](patches/README.md)。
-- 成品使用 Debian Node/Python，内置 pnpm、PPTX 专用的 python-pptx 1.0.2 和 LibreOffice WASM。图片 worker 保留并发上传合并与缓存引用失效时的重试。
+- 从实际载荷确认 Electron 44.7.0、Node 24.21.0、Python 3.12.14、pnpm 11.28.5。保留同版本的 8 项 Linux 平台原生依赖和 node-pty prebuild，包括 Sharp 0.35.5 和 LibreOffice Kit WASM 0.2.3。
+- 官方载荷保留内存 Host Cookie 和旧认证条目清理。Linux 窗口、KDE 动态代理、MCP 协商与后台启动、libc 探测、指纹门禁及系统运行时补丁通过原补丁链。官方侧栏说明仍规定插件重新加载时重置取消固定状态。[补丁总览](patches/README.md) [官方侧栏说明](https://github.com/deepseek-ai/deepseek-harness/blob/9c2670d3bce5275e0d1610272958121af87787bb/packages/client/ui-sidebar/README.zh.md#L44)
+- Arch `makepkg` 完成源码校验、构建及打包。验证时从签名通过的 Arch 包临时解出 `unzip`，以 `--nodeps` 运行并用 `pacman -T` 单独核对宿主依赖。系统 Electron 44.11.2、Node 26.13.1、Python 3.14.10、pnpm 12.21.0 用于成品测试。
 
 ## 成品验证
 
-- `dist/deepseek-harness_0.2.2-rc.3+systemruntime3_amd64.bundled.deb` 为 184274592 字节，SHA256 为 `b8d119061fc210a2b570415eae408a1b79c0276152c4c401f943df666cff26a8`。校验通过。APT 模拟由 rc.2 升级，升级 1 个包，新增和移除均为 0。[安装说明](ARTIFACTS.md)
-- 从 deb 解包验证 CLI `0.2.2-rc.3`、pnpm `11.28.5` 和 22 个 ELF 文件。主进程仅有打包阶段的系统 Node 路径改写，两个 preload 与已验证的应用树一致，三者语法检查通过。
-- 成品回归 76 项通过，RPM/pacman 因缺少工具各跳过 1 项。覆盖本地 HTTP 与账户 WebSocket 的 Host Cookie、100 次换端口、KDE 代理、MCP 及原生锁行为。
-- 图片 worker 自检通过，包括同图并发、旧图读取、20 张图并发缩放、坏数据拒绝和 libvips 隔离。使用成品附件存储为三轮各 20 张合成图生成请求图片。
-- 实际调用 `load_workspace_dependencies` 返回系统 Node 24.22.2、Python 3.14.10、内置 pnpm 和私有 PPTX 路径。没有创建用户运行时缓存。加载三种 Office 编辑技能的默认和用户 Python 指引，完成 DOCX、XLSX、PPTX 读写和 WASM 导出一页 PDF。
-- 从最终 deb 在隔离的 KWin 虚拟桌面启动原生 Wayland 和 XWayland，约 3.2 秒和 3.1 秒进入主界面，含跳过欢迎页。两后端的欢迎页和主界面实色与普通窗口 12px 圆角通过检查，折叠侧栏按钮位于 128px 和 88px。点击交通灯后窗口尺寸由 1280×820 变为 1600×1000 并成功还原，DOM 真全屏及退出也通过。最大化和全屏时交通灯保持可见，圆角消失，侧栏按钮位置不变。
-- 桌面测试使用窗口几何和计算样式，XWayland 使用 Mesa 软件渲染。自动化测试未覆盖真实账户、现有会话、用户插件、GPU 和会话导入流程。
+- `0.2.2_rc.5+systemruntime1-1` 的包信息、SHA256 和 `pacman -U --print` 升级解析均通过。[本轮安装包](ARTIFACTS.md)
+- 从最终包解出主进程和两个 preload，语法检查通过。两个 preload 与构建树一致，主进程包含打包阶段的系统 Node 和 pnpm 路径改写。隔离 KWin 的 Wayland 与 XWayland 均从欢迎页进入并渲染主界面。
+- CLI 报告 rc.5，系统 pnpm 为 12.21.0。通过 CLI 离线添加、锁文件重放、移除本地测试依赖，并用 pnpm 12 重放由随载荷的 pnpm 11 生成的测试锁文件。
+- 实际调用 `load_workspace_dependencies`，返回系统 Node、Python、pnpm 和八项 Office Python 库。系统 Python 读写 DOCX、XLSX、PPTX 通过。图片 worker 通过自检，覆盖同图并发、旧图读取、20 图并发缩放及坏数据拒绝。
+- 自动回归 75 项通过，因缺少 deb/RPM 工具跳过 3 项。实际载荷的 Cookie、代理热切换、MCP 和 libc 用例通过。
+- 隔离桌面冒烟使用空 profile 和软件渲染。真实账户、会话、第三方插件、GPU、窗口最大化与全屏交互及 Office WASM 导出留待独立验收。
 
+## GitHub HTTPS 诊断
 
-## 用户验收与清理
-
-- 用户完成桌面验收，除侧边栏应用入口取消固定后重启会恢复外，未报告其他问题。官方 rc.2 与 rc.3 均只在内存中保存未固定列表，侧边栏插件重新加载时会重置。rc.3 官方 ZIP 与自用 deb 的侧边栏模块逐字节一致，本次暂保留该行为。[官方侧边栏说明](https://github.com/deepseek-ai/deepseek-harness/blob/38a6a5c965aa99ab525161efb7cc5cf1fe62fced/packages/client/ui-sidebar/README.zh.md#L44)
-- 清理本轮下载、解包、构建及测试暂存和 rc.2 安装包。`dist/` 保留已验收的 rc.3 deb 及校验文件。
-
-## Arch Linux 迁移（2026-11-17）
-
-- 官方开发清单分发比例已达 100%，版本仍为 `0.2.2-rc.3`。重新校验同一 ZIP 并走完整 Linux 构建。pacman 成品为 `0.2.2_rc.3+systemruntime1-1` x86_64，90.78 MiB，包校验与 `pacman -U --print` 依赖解析通过。[安装包记录](ARTIFACTS.md)
-- 成品在隔离环境使用 Arch Electron 44.11.2、Node 26.13.1、Python 3.14.10、pnpm 12.21.0。Wayland 和 XWayland 均通过欢迎页并渲染主界面。CLI 和图片 worker 自检通过。
-- 工作区依赖工具返回系统 Node、Python、pnpm 路径和八个 Python 库，跳过旧运行时缓存。系统 Python 成功读写 DOCX、XLSX 和 PPTX，内嵌 LibreOffice Kit WASM 将三种格式导出 PDF。
-- Desktop CLI 使用系统 pnpm 完成离线添加、锁文件重放和移除。另用 pnpm 12 重放由 pnpm 11 生成的测试锁文件。成品回归 75 项通过，2 项 deb 和 1 项 RPM 因缺少构建工具跳过。
-- 迁移来的用户目录中已存在 Desktop 配置和插件。三个旧工作区路径仍可访问，22 个会话归档通过解压校验。隔离测试未使用真实账户和第三方插件。
-
-### PKGBUILD 验证（2026-11-18）
-
-- `makepkg` 完成源文件校验、构建和打包。验证时从签名通过的 Arch 包临时解出 `unzip`，以 `--nodeps` 运行，并用 `pacman -T` 单独确认运行时依赖。新成品的包名相同，`pkgrel` 为 2。包元数据、校验和及 `pacman -U --print` 升级解析均通过。
-- 新包的应用资源与 `pkgrel=1` 逐文件一致，内置 CLI、系统 pnpm 和图片 worker 复测通过。隔离 GUI 检查复用上一包的记录。自动回归 75 项通过，3 项因缺少 deb/RPM 工具跳过。[当前产物](ARTIFACTS.md#arch-linux-x86_64)
-- 用户确认 `pkgrel=2` 验收通过。清理构建暂存和旧 Arch 包，保留最新 Arch 包、Debian 包及各自的校验文件。
+KDE 排除列表中的 IP 通配形式会使适配器拒绝该次读取。排除规则在隔离配置中改用 IPv4 CIDR 后，原 HTTPS 代理字段仍在代理端口的 TLS 握手时失败。将同一地址的代理 URL 改为 `http://` 后，rc.5 Host 的 GitHub HTTPS 请求返回 200，继承该策略的 Git 进程读到了公开仓库 HEAD。用于复测的配置与日常桌面隔离。[配置说明](SYSTEM_PROXY.md#github-https-超时)

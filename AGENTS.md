@@ -1,13 +1,13 @@
 # 项目维护约定
 
-## 2026-11-13 自用交付状态
+## 2026-11-18 自用交付状态
 
-- 官方 macOS arm64 开发版清单已提供 `0.2.2-rc.3`，核对时分发比例为 10%。ZIP 大小、SHA512、应用和 runtime 版本均已核对。构建和验证记录见 `docs/COMPATIBILITY.md`。
-- 自用 amd64 包为 `0.2.2-rc.3+systemruntime3`。构建沿用 Electron 44.7.0、Node 24.21.0、Python 3.12.14、pnpm 11.28.5 的官方基线。成品使用 Debian Node/Python，并内置 pnpm、私有 python-pptx 和 LibreOffice WASM 0.2.3。
-- rc.3 成品已验证图片 worker 和三轮各 20 张附件的请求图片准备、APT 升级模拟及 76 项回归，2 项因缺少 RPM/pacman 工具跳过。SHA256 为 `b8d119061fc210a2b570415eae408a1b79c0276152c4c401f943df666cff26a8`。
-- rc.3 成品通过隔离 Wayland/XWayland 启动、侧栏、最大化与全屏检查，以及 Office 读写和 WASM 导出。用户已完成桌面验收，除上游侧边栏取消固定在重启后重置外，未报告其他问题。该行为暂按上游实现保留。
-- 官方 rc.3 桌面载荷保留本地 Host Cookie 累积修复，当前构建沿用官方实现。代理、MCP 和 libc 探测的官方复核见 `docs/patches/README.md`。
-- rc.3 Office 技能由插件加载时附加 Python 环境说明。系统运行时模式应更新该说明，保留项目或用户显式选择，并只在 PPTX 默认流程加入私有库。LibreOffice WASM 使用适配层声明的确切版本。
+- 官方 macOS arm64 开发版清单已提供 `0.2.2-rc.5`，核对时分发比例为 30%。ZIP 大小、SHA512、应用和 runtime 版本均已核对。详见 `docs/COMPATIBILITY.md`。
+- Arch x86_64 成品为 `0.2.2_rc.5+systemruntime1-1`。官方基线为 Electron 44.7.0、Node 24.21.0、Python 3.12.14、pnpm 11.28.5。成品依赖 Arch 的 Electron、Node、Python、Office Python 库和 pnpm，内置 LibreOffice WASM 0.2.3 及 Sharp worker。
+- rc.5 Arch 成品已通过包校验、pacman 升级解析、隔离 Wayland/XWayland 启动、CLI/pnpm、图片 worker、工作区运行时工具和 Office Python 读写检查。75 项自动回归通过，因缺少 deb/RPM 工具跳过 3 项。
+- Arch 宿主已安装 `0.2.2_rc.5+systemruntime1-1`。交付清理保留最新版安装包和经复核的 SHA256，移除已被替代的 rc.3 安装包及本轮构建和诊断暂存。
+- 官方 rc.5 保留 Host Cookie 修复。KDE 代理、MCP 和 libc 探测的官方复核见 `docs/patches/README.md`。系统代理跳过整份不受支持的排除规则时，可用隔离测试分别验证代理地址和绕过规则，避免误认为补丁缺失。
+- Office 技能由插件加载时附加 Python 环境说明。系统运行时模式应更新该说明，保留项目或用户显式选择。Debian 的 PPTX 默认流程加入私有库，Arch 使用系统库。LibreOffice WASM 使用适配层声明的确切版本。
 - 交付前对照实际发布包与固定官方源码快照复核补丁。官方源码中的修复须确认进入发布包后再移除本地替代。
 
 ## 分支与范围
@@ -48,13 +48,12 @@
 ## 构建与产物
 
 - Arch x86_64 可在仓库根目录用 `PKGDEST="$PWD/dist" makepkg -s` 构建。更新 `PKGBUILD` 后同步 `.SRCINFO`，核对上游 ZIP 校验和、版本及系统依赖。与 `auto-build.sh --formats pacman` 共用文件暂存逻辑。
-- 2026-11-18，Arch `0.2.2_rc.3+systemruntime1-2` 已通过用户验收。该包由 `makepkg` 生成，应用资源与手工打包的 `pkgrel=1` 一致，验收后保留当前 `pkgrel=2` 成品和校验文件。
 
 自用 x86_64 bundled deb 的常用命令：
 
 ```sh
 ./auto-build.sh --arch x64 --formats deb --electron bundled --system-runtime --package-jobs 4 \
-  --archive /绝对路径/已校验的/deepseek-harness-0.2.2-rc.3-mac-arm64.zip
+  --archive /绝对路径/已校验的/deepseek-harness-0.2.2-rc.5-mac-arm64.zip
 ```
 
 - 默认保留下载缓存、解包文件和构建暂存。清理使用显式选项或按用户指定范围执行；不要在构建脚本中加入默认删除行为。

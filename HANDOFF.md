@@ -1,20 +1,8 @@
 # 自用 DSH Desktop 项目交接
 
-## 2026-11-18 · Arch PKGBUILD
+## 2026-11-18 · 0.2.2-rc.5
 
-- 根目录 `PKGBUILD` 与 `.SRCINFO` 支持用 `makepkg` 构建系统运行时包。与原有 pacman 打包路径共用文件暂存逻辑。
-- `pkgrel=2` 已完成端到端构建、包校验和升级解析，应用资源与 `pkgrel=1` 一致。用户已验收，已清理本轮构建暂存及旧 Arch 包。[成品和用法](docs/ARTIFACTS.md#arch-linux-x86_64)
-
-## 2026-11-17 · Arch Linux
-
-- 同一 rc.3 载荷用 `--formats pacman --electron system --system-runtime` 构建了 x86_64 安装包。系统提供 Electron、Node、Python、pnpm 和 Office Python 库。LibreOffice Kit WASM 和 Sharp worker 保留。
-- 安装包、校验和、依赖与验证范围见 [产物](docs/ARTIFACTS.md) 和 [兼容性记录](docs/COMPATIBILITY.md#arch-linux-迁移2026-11-17)。旧工作区路径由 `/home/debian` 指向 `/home/arch` 的映射维持，已核对存量会话归档。
-
-## 2026-11-13 · 0.2.2-rc.3
-
-- 分支 `codex/personal-desktop`。使用已核对的官方 macOS arm64 开发版 ZIP 构建 `0.2.2-rc.3+systemruntime3` amd64 bundled deb。来源、SHA512、构建步骤和安装包校验见 [兼容性记录](docs/COMPATIBILITY.md)。
-- 保持 Electron 44.7.0、Node 24.21.0、Python 3.12.14、pnpm 11.28.5 的官方构建基线。成品沿用 Debian Node/Python、内置 pnpm、私有 python-pptx 和 LibreOffice WASM 0.2.3。
-- 官方载荷保留 Host Cookie 修复。现有 Linux 补丁链应用成功，复核见 [补丁总览](docs/patches/README.md)。
-- 成品通过 APT 升级模拟、图片并发与 Office 回归，76 项自动回归通过、2 项因缺少 RPM/pacman 工具跳过。隔离 Wayland/XWayland 桌面通过启动、侧栏、最大化和全屏检查。
-- 用户已完成桌面验收。侧边栏入口的取消固定状态会在重启后重置，按上游实现暂予保留。验收未报告其他问题。
-- 验收后清理本轮下载、解包、打包和测试暂存及 rc.2 安装包。`dist/` 保留 rc.3 deb 与校验文件。
+- `codex/personal-desktop` 上的 `PKGBUILD` 和 `.SRCINFO` 已更新到官方 rc.5 桌面 ZIP。Electron 44.7.0、Node 24.21.0、Python 3.12.14、pnpm 11.28.5 构建基线与上一版相同。
+- Arch x86_64 宿主已安装 `0.2.2_rc.5+systemruntime1-1`。系统运行时、包校验、升级解析、隔离 Wayland/XWayland 启动及回归测试已核对。交付后 `dist/` 保留 rc.5 安装包和 SHA256 校验文件。[成品和用法](docs/ARTIFACTS.md)
+- 官方载荷保留 Host Cookie 修复，Linux 补丁链应用成功。GitHub HTTPS 的隔离测试复现了两项配置问题，分别是 KDE 绕过通配符拒绝和 HTTP 代理端口的 URL 协议误设，见 [系统代理](docs/SYSTEM_PROXY.md)。
+- 当前和上一适配版的验证记录见 [rc.5](docs/COMPATIBILITY.md) 和 [rc.3](docs/COMPATIBILITY-PREVIOUS.md)。

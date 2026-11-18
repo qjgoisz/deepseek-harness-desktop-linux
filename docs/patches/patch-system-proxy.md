@@ -12,7 +12,7 @@
 
 **官方载荷和所查源码均未发现等价修复。**
 
-启动路径调用 installProxyFromEnvironment。已核对的 Desktop Host 和代理实现未提供 KDE 配置读取或动态刷新。 [apps/cli/src/profile-boot.ts](https://github.com/deepseek-ai/deepseek-harness/blob/38a6a5c965aa99ab525161efb7cc5cf1fe62fced/apps/cli/src/profile-boot.ts) [packages/util/http-proxy/src/install.ts](https://github.com/deepseek-ai/deepseek-harness/blob/38a6a5c965aa99ab525161efb7cc5cf1fe62fced/packages/util/http-proxy/src/install.ts)
+启动路径调用 installProxyFromEnvironment。已核对的 Desktop Host 和代理实现未提供 KDE 配置读取或动态刷新。 [apps/cli/src/profile-boot.ts](https://github.com/deepseek-ai/deepseek-harness/blob/9c2670d3bce5275e0d1610272958121af87787bb/apps/cli/src/profile-boot.ts) [packages/util/http-proxy/src/install.ts](https://github.com/deepseek-ai/deepseek-harness/blob/9c2670d3bce5275e0d1610272958121af87787bb/packages/util/http-proxy/src/install.ts)
 
 核对范围见 [补丁总览](README.md#核对基线)。
 

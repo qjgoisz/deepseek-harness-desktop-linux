@@ -20,6 +20,16 @@
 
 `kreadconfig` 属于 KDE 工具；缺失时会给出诊断。`dbus-monitor` 缺失时文件监听和周期检查继续工作，不新增硬性 D-Bus 包依赖。
 
+## GitHub HTTPS 超时
+
+先检查 KDE 手动代理的两个字段。`httpsProxy` 指的是 HTTPS 请求使用的代理，值中的协议描述客户端如何连接代理端口。若本地代理监听的是 HTTP，HTTP 和 HTTPS 两栏都使用 `http://<地址>:<端口>`。访问 GitHub 时仍通过 CONNECT 建立 HTTPS 隧道。v2rayN 的 KDE 脚本也为两个字段写入 `http://` 地址。[v2rayN KDE 脚本](https://github.com/2dust/v2rayN/blob/master/v2rayN/ServiceLib/Sample/proxy_set_linux_sh)
+
+再检查绕过项。当前适配器会拒绝 `127.*`、`192.168.*` 这类 IP 通配符和 `*example.org` 这类域名通配符。按原来想绕过的范围改写，如 `127.0.0.0/8`、`192.168.0.0/16`，或用 `example.org` 表示该域及其子域。保存后系统代理适配器会重新读取配置。若 v2rayN 会重新写入这些字段，也应检查它使用的排除列表。
+
+rc.5 成品使用独立 KDE 配置复现了规则拒绝和 TLS 握手失败。修正两处后，Host 请求 GitHub 返回 HTTP 200，继承同一策略的 Git 子进程成功读取公开仓库 HEAD。测试使用 HTTPS 仓库 URL。
+
+插件管理器在安装 GitHub 来源插件前会用 Host 的环境执行 `git ls-remote`，默认限时 5000 毫秒。出现这个超时时，pnpm 尚未开始。只有确认代理路由正常、同一探测能成功但耗时超过 5 秒时，才需要考虑调高插件管理器的 `githubConnectionTimeoutMs`。
+
 ## 仓库实现
 
 - `patches/patch-system-proxy.py`：构建时检查全部匹配点，再修改 `dsh-http-proxy` 与 `runProfile` 的导入/调用；重复运行验证一致性，未知载荷或已有陌生适配代码失败，不保留部分修改。
