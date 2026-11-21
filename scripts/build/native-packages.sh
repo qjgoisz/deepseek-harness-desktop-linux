@@ -133,7 +133,7 @@ Architecture: $DEBARCH
 Maintainer: DeepSeek Harness Linux port <noreply@localhost>
 Installed-Size: $size
 Depends: $deps
-${recommends_line}Homepage: https://harness.deepseek.com
+${recommends_line}Homepage: https://deepseek.com/harness/
 Description: DeepSeek Harness desktop client ($variant Electron build)
  DeepSeek Harness desktop application repackaged for Linux.
  This build $([ "$variant" = bundled ] && echo "bundles its own Electron $PACKAGED_ELECTRON_VERSION runtime" || echo "uses the distribution-provided Electron runtime").
@@ -181,7 +181,7 @@ Version:        $RPM_VERSION
 Release:        $RPM_RELEASE
 Summary:        DeepSeek Harness desktop client
 License:        MIT
-URL:            https://harness.deepseek.com
+URL:            https://deepseek.com/harness/
 BuildArch:      $RPMARCH
 AutoReqProv:    no
 # 禁止 rpmbuild 触碰厂商预编译产物（python/node/原生模块）
@@ -301,7 +301,7 @@ pkgname = deepseek-harness-desktop
 pkgbase = deepseek-harness-desktop
 pkgver = $version
 pkgdesc = DeepSeek Harness desktop client (system-wide Electron build)
-url = https://harness.deepseek.com
+url = https://deepseek.com/harness/
 builddate = $(date +%s)
 packager = DeepSeek Harness Linux port
 size = $size

@@ -6,7 +6,7 @@ pkgver="${_upstream_version/-/_}+systemruntime1"
 pkgrel=1
 pkgdesc='DeepSeek Harness Desktop with system Electron, Node.js, Python and pnpm'
 arch=('x86_64')
-url='https://harness.deepseek.com'
+url='https://deepseek.com/harness/'
 license=('MIT')
 depends=("electron${_electron_version%%.*}>=${_electron_version}"
          "nodejs>=${_node_version}" 'nodejs<27' 'pnpm>=12.21.0' 'pnpm<13'

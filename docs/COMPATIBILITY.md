@@ -26,3 +26,10 @@
 ## GitHub HTTPS 诊断
 
 KDE 排除列表中的 IP 通配形式会使适配器拒绝该次读取。排除规则在隔离配置中改用 IPv4 CIDR 后，原 HTTPS 代理字段仍在代理端口的 TLS 握手时失败。将同一地址的代理 URL 改为 `http://` 后，rc.5 Host 的 GitHub HTTPS 请求返回 200，继承该策略的 Git 进程读到了公开仓库 HEAD。用于复测的配置与日常桌面隔离。[配置说明](SYSTEM_PROXY.md#github-https-超时)
+
+
+## 2026-11-21 主页元数据重打包
+
+- 使用修正主页为 `https://deepseek.com/harness/` 的 `PKGBUILD`，从固定官方 ZIP 重新走 `makepkg` 流程。版本与 pkgrel 仍为 `0.2.2_rc.5+systemruntime1-1`。本次源码校验、构建、依赖解析和包校验通过，宿主 pnpm 为 12.22.0。[产物与新 SHA256](ARTIFACTS.md)
+- 新旧包的 25,005 项应用文件、目录和链接逐项一致，包元数据已核对官方主页。最终包解出后验证 CLI、系统 pnpm、主进程和两个 preload 的语法以及图片 worker 自检。相同载荷沿用前轮兼容性检查。
+- 构建自带 Xvfb 冒烟遇到宿主 NVIDIA EGL 初始化崩溃。后续在独立 HOME、网络和 PID 命名空间的 Xvfb 中指定 Mesa 软件渲染，最终包成功跳过欢迎页并显示主界面。

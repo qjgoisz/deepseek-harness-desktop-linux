@@ -47,6 +47,8 @@
 
 ## 构建与产物
 
+- 2026-11-21，包元数据主页统一为官方仓库列出的 `https://deepseek.com/harness/`。更新 `PKGBUILD` 后重新生成 `.SRCINFO`，deb、RPM 和手工 pacman 包使用同一主页。Arch 重打包保持 `0.2.2_rc.5+systemruntime1-1`，应用载荷与上一份包逐文件相同，新的产物校验和见 `docs/ARTIFACTS.md`。
+- 主页修正重打包交付后，已按用户要求清理本轮下载、应用树、测试副本和旧包解包暂存；`dist/` 保留重打包成品及复核通过的 SHA256 文件。
 - Arch x86_64 可在仓库根目录用 `PKGDEST="$PWD/dist" makepkg -s` 构建。更新 `PKGBUILD` 后同步 `.SRCINFO`，核对上游 ZIP 校验和、版本及系统依赖。与 `auto-build.sh --formats pacman` 共用文件暂存逻辑。
 
 自用 x86_64 bundled deb 的常用命令：
