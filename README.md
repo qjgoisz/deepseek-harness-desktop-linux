@@ -65,7 +65,7 @@
 ├── icons/                       桌面项 + 16→512 全套 hicolor 图标
 ├── build-packages.sh            打全部格式（deb×2 / pkg.tar.zst / rpm / AppImage）
 ├── install-image-worker.sh      把 Sharp 替身包装入某棵应用树
-├── verify-launch-x64.sh         五种格式逐个解包并实测启动
+├── verify-launch-x64.sh         最终安装包验证入口（传入包路径）
 └── docs/
     ├── patches/                全部补丁的独立文档与上游审计
     ├── ARTIFACTS.md             产物说明：安装方式、依赖策略、验证记录

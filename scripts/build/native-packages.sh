@@ -51,7 +51,7 @@ cat > "$META/launcher" <<'LAUNCH'
 #!/bin/sh
 # DeepSeek Harness launcher (system-wide Electron build).
 set -e
-APP_DIR=/usr/lib/deepseek-harness/resources
+APP_DIR="$(dirname "$(readlink -f "$0")")/../lib/deepseek-harness/resources"
 find_electron() {
   for c in electron electron44 electron43 electron42 electron41 electron40 electron39 nodejs-electron; do
     command -v "$c" >/dev/null 2>&1 && { command -v "$c"; return 0; }
@@ -72,6 +72,8 @@ ELECTRON_BIN=$(find_electron) || {
 export DSH_DESKTOP_FORCE_PACKAGED=1
 export DSH_DESKTOP_RESOURCES_DIR="$APP_DIR"
 export DSH_DESKTOP_NODE_EXECUTABLE="$ELECTRON_BIN"
+dsh_resources="$APP_DIR"
+. "$dsh_resources/netlink-guard/preload.sh"
 exec "$ELECTRON_BIN" "$APP_DIR/app" "$@"
 LAUNCH
 chmod 755 "$META/launcher"
@@ -88,7 +90,7 @@ build_deb() {
   mkdir -p "$D/usr/lib/deepseek-harness" "$D/usr/bin" "$D/usr/share/applications" "$D/usr/share/icons/hicolor"
   if [ "$variant" = bundled ]; then
     copy_tree "$SRC" "$D/usr/lib/deepseek-harness" .sharp-native-backup
-    printf '#!/bin/sh\nexec /usr/lib/deepseek-harness/deepseek-harness "$@"\n' > "$D/usr/bin/deepseek-harness"
+    cp "$ROOT/scripts/launch-bundled.sh" "$D/usr/bin/deepseek-harness"
     deps="libgtk-3-0, libnotify4, libnss3, libxss1, libxtst6, xdg-utils, libatspi2.0-0, libuuid1, libsecret-1-0, libgbm1, libasound2, libdrm2, libxkbcommon0, libxcomposite1, libxdamage1, libxfixes3, libxrandr2, libcups2, libx11-xcb1, libxcb-dri3-0"
   else
     copy_tree "$SRC/resources" "$D/usr/lib/deepseek-harness/resources" .sharp-native-backup
@@ -174,6 +176,7 @@ build_rpm() {
   copy_tree "$SRC" "$top/SOURCES/app" .sharp-native-backup
   normalize_modes "$top/SOURCES/app"
   cp "$META/deepseek-harness.desktop" "$top/SOURCES/"
+  cp "$ROOT/scripts/launch-bundled.sh" "$top/SOURCES/"
   cp -a "$META/icons" "$top/SOURCES/icons"
   cat > "$top/SPECS/deepseek-harness.spec" <<SPEC
 Name:           deepseek-harness
@@ -200,7 +203,7 @@ This build bundles its own Electron $PACKAGED_ELECTRON_VERSION runtime.
 mkdir -p %{buildroot}/usr/lib/deepseek-harness
 cp -a %{_sourcedir}/app/. %{buildroot}/usr/lib/deepseek-harness/
 mkdir -p %{buildroot}/usr/bin
-printf '#!/bin/sh\nexec /usr/lib/deepseek-harness/deepseek-harness "\$@"\n' > %{buildroot}/usr/bin/deepseek-harness
+cp %{_sourcedir}/launch-bundled.sh %{buildroot}/usr/bin/deepseek-harness
 chmod 755 %{buildroot}/usr/bin/deepseek-harness
 mkdir -p %{buildroot}/usr/share/applications
 cp %{_sourcedir}/deepseek-harness.desktop %{buildroot}/usr/share/applications/
@@ -263,8 +266,11 @@ stage_arch_package() {
   mkdir -p "$r/usr/bin"
   cat > "$r/usr/bin/deepseek-harness" <<EOF
 #!/bin/sh
+set -e
+dsh_resources="\$(dirname "\$(readlink -f "\$0")")/../lib/deepseek-harness/resources"
+. "\$dsh_resources/netlink-guard/preload.sh"
 export DSH_DESKTOP_FORCE_PACKAGED=1
-export DSH_DESKTOP_RESOURCES_DIR=/usr/lib/deepseek-harness/resources
+export DSH_DESKTOP_RESOURCES_DIR="\$dsh_resources"
 export DSH_DESKTOP_NODE_EXECUTABLE=/usr/bin/electron$electron_major
 exec "\$DSH_DESKTOP_NODE_EXECUTABLE" "\$DSH_DESKTOP_RESOURCES_DIR/app" "\$@"
 EOF

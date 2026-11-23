@@ -29,7 +29,7 @@ prepare() {
     rm -r -- "$port"
   fi
   mkdir -p "$port"
-  cp -a -- "$startdir"/{auto-build.sh,install-image-worker.sh,scripts,patches,icons,image-worker-src} "$port/"
+  cp -a -- "$startdir"/{auto-build.sh,install-image-worker.sh,scripts,patches,icons,image-worker-src,netlink-guard} "$port/"
 }
 
 build() {

@@ -10,11 +10,11 @@
  *   4. malformed input raises an error instead of crashing the process
  *   5. concurrent reads and cache evictions preserve valid images
  */
-const { readFileSync } = require('node:fs');
+const { existsSync, readFileSync } = require('node:fs');
 const { spawnSync } = require('node:child_process');
 const { createRequire } = require('node:module');
 
-const RES = process.env.DSH_DESKTOP_RESOURCES_DIR || '/usr/lib/deepseek-harness/resources';
+const RES = process.argv[2] || process.env.DSH_DESKTOP_RESOURCES_DIR || '/usr/lib/deepseek-harness/resources';
 const APP = `${RES}/app`;
 const NODE = `${RES}/runtime/primary-runtime/dependencies/node/bin/node`;
 const VENDORED = `${RES}/image-worker/worker-modules/node_modules/sharp`;
@@ -63,17 +63,27 @@ function cacheTestImages(count) {
   console.log(`Electron ${process.versions.electron} / Node ${process.versions.node}`);
   check('加载 shim 前本进程无 libvips', mapsHasVips() === false);
 
+  const facade = JSON.parse(readFileSync(`${APP}/dsh/node_modules/sharp/package.json`, 'utf8'));
+  const native = JSON.parse(readFileSync(`${VENDORED}/package.json`, 'utf8'));
+  const isFacade = pkg => pkg.description?.includes('Out-of-process Sharp facade');
+  if (!isFacade(facade) || isFacade(native) ||
+      !['client.cjs', 'worker.cjs'].every(name => existsSync(`${RES}/image-worker/${name}`))) {
+    throw new Error('缺少 Sharp facade、原生 worker 依赖或 worker 启动文件');
+  }
+
   // Resolve exactly like the attachment package does.
   const req = createRequire(`${APP}/dsh/node_modules/@deepseek-ai/dsh-attachment-local/lib/index.js`);
   const resolved = req.resolve('sharp');
   const sharp = req('sharp');
-  check('sharp 解析到 facade', resolved.includes('node_modules/sharp/dist/index.cjs'), resolved.replace(RES, '…'));
+  check('sharp 解析到 facade', typeof sharp.__dshWorkerStatus === 'function', resolved.replace(RES, '…'));
 
   // Build the images the pipeline actually handles.
   const jpeg = sourceImage(`s({create:{width:800,height:600,channels:3,background:{r:90,g:140,b:220}}}).jpeg({quality:88}).toBuffer().then(b=>process.stdout.write(b))`);
   const pngAlpha = sourceImage(`s({create:{width:400,height:300,channels:4,background:{r:10,g:200,b:80,alpha:0.5}}}).png().toBuffer().then(b=>process.stdout.write(b))`);
   const webp = sourceImage(`s({create:{width:300,height:200,channels:3,background:{r:200,g:30,b:30}}}).webp({quality:80}).toBuffer().then(b=>process.stdout.write(b))`);
   const gif = sourceImage(`s({create:{width:120,height:120,channels:3,background:{r:0,g:0,b:255}}}).gif().toBuffer().then(b=>process.stdout.write(b))`);
+  const large = sourceImage(`s({create:{width:6000,height:4000,channels:3,background:'blue'}}).jpeg().toBuffer().then(b=>process.stdout.write(b))`);
+  const animatedGif = Buffer.from('R0lGODlhBAAEAIEAAP8AAAAAAAAAAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQACAAAACwAAAAABAAEAAAICQABCBxIsCCAgAAh+QQBCAABACwAAAAABAAEAIEAAP8AAAAAAAAAAAAICQABCBxIsCCAgAA7', 'base64');
 
   // 1) probeImage path: metadata only
   const md = await sharp(jpeg, { failOn: 'error', limitInputPixels: false }).metadata();
@@ -103,6 +113,10 @@ function cacheTestImages(count) {
     const meta = await sharp(bytes).metadata();
     check(`${label} 可解码`, typeof meta.width === 'number' && meta.width > 0, `${meta.format} ${meta.width}x${meta.height}`);
   }
+  const largeOut = await sharp(large).resize({ width: 512 }).jpeg().toBuffer({ resolveWithObject: true });
+  check('6000x4000 大图缩放', largeOut.info.width === 512 && largeOut.info.height === 341);
+  const animation = await sharp(animatedGif).metadata();
+  check('双帧 GIF 可读取', animation.format === 'gif' && animation.pages === 2);
 
   // 5) Concurrent reads of the same source must not displace an older live handle.
   const cacheImages = cacheTestImages(28);
@@ -126,13 +140,10 @@ function cacheTestImages(count) {
   check('并发读取和缩放 20 张图', completed === burst.length, `${completed}/${burst.length}`);
 
   // 7) Bad input raises instead of crashing.
-  let threw = false;
-  try {
-    await sharp(Buffer.from('not an image at all')).metadata();
-  } catch {
-    threw = true;
+  for (const [label, bytes] of [['坏数据', Buffer.from('not an image at all')], ['截断 JPEG', jpeg.subarray(0, 100)]]) {
+    const [result] = await Promise.allSettled([sharp(bytes).metadata()]);
+    check(`${label}抛错而非崩溃`, result.status === 'rejected');
   }
-  check('坏数据抛错而非崩溃', threw);
 
   // 8) The isolation invariant that matters.
   check('全程本进程始终无 libvips', mapsHasVips() === false);

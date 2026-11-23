@@ -134,10 +134,29 @@ electron=$(find_electron) || {
 export DSH_DESKTOP_FORCE_PACKAGED=1
 export DSH_DESKTOP_RESOURCES_DIR="$resources"
 export DSH_DESKTOP_NODE_EXECUTABLE="$electron"
+dsh_resources="$resources"
+. "$dsh_resources/netlink-guard/preload.sh"
 ELECTRON_RUN_AS_NODE=1 exec "$electron" --expose-internals "$cli" "$@"
 LAUNCH
   chmod 755 "$launcher"
   step "runtime/cli/bin/dsh 已改写为 Linux 启动器"
+}
+
+prepare_package_runtime() {  # <arch>
+  local arch="$1" out="$ROOT/out-$1"
+  "$ROOT/install-image-worker.sh" "$out" "$arch"
+  "$ROOT/scripts/install-netlink-guard.sh" "$out" "$arch"
+  rewrite_cli_launcher "$out/resources"
+}
+
+check_agent_dependencies() {  # <resources> <arch>
+  local resources="$1" arch="$2" node
+  if [ "$arch" = "$HOST_ARCH" ]; then
+    node="$resources/runtime/primary-runtime/dependencies/node/bin/node"
+  else
+    node="$(command -v node)" || die "跨架构检查 Agent 预设依赖需要宿主 Node.js（24 或更新版本）"
+  fi
+  "$node" --experimental-import-meta-resolve "$ROOT/scripts/check-agent-dependencies.mjs" "$resources"
 }
 
 build_tree() {  # <arch>
@@ -146,7 +165,7 @@ build_tree() {  # <arch>
   if [ "$DRY_RUN" -eq 1 ]; then
     say "阶段 2/3 生成应用树 out-$arch"
     step "[dry-run] 解包 dmg → Electron 骨架 → 展开 app.asar → 换 node/python 载荷"
-    step "[dry-run] → 原生模块换 Linux 版 → 打补丁 → 装 image-worker"
+    step "[dry-run] → 原生模块换 Linux 版 → 打补丁 → 检查 Agent 预设依赖 → 装 image-worker 和 Netlink 退避守卫"
     return 0
   fi
   local resources pyver nodever appver
@@ -235,10 +254,9 @@ PYEOF
   [ -n "$fingerprint" ] || die "找不到 node-addon-require-builtin 的 Linux 原生模块"
   python3 "$ROOT/patches/patch-fingerprint.py" "$fingerprint"
 
-  # 8) Sharp 进程隔离 + CLI 启动器 + 权限归一
-  "$ROOT/install-image-worker.sh" "out-$arch" "$arch"
-  # Native Sharp backup stays available for diagnostics; AppImage packaging excludes it.
-  rewrite_cli_launcher "$out/resources"
+  # 8) Verify preset imports and prepare the shared package runtime.
+  check_agent_dependencies "$out/resources" "$arch"
+  prepare_package_runtime "$arch"
   normalize_modes "$out"
   python3 "$ROOT/scripts/verify-architecture.py" "$out" "$arch"
   say "应用树完成: out-$arch（$(human "$out")）"

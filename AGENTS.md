@@ -40,6 +40,7 @@
 - `patches/patch-main.py` 遇到未知或重复匹配时应失败，且不写入部分补丁。维护其他补丁时也应避免匹配失败后悄悄交付半成品；同时检查主进程与两个 preload。
 - 保留 Sharp 的独立 Node worker 隔离方案。facade 的版本信息应读取实际 worker 原包，不能写死旧版版本号。
 - 图片 worker 客户端按源字节的 SHA-256 合并并发上传。若 worker 在开始处理前报告缓存引用失效，客户端携带源字节重试一次。成品自检应覆盖同图并发、淘汰后重读及超出缓存容量的并发处理。
+- 可重复运行图片 worker 安装脚本。打包旧应用树时从原生备份或 worker 私有依赖恢复原生 Sharp，避免把 facade 复制进 worker。构建同时检查 Agent 预设关键静态导入；Windows 命名的 ACL 包也可能是 Linux 的必需依赖。
 - 不把插件自身的性能问题或协作桥改动夹带进桌面重打包；发现相关问题可记录诊断，按用户指定范围另行处理。
 - `local-fixes/dsh-usage-settings/` 单独保存用户授权纳入自用分支的插件导航修复；仅显式运行 `apply-fix.py --apply` 时修改本机插件，不接入 Desktop 打包流程。
 - `local-fixes/dsh-qoder-sidebar/` 保存独立的 Qoder 底栏兼容修复。已在 DSH Desktop `0.2.2-rc.3` 与 `dsh-qoder-connect 0.2.16` 上验收，额度卡开关两种状态下「会话与工作区」入口均可显示。插件更新或重装后先检查已发布的客户端规则，仅用 `--apply` 备份并替换已知规则。脚本独立于 Desktop 打包流程。
@@ -50,6 +51,7 @@
 - 2026-11-21，包元数据主页统一为官方仓库列出的 `https://deepseek.com/harness/`。更新 `PKGBUILD` 后重新生成 `.SRCINFO`，deb、RPM 和手工 pacman 包使用同一主页。Arch 重打包保持 `0.2.2_rc.5+systemruntime1-1`，应用载荷与上一份包逐文件相同，新的产物校验和见 `docs/ARTIFACTS.md`。
 - 主页修正重打包交付后，已按用户要求清理本轮下载、应用树、测试副本和旧包解包暂存；`dist/` 保留重打包成品及复核通过的 SHA256 文件。
 - 2026-11-23，使用官网 DMG 和当前 `PKGBUILD` 重打 Arch 包，版本仍为 `0.2.2_rc.5+systemruntime1-1`。最终包的 25,005 项载荷与已验收的 ZIP 构建逐项一致，隔离桌面启动、CLI、pnpm 和图片 worker 均通过。用户验收后清理本轮构建缓存和隔离测试目录，`dist/` 保留已验收成品及复核过的 SHA256。
+- 同日，用户验收了加入 Agent 预设依赖检查、Sharp 安全重装、Netlink 退避和最终包验证的新构建。Arch 包版本沿用 `0.2.2_rc.5+systemruntime1-1`，通过 Xvfb、Wayland 和 XWayland 启动验证。验收包已移入 `dist/` 并复核 SHA256，本轮暂存已清理。
 - Arch x86_64 可在仓库根目录用 `PKGDEST="$PWD/dist" makepkg -s` 构建。`PKGBUILD` 将官网 DMG 以版本化文件名缓存并固定 SHA256。官网更新后，重建旧版本须在 `SRCDEST` 中提供匹配的 DMG。更新 `PKGBUILD` 后同步 `.SRCINFO`，核对版本、摘要及系统依赖。与 `auto-build.sh --formats pacman` 共用文件暂存逻辑。
 
 自用 x86_64 bundled deb 的常用命令：
@@ -81,5 +83,6 @@ for script in scripts/build/*.sh; do bash -n "$script"; done
 - 分别用 `--ozone-platform=wayland` 与 `--ozone-platform=x11` 测试原生 Wayland、XWayland。先在正确的 `welcome.html` 页面跳过欢迎流程，再确认主界面已显示；测试最大化问题必须实际最大化，并核对原生窗口状态。
 - 窗口圆角和背景穿透问题需结合整屏截图或原生窗口几何检查，单独截取页面内容不足以验证。焦点或自动化限制导致某项未实测时应如实记录，不把合成事件测试当作完整人工验收。
 - 验证最终安装包：检查包元数据、解包后运行内置 CLI 与 pnpm 的 `--version`、运行 `image-worker-src/verify-image-worker.cjs`，并在校验文件所在目录执行 `sha256sum -c`。
+- `scripts/verify-package.py` 解包后从包内入口启动，验证主界面和 Netlink 守卫。Netlink 守卫仅延迟特定收包错误并保留原始错误码，回归入口为 `tests/test-netlink-guard.sh`。
 - 确认打包中的 GUI 文件与已验证的应用树一致。测试后关闭自己创建的实例，清理仅按已授权范围执行；不使用会误杀其他 DSH 实例的宽泛进程匹配。
 - 日志可能包含本地认证 token 或用户数据；输出和交付前应筛除，不把凭据或真实会话内容放进文档、Git 或 PR。

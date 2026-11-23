@@ -41,6 +41,8 @@ build_appimage() {  # <arch>
   cat > "$appdir/AppRun" <<'APPRUN'
 #!/bin/sh
 HERE="$(dirname "$(readlink -f "$0")")"
+dsh_resources="$HERE/resources"
+. "$dsh_resources/netlink-guard/preload.sh"
 exec "$HERE/deepseek-harness" "$@"
 APPRUN
   chmod 755 "$appdir/AppRun"

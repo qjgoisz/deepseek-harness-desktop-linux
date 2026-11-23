@@ -211,6 +211,10 @@ for arch in "${ARCHES[@]}"; do
 done
 for arch in "${ARCHES[@]}"; do
   if want_phase package; then
+    if [ "$DRY_RUN" -eq 0 ] && ! want_phase tree; then
+      [ -d "$ROOT/out-$arch" ] || die "缺少应用树 out-$arch（先跑 --only tree）"
+      prepare_package_runtime "$arch"
+    fi
     if want_format appimage; then build_appimage "$arch"; fi
     if want_format deb || want_format pacman || want_format rpm; then build_native_packages "$arch"; fi
   fi

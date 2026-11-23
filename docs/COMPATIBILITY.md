@@ -39,3 +39,9 @@ KDE 排除列表中的 IP 通配形式会使适配器拒绝该次读取。排除
 - 使用[官方下载页](https://deepseek.com/harness/)的 Apple Silicon DMG 通过 `makepkg` 重建同版本 Arch 包。DMG 为 276237948 字节，SHA256 为 `9f0c4406ce97f0cdd3862ba1e70a085b422dbeb1390fdeb8a6e810c38b0a8ffd`。应用与运行时仍为 `0.2.2-rc.5`，Electron 44.7.0、Node 24.21.0、Python 3.12.14、pnpm 11.28.5。[官方 DMG](https://download.deepseek.com/desktop/dsh-latest-macos-arm64.dmg)
 - 最终包与 11 月 21 日的 ZIP 构建逐项比较，25,005 项应用文件、目录和链接的类型、权限与内容均一致。包元数据、依赖解析、主进程与两个 preload 的语法、CLI、系统 pnpm 12.22.0、图片 worker 和交付包 SHA256 均通过。[成品与校验和](ARTIFACTS.md)
 - 构建内置冒烟报告 X 显示不可用。将包内启动器和应用挂载到独立网络与 PID 命名空间，在 Xvfb 中指定 Mesa 软件渲染，使用空 profile 跳过欢迎页，确认主界面渲染。
+
+## 2026-11-23 构建检查与 Netlink 退避
+
+- 同版本 Arch x86_64 包通过最终归档校验。从包内启动器分别在隔离的 Xvfb、Wayland 和 XWayland 中跳过欢迎页并渲染主界面，三条路径均确认加载包内 Netlink 守卫。模拟 Netlink 收包拒绝时测到 1、2、4、8、8 毫秒的封顶退避，原始错误码不变。
+- 包内 CLI、pnpm、20 个 Agent 预设相关静态导入和图片 worker 自检通过。移除 ACL 依赖的临时副本触发检查失败。Sharp 脚本重跑两次仍保留原生 worker 依赖，大图、双帧 GIF、并发缓存及截断 JPEG 均通过测试。自动回归 75 项通过、4 项跳过。
+- 用户已验收，清理本轮构建与隔离测试暂存。最新成品和 SHA256 见[产物说明](ARTIFACTS.md)。

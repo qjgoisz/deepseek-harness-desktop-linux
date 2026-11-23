@@ -14,11 +14,32 @@ set -euo pipefail
 TREE="${1:?用法: install-image-worker.sh <tree> <arch>}"
 ARCH="${2:?用法: install-image-worker.sh <tree> <arch>}"
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-SRC="$ROOT/$TREE/resources"
+case "$TREE" in
+  /*) SRC="$TREE/resources" ;;
+  *) SRC="$ROOT/$TREE/resources" ;;
+esac
 NM="$SRC/app/dsh/node_modules"
 WORKER="$SRC/image-worker"
+W="$WORKER/worker-modules/node_modules"
 
 [ -d "$NM" ] || { echo "找不到 node_modules: $NM" >&2; exit 1; }
+case "$ARCH" in
+  x64|arm64) ;;
+  *) echo "未知架构: $ARCH" >&2; exit 1 ;;
+esac
+
+is_facade() {
+  [ -f "$1/package.json" ] && grep -qF 'Out-of-process Sharp facade' "$1/package.json"
+}
+
+native_sharp=
+for candidate in "$NM/sharp" "$NM/.sharp-native-backup/sharp" "$W/sharp"; do
+  if [ -f "$candidate/package.json" ] && ! is_facade "$candidate"; then
+    native_sharp="$candidate"
+    break
+  fi
+done
+[ -n "$native_sharp" ] || { echo "找不到原生 Sharp，无法生成图片 worker: $NM" >&2; exit 1; }
 
 echo "== 安装 image-worker ($ARCH) -> $TREE"
 
@@ -30,22 +51,15 @@ cp "$ROOT/image-worker-src/worker.cjs" "$WORKER/worker.cjs"
 # --------------------------------------------------- private sharp closure ---
 # Only what `sharp` needs to load libvips out of process: the JS package itself plus
 # the platform binaries and its two runtime dependencies.
-W="$WORKER/worker-modules/node_modules"
-rm -rf "$W/sharp" "$W/@img" "$W/detect-libc" "$W/semver"
+rm -rf "$W/@img" "$W/detect-libc" "$W/semver"
 mkdir -p "$W/@img"
-cp -a "$NM/sharp" "$W/sharp"
+if [ "$native_sharp" != "$W/sharp" ]; then
+  rm -rf "$W/sharp"
+  cp -a "$native_sharp" "$W/sharp"
+fi
 cp -a "$NM/@img/colour" "$W/@img/colour"
-case "$ARCH" in
-  x64)
-    cp -a "$NM/@img/sharp-linux-x64" "$W/@img/sharp-linux-x64"
-    cp -a "$NM/@img/sharp-libvips-linux-x64" "$W/@img/sharp-libvips-linux-x64"
-    ;;
-  arm64)
-    cp -a "$NM/@img/sharp-linux-arm64" "$W/@img/sharp-linux-arm64"
-    cp -a "$NM/@img/sharp-libvips-linux-arm64" "$W/@img/sharp-libvips-linux-arm64"
-    ;;
-  *) echo "未知架构: $ARCH" >&2; exit 1 ;;
-esac
+cp -a "$NM/@img/sharp-linux-$ARCH" "$W/@img/sharp-linux-$ARCH"
+cp -a "$NM/@img/sharp-libvips-linux-$ARCH" "$W/@img/sharp-libvips-linux-$ARCH"
 for dep in detect-libc semver; do
   [ -d "$NM/$dep" ] && cp -a "$NM/$dep" "$W/$dep"
 done
@@ -55,8 +69,9 @@ echo "  闭包: $(find "$WORKER/worker-modules" -type f | wc -l) 个文件, $(du
 # Move the native sharp aside (kept for diagnostics but no longer resolvable) and
 # install a facade that mirrors the real package's `main` so the Host's
 # createRequire(...)("sharp") resolves here.
-if [ -d "$NM/sharp" ] && [ ! -d "$NM/.sharp-native-backup/sharp" ]; then
+if [ -d "$NM/sharp" ] && ! is_facade "$NM/sharp"; then
   mkdir -p "$NM/.sharp-native-backup"
+  rm -rf "$NM/.sharp-native-backup/sharp"
   mv "$NM/sharp" "$NM/.sharp-native-backup/sharp"
 fi
 FACADE="$NM/sharp"

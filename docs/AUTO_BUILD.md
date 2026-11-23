@@ -8,13 +8,13 @@
 ## 依赖与首次运行
 
 需要 Bash、Python **3.12 或更新版本**、7z（或 7za）、curl、tar、xz、unzip、
-sha256sum、realpath 和其他 coreutils 命令。Python 需要 pip，或能够通过 venv 创建
+sha256sum、realpath 和其他 coreutils 命令。生成应用树或打包还需要 C 编译器和 `file`，用于构建 Netlink 退避守卫。Python 需要 pip，或能够通过 venv 创建
 带 pip 的环境。Python 辅助脚本仅使用标准库。
 
 Debian/Ubuntu 可安装这些系统工具（需要管理员权限）：
 
 ```bash
-sudo apt install bash python3 python3-pip python3-venv p7zip-full curl tar xz-utils unzip coreutils
+sudo apt install bash python3 python3-pip python3-venv p7zip-full curl tar xz-utils unzip coreutils build-essential file
 ```
 
 若发行版的 Python 低于 3.12，请使用已有的 Python 3.12+ 环境，将其 `python3`
@@ -30,8 +30,9 @@ sudo apt install bash python3 python3-pip python3-venv p7zip-full curl tar xz-ut
 ./auto-build.sh --arch all
 ```
 
-默认按本机架构构建。跨架构生成应用树与打包不需运行目标二进制，但目标架构的
-Sharp/启动测试会跳过；应在目标机器上另行验证。首次运行需下载较大的 dmg、
+默认按本机架构构建。跨架构构建需要相应的 Linux 交叉 C 编译器
+（默认 `aarch64-linux-gnu-gcc` 或 `x86_64-linux-gnu-gcc`，可用 `CC_ARM64` 或 `CC_X64` 覆盖）和宿主 Node.js 24+，用于检查 Agent 预设依赖。目标架构的
+Sharp/启动测试在目标机器上另行执行。首次运行需下载较大的 dmg、
 Electron 与运行时归档，并预留数 GB 的解包、应用树和打包空间。
 
 ## 打包格式
@@ -276,7 +277,7 @@ chmod +x dist/DeepSeek-Harness-*.AppImage
 
 ## 查找版本源码
 
-自用分支以 `personal-dsh-v<上游版本>` 注释标签标记对应的构建提交。列出历史标签，或查看当前交付的源码提交：
+自用分支以 `personal-dsh-v<上游版本>` 注释标签标记对应的构建基线。可以列出历史标签，或查看 rc.5 的官网 DMG 构建基线：
 
 ```sh
 git tag --list 'personal-dsh-v*' --sort=version:refname
@@ -290,6 +291,10 @@ git show --no-patch personal-dsh-v0.2.2-rc.5
 当前兼容性范围见 [兼容性记录](COMPATIBILITY.md)。当前 pnpm 位于
 `runtime/primary-runtime/dependencies/pnpm`，资源根覆盖保留载荷自身的目录布局。
 Sharp facade 的版本信息取自载荷中的原包，随图片 worker 一起更新。
+
+生成应用树时，检查预设、沙箱、Shell、PTC 及工作流核心入口的静态导入。检查用载荷自带的 Acorn 分析 ESM，并从导入方实际解析目标。例如 `dsh-sandbox-local` 在 Linux 上仍静态导入 `dsh-sandbox-windows-acl`。关键入口或依赖缺失会中止构建。
+
+`--only package` 会重新准备图片 worker 和 Netlink 守卫。已安装 Sharp facade 的应用树可从原生备份或 worker 私有依赖取回原生 Sharp；打包会继续排除原生备份。桌面和 CLI 的标准启动器加载 Netlink 守卫，对 Netlink 收包的权限错误和缓冲区不足实行 1 毫秒起、60 秒封顶的指数退避。排查时可用 `DSH_NETLINK_GUARD=0` 禁用。通过 `bash tests/test-netlink-guard.sh` 可在本机模拟失败并验证退避。
 
 生成应用树时还会应用 MCP 协商与后台初始化补丁：默认 auto/blocking，未知或部分修改的
 载荷会中止，不交付半成品。固定 mcp-remote 及用户 profile 配置由独立工具显式应用，
@@ -312,6 +317,18 @@ python3 -m unittest discover -s tests -v
 异常输入、npm 版本/摘要/归档、格式选择、依赖预检查和包元数据。
 有对应工具时使用小型载荷实际生成 deb、RPM 与 pacman 包并检查内容；缺少时跳过
 该格式测试。完整构建及目标机器运行检查另行执行。
+
+### 验证最终安装包
+
+在目标架构上，向验证脚本传入本次生成的安装包路径：
+
+```sh
+python3 scripts/verify-package.py /绝对路径/本次安装包.pkg.tar.zst
+python3 scripts/verify-package.py --wayland /绝对路径/本次安装包.pkg.tar.zst
+python3 scripts/verify-package.py --xwayland /绝对路径/本次安装包.pkg.tar.zst
+```
+
+脚本支持 pacman、deb、RPM 和 AppImage。它核对可用的 SHA256 文件，解包后检查 CLI、pnpm、Agent 预设依赖和图片 worker，再用包内启动器进入主界面并确认 Netlink 守卫已加载。验证使用 bubblewrap 隔离 HOME、配置、网络和 PID 命名空间。默认使用 `xvfb-run`。Wayland 和 XWayland 模式使用 `kwin_wayland` 与 `dbus-run-session` 创建虚拟会话，XWayland 模式还需要 `Xwayland`。deb 解包用 `dpkg-deb`，RPM 和 pacman 解包用 `bsdtar`。
 
 ## ARM64 构建与验证边界
 

@@ -8,4 +8,5 @@
 - 2026-11-21 修正包元数据主页并用 `makepkg` 按相同版本号重打包。25,005 项应用文件、目录和链接与之前的 rc.5 包一致，产物记录和 SHA256 已更新。交付后已按用户要求清理本轮构建和测试暂存，保留新成品及校验文件。
 - 2026-11-23 用官网 DMG 构建同版本 Arch 成品。包内载荷与此前已验收的 ZIP 成品逐项一致，成品通过包校验、CLI、图片 worker 和隔离桌面启动检查。
 - 官网 DMG 构建已通过用户验收。本轮下载、构建和隔离测试暂存已清理，保留 `dist/` 内的成品和校验文件。
-- 当前构建源码见 `personal-dsh-v0.2.2-rc.5`（`e089bd3`），上一适配版见 `personal-dsh-v0.2.2-rc.3`（`21f5a7e`）。对应报告见 [rc.5](docs/COMPATIBILITY.md) 和 [rc.3](docs/COMPATIBILITY-PREVIOUS.md)。
+- rc.5 官网 DMG 构建基线见 `personal-dsh-v0.2.2-rc.5`（`e089bd3`），上一适配版见 `personal-dsh-v0.2.2-rc.3`（`21f5a7e`）。对应报告见 [rc.5](docs/COMPATIBILITY.md) 和 [rc.3](docs/COMPATIBILITY-PREVIOUS.md)。
+- 当前构建加入 Agent 预设依赖检查、Sharp 隔离重装、Netlink 收包退避和最终包验证。Arch x86_64 成品通过 Xvfb、Wayland 与 XWayland 主界面检查，三条路径均确认桌面进程加载了包内守卫。用户验收通过后已清理暂存，`dist/` 保留本次成品及复核过的 SHA256。[验证用法](docs/AUTO_BUILD.md#验证最终安装包)

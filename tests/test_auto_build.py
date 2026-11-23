@@ -35,7 +35,10 @@ class BuildCLI(unittest.TestCase):
         self.root.mkdir()
         shutil.copy2(ROOT / 'auto-build.sh', self.root)
         shutil.copy2(ROOT / 'build-packages.sh', self.root)
+        shutil.copy2(ROOT / 'install-image-worker.sh', self.root)
         shutil.copytree(ROOT / 'scripts', self.root / 'scripts')
+        shutil.copytree(ROOT / 'image-worker-src', self.root / 'image-worker-src')
+        shutil.copytree(ROOT / 'netlink-guard', self.root / 'netlink-guard')
         self.bin = Path(self.temp.name) / 'bin'
         self.bin.mkdir()
         self.marker = Path(self.temp.name) / 'network-used'
@@ -122,6 +125,11 @@ class BuildCLI(unittest.TestCase):
         backup = tree / 'resources/app/dsh/node_modules/.sharp-native-backup'
         backup.mkdir(parents=True)
         (backup / 'diagnostic').write_bytes(b'backup')
+        modules = backup.parent
+        (modules / 'sharp').mkdir()
+        (modules / 'sharp/package.json').write_text(json.dumps({'name': 'sharp', 'version': '0.35.5'}))
+        for dependency in ('colour', 'sharp-linux-x64', 'sharp-libvips-linux-x64'):
+            (modules / '@img' / dependency).mkdir(parents=True)
         store = Path(self.temp.name) / 'store'
         for name in ['others/dmg', 'dl/pip-cache', 'tools/usr/bin', 'dl/npm', 'work/x64']:
             (store / name).mkdir(parents=True, exist_ok=True)
@@ -143,6 +151,23 @@ class BuildCLI(unittest.TestCase):
                      'work/x64/app.squashfs']:
             self.assertTrue((store / path).exists(), path)
         self.assertTrue((self.root / 'out-x64/resources/app/dsh/node_modules/.sharp-native-backup').exists())
+
+    def test_package_only_reuses_the_worker_native_sharp_after_backup_cleanup(self):
+        store = self.package_fixture()
+        args = ('--only', 'package', '--store', str(store))
+        result = self.run_cli(*args)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        resources = self.root / 'out-x64/resources'
+        modules = resources / 'app/dsh/node_modules'
+        worker = resources / 'image-worker/worker-modules/node_modules/sharp/package.json'
+        native_manifest = worker.read_bytes()
+        shutil.rmtree(modules / '.sharp-native-backup')
+        result = self.run_cli(*args)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(worker.read_bytes(), native_manifest)
+        self.assertIn('Out-of-process Sharp facade', (modules / 'sharp/package.json').read_text())
+        staged = store / 'work/x64/DeepSeek-Harness.AppDir'
+        self.assertTrue((staged / 'resources/netlink-guard/libdsh-netlink-guard.so').is_file())
 
     def test_explicit_clean_preserves_downloads_and_final_artifacts(self):
         store = self.package_fixture()
