@@ -274,6 +274,17 @@ chmod +x dist/DeepSeek-Harness-*.AppImage
 | `DSH_STORE` | 与 `--store` 对应 |
 | `DSH_NODE_VERSION` / `DSH_PY_VERSION` | 仅用于 dry-run 占位 |
 
+## 查找版本源码
+
+自用分支以 `personal-dsh-v<上游版本>` 注释标签标记对应的构建提交。列出历史标签，或查看当前交付的源码提交：
+
+```sh
+git tag --list 'personal-dsh-v*' --sort=version:refname
+git show --no-patch personal-dsh-v0.2.2-rc.5
+```
+
+重建旧版时，请使用对应标签中的构建说明与载荷校验和。当前与上一版的验证记录见 [兼容性记录](COMPATIBILITY.md) 和 [上一版](COMPATIBILITY-PREVIOUS.md)。
+
 ## 维护与离线测试
 
 当前兼容性范围见 [兼容性记录](COMPATIBILITY.md)。当前 pnpm 位于
@@ -325,7 +336,7 @@ DSH_DESKTOP_RESOURCES_DIR="$PWD/out-arm64/resources" ELECTRON_RUN_AS_NODE=1 \
 提供兼容的 ARM64 Electron。
 
 
-## KDE/v2rayN 代理适配
+## 系统代理适配
 
 应用树阶段自动运行 `patches/patch-system-proxy.py`，补充 Desktop Host 的系统代理读取和动态更新。范围、环境覆盖规则及测试见 [SYSTEM_PROXY.md](SYSTEM_PROXY.md)。新补丁对未知或重复匹配中止，不直接改用户插件目录。
 

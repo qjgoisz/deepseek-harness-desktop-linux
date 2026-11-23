@@ -1,13 +1,13 @@
-# KDE/v2rayN 系统代理适配
+# 系统代理适配
 
-适用：Linux KDE/Plasma 的 DSH Desktop，HTTP/HTTPS 手动代理。默认从桌面图标启动即可读取系统代理；v2rayN 的 KDE 配置更新通知和 `kioslaverc` 文件变化触发后台刷新，无需为每次启动添加代理环境变量。此功能不修改桌面设置，也不依赖代理服务固定监听某个端口。
+DSH Desktop 支持读取 Linux KDE/Plasma 的手动 HTTP/HTTPS 系统代理。从桌面图标启动即可读取，KDE 配置更新通知或 `kioslaverc` 文件变化会触发后台刷新。此功能不修改桌面设置，也不要求代理服务监听固定端口。
 
 ## 代理来源与切换
 
 - 仅 Desktop Host 启用；CLI、非 KDE 桌面、工作流/脚本 worker 保留上游代理行为。
 - 用户在启动环境或受信任的 DSH home `.env` 中明确设置 `http_proxy`、`https_proxy`、`all_proxy`（或大写形式）时，尊重这份覆盖，不自动跟随 KDE。只有 `no_proxy` 不算手动代理覆盖，它会与系统绕过项合并。
 - `DSH_DESKTOP_SYSTEM_PROXY=0` 可禁用适配，恢复上游环境变量行为。普通使用无需设置此变量。
-- 通过 `kreadconfig6`/`kreadconfig5` 读取 KDE 代理模式、HTTP/HTTPS 端点、绕过列表等；通过会话总线监听 `/KIO/Scheduler` 的 `org.kde.KIO.Scheduler.reparseSlaveConfiguration`。这正是 v2rayN 官方 Linux 脚本在更新配置后发送的信号。
+- 通过 `kreadconfig6`/`kreadconfig5` 读取 KDE 代理模式、HTTP/HTTPS 端点和绕过列表，并通过会话总线监听 `/KIO/Scheduler` 的 `org.kde.KIO.Scheduler.reparseSlaveConfiguration` 通知。
 - 同时监听配置目录以覆盖配置文件的原子替换，并每 30 秒低频检查一次，补偿缺少 D-Bus 工具或漏掉通知的情况。重复通知合并，读取过期结果被丢弃，相同策略不重建连接池。
 - 开关或端口变更对新请求生效；旧连接池停止接收新请求，让已有流式响应完成。应用退出时统一释放监听和连接。
 - 关闭系统代理时切换直连，并清除适配器发布的旧代理变量；以后新启动的工具继承当前策略。已经启动的外部工具不会因父进程更改变量而自动切换。
@@ -22,9 +22,9 @@
 
 ## GitHub HTTPS 超时
 
-先检查 KDE 手动代理的两个字段。`httpsProxy` 指的是 HTTPS 请求使用的代理，值中的协议描述客户端如何连接代理端口。若本地代理监听的是 HTTP，HTTP 和 HTTPS 两栏都使用 `http://<地址>:<端口>`。访问 GitHub 时仍通过 CONNECT 建立 HTTPS 隧道。v2rayN 的 KDE 脚本也为两个字段写入 `http://` 地址。[v2rayN KDE 脚本](https://github.com/2dust/v2rayN/blob/master/v2rayN/ServiceLib/Sample/proxy_set_linux_sh)
+先检查 KDE 手动代理的两个字段。`httpsProxy` 指的是 HTTPS 请求使用的代理，值中的协议描述客户端如何连接代理端口。若本地代理监听的是 HTTP，HTTP 和 HTTPS 两栏都使用 `http://<地址>:<端口>`。访问 GitHub 时仍通过 CONNECT 建立 HTTPS 隧道。
 
-再检查绕过项。当前适配器会拒绝 `127.*`、`192.168.*` 这类 IP 通配符和 `*example.org` 这类域名通配符。按原来想绕过的范围改写，如 `127.0.0.0/8`、`192.168.0.0/16`，或用 `example.org` 表示该域及其子域。保存后系统代理适配器会重新读取配置。若 v2rayN 会重新写入这些字段，也应检查它使用的排除列表。
+再检查绕过项。当前适配器会拒绝 `127.*`、`192.168.*` 这类 IP 通配符和 `*example.org` 这类域名通配符。按原来想绕过的范围改写，如 `127.0.0.0/8`、`192.168.0.0/16`，或用 `example.org` 表示该域及其子域。保存后系统代理适配器会重新读取配置。
 
 rc.5 成品使用独立 KDE 配置复现了规则拒绝和 TLS 握手失败。修正两处后，Host 请求 GitHub 返回 HTTP 200，继承同一策略的 Git 子进程成功读取公开仓库 HEAD。测试使用 HTTPS 仓库 URL。
 
@@ -52,6 +52,4 @@ for script in scripts/build/*.sh; do bash -n "$script"; done
 
 本机 HTTP/HTTPS 模拟服务与私有 D-Bus 测试均已通过。当前载荷的验证范围见 [兼容性记录](COMPATIBILITY.md)。
 
-参考：
-- v2rayN 官方 Linux 脚本：https://github.com/2dust/v2rayN/blob/master/v2rayN/ServiceLib/Sample/proxy_set_linux_sh
-- Electron Chromium 与 Node 网络栈区分：https://www.electronjs.org/docs/latest/api/net/
+参考 [Electron 的 Chromium 与 Node 网络栈说明](https://www.electronjs.org/docs/latest/api/net/)。

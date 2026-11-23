@@ -8,7 +8,7 @@
 自用分支当前适配基线：`@deepseek-ai/dsh-desktop 0.2.2-rc.5`。
 本分支使用实色背景与普通窗口圆角，保留全屏交通灯及窗口控件修复。
 本轮验证范围为 Arch Linux x86_64 系统运行时包。
-已加入 KDE/v2rayN 系统代理自动读取和动态切换。
+已加入系统代理自动读取和动态切换。
 支持范围和手动环境覆盖规则见 [系统代理说明](docs/SYSTEM_PROXY.md)。
 
 自用分支另提供按服务选择 MCP 协商方式和后台初始化的补丁。默认仍等待连接；
@@ -46,7 +46,7 @@
 ```
 ├── patches/
 │   ├── patch-main.py            平台准入 / resources 根 / 打包态 / 托盘 / CLI 路径
-│   ├── patch-system-proxy.py    KDE/v2rayN Desktop 后台代理适配
+│   ├── patch-system-proxy.py    Desktop 后台系统代理适配
 │   ├── system-proxy/           系统代理适配模块及连接池控制器
 │   ├── patch-mcp-negotiation.py MCP 协商方式与可选后台初始化（默认行为不变）
 │   ├── patch-flock-libc.py      会话锁 libc 探测排除网络诊断

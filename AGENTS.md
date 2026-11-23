@@ -6,7 +6,7 @@
 - Arch x86_64 成品为 `0.2.2_rc.5+systemruntime1-1`。官方基线为 Electron 44.7.0、Node 24.21.0、Python 3.12.14、pnpm 11.28.5。成品依赖 Arch 的 Electron、Node、Python、Office Python 库和 pnpm，内置 LibreOffice WASM 0.2.3 及 Sharp worker。
 - rc.5 Arch 成品已通过包校验、pacman 升级解析、隔离 Wayland/XWayland 启动、CLI/pnpm、图片 worker、工作区运行时工具和 Office Python 读写检查。75 项自动回归通过，因缺少 deb/RPM 工具跳过 3 项。
 - Arch 宿主已安装 `0.2.2_rc.5+systemruntime1-1`。交付清理保留最新版安装包和经复核的 SHA256，移除已被替代的 rc.3 安装包及本轮构建和诊断暂存。
-- 官方 rc.5 保留 Host Cookie 修复。KDE 代理、MCP 和 libc 探测的官方复核见 `docs/patches/README.md`。系统代理跳过整份不受支持的排除规则时，可用隔离测试分别验证代理地址和绕过规则，避免误认为补丁缺失。
+- 官方 rc.5 保留 Host Cookie 修复。系统代理、MCP 和 libc 探测的官方复核见 `docs/patches/README.md`。文档统一使用“系统代理”，当前适用范围为 KDE/Plasma 手动 HTTP/HTTPS 代理。系统代理跳过整份不受支持的排除规则时，可用隔离测试分别验证代理地址和绕过规则，避免误认为补丁缺失。
 - Office 技能由插件加载时附加 Python 环境说明。系统运行时模式应更新该说明，保留项目或用户显式选择。Debian 的 PPTX 默认流程加入私有库，Arch 使用系统库。LibreOffice WASM 使用适配层声明的确切版本。
 - 交付前对照实际发布包与固定官方源码快照复核补丁。官方源码中的修复须确认进入发布包后再移除本地替代。
 
@@ -29,7 +29,7 @@
 
 ## DSH 更新适配
 
-- 自用分支持续跟进官方下载页更新的桌面载荷。旧版构建源码保留在相应提交，已验收的 rc.1 系统运行时版见 `personal-dsh-v0.2.2-rc.1`。
+- 自用分支持续跟进官方下载页更新的桌面载荷。版本用 `personal-dsh-v<上游版本>` 注释标签定位到对应的构建提交。当前标签为 `personal-dsh-v0.2.2-rc.5`，历史标签可按[构建文档](docs/AUTO_BUILD.md#查找版本源码)查询。
 - 兼容性检测保留当前和紧邻的上一版。适配新版本时，将原 `docs/COMPATIBILITY.md` 移为 `docs/COMPATIBILITY-PREVIOUS.md`，覆盖更早归档，再写入当前报告。其他文档聚焦当前版本的产物、用法和验证范围。
 
 - 自用打包以[官方下载页](https://deepseek.com/harness/)的 Apple Silicon DMG 为准，滚动地址为 `https://download.deepseek.com/desktop/dsh-latest-macos-arm64.dmg`。下载后解包核对应用 `package.json` 与 `runtime/primary-runtime/runtime.json`，记录 SHA256。nightly 清单只用于了解更新进度。2026-11-23 核对官网 DMG 仍为 `0.2.2-rc.5`，已切换构建来源。

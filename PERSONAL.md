@@ -17,4 +17,4 @@
 默认保留构建缓存；如需在成功后删除解包、打包暂存和应用树，增加 `--clean`。下载缓存仍保留，可在确认成品可用后删除构建存储目录。
 
 
-当前适配基线为 DSH `0.2.2-rc.5`。Arch 包使用系统 Electron、Node、Python、pnpm 和 Office Python 库，保留内置 LibreOffice WASM。KDE/v2rayN 代理、MCP 启动与 libc 探测补丁仍适用。Desktop Cookie 修复由官方载荷提供。测试范围见 [兼容性记录](docs/COMPATIBILITY.md)。
+当前适配基线为 DSH `0.2.2-rc.5`。Arch 包使用系统 Electron、Node、Python、pnpm 和 Office Python 库，保留内置 LibreOffice WASM。系统代理、MCP 启动与 libc 探测补丁仍适用。Desktop Cookie 修复由官方载荷提供。测试范围见 [兼容性记录](docs/COMPATIBILITY.md)。

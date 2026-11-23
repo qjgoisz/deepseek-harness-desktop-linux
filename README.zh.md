@@ -34,7 +34,7 @@ PKGDEST="$PWD/dist" makepkg -s
 
 - 安装前在产物目录核对 SHA256。安装步骤见 [产物说明](docs/ARTIFACTS.md)。
 - 窗口、侧栏和交通灯的当前策略见 [自用外观说明](PERSONAL.md)。
-- KDE/v2rayN 的适用范围和环境变量覆盖见 [系统代理说明](docs/SYSTEM_PROXY.md)。
+- 适用范围和环境变量覆盖见 [系统代理说明](docs/SYSTEM_PROXY.md)。
 - MCP 协商与后台初始化需要按服务启用，见 [MCP 启动说明](docs/MCP_STARTUP.md)。
 - 自定义 Agent 预设若引用独立的 `@deepseek-ai/dsh-tool-subagent-control/list-agents`，移除该条目并保留主模块和原有预设 ID。当前主模块已注册 `list_agents`。更新预设后重启或按本机配置方式重载预设，再检查会话恢复。
 - 打包补丁的用途与官方实现核对见 [补丁总览](docs/patches/README.md)。
