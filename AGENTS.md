@@ -45,6 +45,7 @@
 - `local-fixes/dsh-usage-settings/` 单独保存用户授权纳入自用分支的插件导航修复；仅显式运行 `apply-fix.py --apply` 时修改本机插件，不接入 Desktop 打包流程。
 - `local-fixes/dsh-qoder-sidebar/` 保存独立的 Qoder 底栏兼容修复。已在 DSH Desktop `0.2.2-rc.3` 与 `dsh-qoder-connect 0.2.16` 上验收，额度卡开关两种状态下「会话与工作区」入口均可显示。插件更新或重装后先检查已发布的客户端规则，仅用 `--apply` 备份并替换已知规则。脚本独立于 Desktop 打包流程。
 - `local-fixes/mcp-startup/` 通过 `npm -g` 安装固定版本 `mcp-remote@0.15.1`。安装前检查显式配置的 npm 全局前缀及目标目录的写权限，通过 `npm root -g` 定位全局包。OpenAlex 和 Exa 用固定 Node 路径直接执行包内的 `dist/proxy.js`。使用 CC Switch 时从其管理源更新入口并同步到已启用的客户端，保留各客户端的启用状态及 DSH 的协商和后台启动设置。
+- MCP 启动工具的源码保留在仓库中。全局安装流程已取代仓库内的 `local-fixes/mcp-startup/runtime/node_modules/`，该旧目录的忽略规则已移除。
 
 ## 构建与产物
 
