@@ -3,10 +3,10 @@
 ## Arch Linux x86_64
 
 - 文件 `dist/deepseek-harness-desktop-0.2.2_rc.5+systemruntime1-1-x86_64.pkg.tar.zst`
-- 大小 124544320 字节
-- SHA256 `c7b71ad14bd312d1f72bea657538060517028d877c2556a3884bcb57791439c0`
+- 大小 124544478 字节
+- SHA256 `0557662db4fc22785543b5c1dc9987200d997cf2ee57961ce75ae4ccf8d18956`
 
-2026-11-21 更新包元数据主页后按原版本号重打包。
+2026-11-23 从官方下载页的 Apple Silicon DMG 按原版本号重新构建。
 
 由仓库根目录的 `PKGBUILD` 经 `makepkg` 构建，可升级同包名的 rc.3。使用 pacman 管理 Electron 44、Node、Python、pnpm 和 Office Python 库。本机的 `python-pptx` 由 Arch Linux CN 提供。安装前核对校验和。
 

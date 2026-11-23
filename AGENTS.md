@@ -29,10 +29,10 @@
 
 ## DSH 更新适配
 
-- 自用分支持续跟进新的 RC 载荷。旧版构建源码保留在相应提交，已验收的 rc.1 系统运行时版见 `personal-dsh-v0.2.2-rc.1`。
+- 自用分支持续跟进官方下载页更新的桌面载荷。旧版构建源码保留在相应提交，已验收的 rc.1 系统运行时版见 `personal-dsh-v0.2.2-rc.1`。
 - 兼容性检测保留当前和紧邻的上一版。适配新版本时，将原 `docs/COMPATIBILITY.md` 移为 `docs/COMPATIBILITY-PREVIOUS.md`，覆盖更早归档，再写入当前报告。其他文档聚焦当前版本的产物、用法和验证范围。
 
-- 官方滚动下载地址为 `https://download.deepseek.com/desktop/dsh-latest-macos-arm64.dmg`。下载地址和文件名不能证明版本；解包后核对应用 `package.json` 与 `runtime/primary-runtime/runtime.json`。
+- 自用打包以[官方下载页](https://deepseek.com/harness/)的 Apple Silicon DMG 为准，滚动地址为 `https://download.deepseek.com/desktop/dsh-latest-macos-arm64.dmg`。下载后解包核对应用 `package.json` 与 `runtime/primary-runtime/runtime.json`，记录 SHA256。nightly 清单只用于了解更新进度。2026-11-23 核对官网 DMG 仍为 `0.2.2-rc.5`，已切换构建来源。
 - Node、Python、Python 包、pnpm 及原生 npm 包使用载荷中的版本；不要独立升级或为了构建成功静默使用其他版本。原生模块默认同版本替换，版本漂移必须明确说明。
 - 自用 deb 可用 `--system-runtime` 在打包阶段改用系统 Python 和 Node，保留内置 pnpm、LibreOffice Kit 和私有的 `python-pptx`。该模式绕过旧用户运行时缓存。适配新版本时复核工作区依赖工具、Office 技能、Desktop Host 和 CLI 的路径。
 - Arch 自用 pacman 包同样使用 `--system-runtime`，依赖对应主版本的系统 Electron、系统 Node、Python、pnpm 和 Office Python 库（包括 `python-pptx`）。LibreOffice Kit WASM 和 Sharp worker 仍随包分发。升级时同时复核系统 pnpm 的插件管理与锁文件兼容性、原生模块和双显示协议启动。
@@ -49,13 +49,14 @@
 
 - 2026-11-21，包元数据主页统一为官方仓库列出的 `https://deepseek.com/harness/`。更新 `PKGBUILD` 后重新生成 `.SRCINFO`，deb、RPM 和手工 pacman 包使用同一主页。Arch 重打包保持 `0.2.2_rc.5+systemruntime1-1`，应用载荷与上一份包逐文件相同，新的产物校验和见 `docs/ARTIFACTS.md`。
 - 主页修正重打包交付后，已按用户要求清理本轮下载、应用树、测试副本和旧包解包暂存；`dist/` 保留重打包成品及复核通过的 SHA256 文件。
-- Arch x86_64 可在仓库根目录用 `PKGDEST="$PWD/dist" makepkg -s` 构建。更新 `PKGBUILD` 后同步 `.SRCINFO`，核对上游 ZIP 校验和、版本及系统依赖。与 `auto-build.sh --formats pacman` 共用文件暂存逻辑。
+- 2026-11-23，使用官网 DMG 和当前 `PKGBUILD` 重打 Arch 包，版本仍为 `0.2.2_rc.5+systemruntime1-1`。最终包的 25,005 项载荷与已验收的 ZIP 构建逐项一致，隔离桌面启动、CLI、pnpm 和图片 worker 均通过。用户验收后清理本轮构建缓存和隔离测试目录，`dist/` 保留已验收成品及复核过的 SHA256。
+- Arch x86_64 可在仓库根目录用 `PKGDEST="$PWD/dist" makepkg -s` 构建。`PKGBUILD` 将官网 DMG 以版本化文件名缓存并固定 SHA256。官网更新后，重建旧版本须在 `SRCDEST` 中提供匹配的 DMG。更新 `PKGBUILD` 后同步 `.SRCINFO`，核对版本、摘要及系统依赖。与 `auto-build.sh --formats pacman` 共用文件暂存逻辑。
 
 自用 x86_64 bundled deb 的常用命令：
 
 ```sh
 ./auto-build.sh --arch x64 --formats deb --electron bundled --system-runtime --package-jobs 4 \
-  --archive /绝对路径/已校验的/deepseek-harness-0.2.2-rc.5-mac-arm64.zip
+  --dmg /绝对路径/已校验的/deepseek-harness-0.2.2-rc.5-mac-arm64.dmg
 ```
 
 - 默认保留下载缓存、解包文件和构建暂存。清理使用显式选项或按用户指定范围执行；不要在构建脚本中加入默认删除行为。

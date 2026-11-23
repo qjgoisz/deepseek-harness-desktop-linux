@@ -1,7 +1,7 @@
 # deepseek-harness-desktop-linux
 
 把 **DeepSeek Harness 桌面端**（官方仅发布 macOS / Windows 包）移植到 Linux 的
-**重新打包工具链**：官方 macOS ZIP 或 DMG 载荷 + 若干公开下载物 → AppImage / deb / pacman / rpm。
+**重新打包工具链**：官网下载页的 Apple Silicon DMG + 若干公开下载物 → AppImage / deb / pacman / rpm。
 
 工具链支持 **x86_64** 与 **aarch64** 的多种包型；当前实测范围见下文。
 
@@ -80,7 +80,7 @@
 ```bash
 ./auto-build.sh --dry-run
 ./auto-build.sh --arch x64 --formats deb --electron bundled --system-runtime --package-jobs 4 \
-  --archive /绝对路径/已校验的/deepseek-harness-0.2.2-rc.5-mac-arm64.zip
+  --dmg /绝对路径/已校验的/deepseek-harness-0.2.2-rc.5-mac-arm64.dmg
 ```
 
 默认保留缓存、解包文件、构建目录和历史产物；`--clean` 显式清理中间文件。

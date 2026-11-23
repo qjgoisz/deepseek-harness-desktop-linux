@@ -14,12 +14,13 @@ depends=("electron${_electron_version%%.*}>=${_electron_version}"
          'python-openpyxl' 'python-xlsxwriter' 'python-pillow' 'python-lxml' 'python-pptx')
 makedepends=('curl' 'unzip' '7zip')
 options=('!strip' '!debug')
-_archive="deepseek-harness-${_upstream_version}-mac-arm64.zip"
+# The official download URL rolls forward. Keep each verified DMG under its versioned name.
+_archive="deepseek-harness-${_upstream_version}-mac-arm64.dmg"
 _license_file="deepseek-harness-${_upstream_version}-LICENSE"
-source=("https://download.deepseek.com/dsh-desk/bin/mac-arm64/${_archive}"
+source=("${_archive}::https://download.deepseek.com/desktop/dsh-latest-macos-arm64.dmg"
         "${_license_file}::https://raw.githubusercontent.com/deepseek-ai/deepseek-harness/9c2670d3bce5275e0d1610272958121af87787bb/LICENSE")
 noextract=("${_archive}")
-sha256sums=('c169975831897ee0925dbc23a661893511eff29bf645a7842ae1c2d2b5d5b8a0'
+sha256sums=('9f0c4406ce97f0cdd3862ba1e70a085b422dbeb1390fdeb8a6e810c38b0a8ffd'
             'ebb4f09972aee8608be255debaf78451a68e95c290f55c240dec2ecfa16ea6be')
 
 prepare() {
@@ -35,7 +36,7 @@ build() {
   local port="$srcdir/linux-port"
   DSH_ELECTRON_VERSION="$_electron_version" bash "$port/auto-build.sh" \
     --arch x64 --formats pacman --electron system --only prepare,tree \
-    --archive "$srcdir/$_archive" --store "$srcdir/build-cache"
+    --dmg "$srcdir/$_archive" --store "$srcdir/build-cache"
 
   python3 - "$port/out-x64/resources" "$_upstream_version" "$_node_version" <<'PY'
 import json

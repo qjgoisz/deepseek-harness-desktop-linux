@@ -10,7 +10,7 @@
 # 国内网络策略（均可用环境变量覆盖）：
 #   * GitHub 资源（Electron / python-build-standalone / AppImage runtime）
 #     默认经 https://gh-proxy.org/ 加速，--no-proxy 改直连；
-#   * 官方 dmg 直接取自 download.deepseek.com，失败才回退 GitHub 镜像；
+#   * 官方 dmg 直接取自 download.deepseek.com；
 #   * Node 官方 tar.xz 取自 npmmirror 二进制镜像，npm 包取自 registry.npmmirror.com，
 #     pip 交叉安装（下载 manylinux 轮子）取自清华 TUNA。
 #
@@ -31,8 +31,6 @@ PYPI_MIRROR="${DSH_PYPI_MIRROR:-https://pypi.tuna.tsinghua.edu.cn/simple}"
 PBS_TAGS=(${DSH_PBS_TAGS:-20260924 20260901 20260825 20260812})   # python-build-standalone 标签，按序探测
 ELECTRON_VERSION="${DSH_ELECTRON_VERSION:-44.7.0}"        # 官方 0.2.2-rc.5 载荷；44.0.0 有 Linux 托盘回归
 DMG_OFFICIAL="${DSH_DMG_URL:-https://download.deepseek.com/desktop/dsh-latest-macos-arm64.dmg}"
-DMG_MIRROR_TAG="${DSH_DMG_MIRROR_TAG:-v0.2.0-rc.2}"
-DMG_MIRROR="${DSH_DMG_MIRROR:-https://github.com/LinJianKun/deepseek-harness-desktop-mirror/releases/download}"
 RUNTIME_REPO="${DSH_RUNTIME_REPO:-https://github.com/AppImage/type2-runtime/releases/download/continuous}"
 APPIMAGETOOL_BASE="${DSH_APPIMAGETOOL_BASE:-https://github.com/AppImage/appimagetool/releases/download/continuous}"
 FALLBACK_NODE_VERSION="${DSH_NODE_VERSION:-24.21.0}"      # rc.5 基线，仅用于 --dry-run

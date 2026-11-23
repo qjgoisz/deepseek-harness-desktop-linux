@@ -23,12 +23,12 @@ pkgbase = deepseek-harness-desktop
 	depends = python-pillow
 	depends = python-lxml
 	depends = python-pptx
-	noextract = deepseek-harness-0.2.2-rc.5-mac-arm64.zip
+	noextract = deepseek-harness-0.2.2-rc.5-mac-arm64.dmg
 	options = !strip
 	options = !debug
-	source = https://download.deepseek.com/dsh-desk/bin/mac-arm64/deepseek-harness-0.2.2-rc.5-mac-arm64.zip
+	source = deepseek-harness-0.2.2-rc.5-mac-arm64.dmg::https://download.deepseek.com/desktop/dsh-latest-macos-arm64.dmg
 	source = deepseek-harness-0.2.2-rc.5-LICENSE::https://raw.githubusercontent.com/deepseek-ai/deepseek-harness/9c2670d3bce5275e0d1610272958121af87787bb/LICENSE
-	sha256sums = c169975831897ee0925dbc23a661893511eff29bf645a7842ae1c2d2b5d5b8a0
+	sha256sums = 9f0c4406ce97f0cdd3862ba1e70a085b422dbeb1390fdeb8a6e810c38b0a8ffd
 	sha256sums = ebb4f09972aee8608be255debaf78451a68e95c290f55c240dec2ecfa16ea6be
 
 pkgname = deepseek-harness-desktop

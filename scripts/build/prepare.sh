@@ -87,8 +87,7 @@ phase_prepare() {
     [ -s "$DMG" ] || die "找不到本地 dmg: $DMG"
     step "使用本地 dmg: $DMG"
   else
-    fetch "$DMG" "$DMG_OFFICIAL" \
-      "$(gh "$DMG_MIRROR/$DMG_MIRROR_TAG/deepseek-harness-${DMG_MIRROR_TAG#v}-mac-arm64.dmg")"
+    fetch "$DMG" "$DMG_OFFICIAL"
   fi
   if [ -z "$DMG_GIVEN" ] || [ -n "$DMG_URL_OVERRIDE" ]; then
     dmg_provenance "${DMG_URL_OVERRIDE:-$DMG_OFFICIAL}"

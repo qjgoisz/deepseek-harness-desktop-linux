@@ -33,3 +33,9 @@ KDE 排除列表中的 IP 通配形式会使适配器拒绝该次读取。排除
 - 使用修正主页为 `https://deepseek.com/harness/` 的 `PKGBUILD`，从固定官方 ZIP 重新走 `makepkg` 流程。版本与 pkgrel 仍为 `0.2.2_rc.5+systemruntime1-1`。本次源码校验、构建、依赖解析和包校验通过，宿主 pnpm 为 12.22.0。[产物与新 SHA256](ARTIFACTS.md)
 - 新旧包的 25,005 项应用文件、目录和链接逐项一致，包元数据已核对官方主页。最终包解出后验证 CLI、系统 pnpm、主进程和两个 preload 的语法以及图片 worker 自检。相同载荷沿用前轮兼容性检查。
 - 构建自带 Xvfb 冒烟遇到宿主 NVIDIA EGL 初始化崩溃。后续在独立 HOME、网络和 PID 命名空间的 Xvfb 中指定 Mesa 软件渲染，最终包成功跳过欢迎页并显示主界面。
+
+## 2026-11-23 官网 DMG 重打包
+
+- 使用[官方下载页](https://deepseek.com/harness/)的 Apple Silicon DMG 通过 `makepkg` 重建同版本 Arch 包。DMG 为 276237948 字节，SHA256 为 `9f0c4406ce97f0cdd3862ba1e70a085b422dbeb1390fdeb8a6e810c38b0a8ffd`。应用与运行时仍为 `0.2.2-rc.5`，Electron 44.7.0、Node 24.21.0、Python 3.12.14、pnpm 11.28.5。[官方 DMG](https://download.deepseek.com/desktop/dsh-latest-macos-arm64.dmg)
+- 最终包与 11 月 21 日的 ZIP 构建逐项比较，25,005 项应用文件、目录和链接的类型、权限与内容均一致。包元数据、依赖解析、主进程与两个 preload 的语法、CLI、系统 pnpm 12.22.0、图片 worker 和交付包 SHA256 均通过。[成品与校验和](ARTIFACTS.md)
+- 构建内置冒烟报告 X 显示不可用。将包内启动器和应用挂载到独立网络与 PID 命名空间，在 Xvfb 中指定 Mesa 软件渲染，使用空 profile 跳过欢迎页，确认主界面渲染。

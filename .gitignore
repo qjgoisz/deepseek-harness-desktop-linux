@@ -15,6 +15,7 @@
 /pkg/
 /*.pkg.tar.*
 /deepseek-harness-*-mac-arm64.zip
+/deepseek-harness-*-mac-arm64.dmg
 /deepseek-harness-*-LICENSE
 
 # 系统文件

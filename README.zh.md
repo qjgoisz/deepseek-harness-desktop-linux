@@ -4,7 +4,7 @@
 
 ## 准备官方载荷
 
-从兼容性记录中的官方链接下载本版 macOS arm64 ZIP。按更新清单核对大小和 SHA512，再核对归档中应用和 runtime 的版本。构建脚本接收本地 ZIP 或 DMG，当前版本使用已校验的 ZIP。
+从[官方下载页](https://deepseek.com/harness/)下载 Apple Silicon DMG。该下载地址会随官网发布滚动更新，构建前须解包核对应用和运行时版本，并记录 SHA256。
 
 构建依赖 Bash、Python 3.12+、7z、curl、tar、xz、unzip 和用于打包的系统工具。各包型的依赖见 [自动构建文档](docs/AUTO_BUILD.md)。构建在普通用户权限下运行。
 
@@ -17,7 +17,7 @@ mkdir -p dist
 PKGDEST="$PWD/dist" makepkg -s
 ```
 
-`PKGBUILD` 固定官方 ZIP 和 SHA256。系统软件包提供运行时，依赖与安装步骤见 [Arch 构建说明](docs/AUTO_BUILD.md#arch-linux-迁移与系统运行时)。
+`PKGBUILD` 固定官网 DMG 的版本化文件名和 SHA256。系统软件包提供运行时，依赖与安装步骤见 [Arch 构建说明](docs/AUTO_BUILD.md#arch-linux-迁移与系统运行时)。
 
 ## 构建 amd64 bundled deb
 
@@ -25,7 +25,7 @@ PKGDEST="$PWD/dist" makepkg -s
 
 ```sh
 ./auto-build.sh --arch x64 --formats deb --electron bundled --system-runtime --package-jobs 4 \
-  --archive /绝对路径/已校验的/deepseek-harness-0.2.2-rc.5-mac-arm64.zip
+  --dmg /绝对路径/已校验的/deepseek-harness-0.2.2-rc.5-mac-arm64.dmg
 ```
 
 脚本依次准备依赖、生成应用树并打包。Electron 默认使用 44.7.0，Node、Python、pnpm 和原生依赖沿用载荷指定版本。包和校验文件保存在 `dist/`。可先加 `--dry-run` 查看步骤，或加 `--clean` 在成功后清除中间产物。

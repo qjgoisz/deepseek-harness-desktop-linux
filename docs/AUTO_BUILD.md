@@ -123,7 +123,7 @@ PKGDEST="$PWD/dist" makepkg -s
 ```
 
 需要 Arch 的 `base-devel`，并启用提供 `python-pptx` 的仓库，例如 Arch Linux CN。
-根目录的 `PKGBUILD` 固定官方 ZIP 和 SHA256，复用仓库的 Linux 构建脚本和补丁，
+根目录的 `PKGBUILD` 从官网下载页获取 Apple Silicon DMG，以版本化文件名缓存并固定 SHA256，复用仓库的 Linux 构建脚本和补丁，
 由 `makepkg` 生成包索引和归档。`.SRCINFO` 用 `makepkg --printsrcinfo > .SRCINFO` 更新。
 当前成品为 `deepseek-harness-desktop-0.2.2_rc.5+systemruntime1-1-x86_64.pkg.tar.zst`。
 构建时，`makepkg` 仍会准备官方基线运行时用于 Linux 应用树与自检。
@@ -132,7 +132,7 @@ PKGDEST="$PWD/dist" makepkg -s
 
 ```sh
 ./auto-build.sh --arch x64 --formats pacman --electron system --system-runtime \
-  --package-jobs 4 --archive /绝对路径/已校验的/deepseek-harness-0.2.2-rc.5-mac-arm64.zip
+  --package-jobs 4 --dmg /绝对路径/已校验的/deepseek-harness-0.2.2-rc.5-mac-arm64.dmg
 ```
 
 确认校验文件后，在管理员 shell 中用 `pacman -U /绝对路径/安装包.pkg.tar.zst` 安装，
@@ -192,7 +192,7 @@ PKGDEST="$PWD/dist" makepkg -s
 ```
 
 本地 dmg 不会被下载或覆盖。URL dmg 下载到 `<store>/others/`，失败即停止。
-默认 dmg 地址失败时才尝试配置的镜像。相对本地 dmg 路径以仓库根为基准。
+默认从官方下载页的 Apple Silicon DMG 地址下载，下载失败即停止。相对本地 dmg 路径以仓库根为基准。
 解包缓存记录 dmg 的 SHA256；更换 dmg 会重新解包。
 
 默认下载存放于 `dl/`，dmg 存放于 `others/`，打包工具存放于 `tools/`，
@@ -269,7 +269,6 @@ chmod +x dist/DeepSeek-Harness-*.AppImage
 | `DSH_PYPI_MIRROR` | pip 主源，失败后尝试阿里云与官方 PyPI |
 | `DSH_ELECTRON_VERSION` | Electron 版本 |
 | `DSH_DMG_URL` | 默认 dmg 地址 |
-| `DSH_DMG_MIRROR` / `DSH_DMG_MIRROR_TAG` | dmg 备源与标签 |
 | `DSH_PBS_TAGS` | Python standalone 候选标签，空格分隔；之后尝试 GitHub API |
 | `DSH_RUNTIME_REPO` / `DSH_APPIMAGETOOL_BASE` | AppImage 工具下载根 |
 | `DSH_STORE` | 与 `--store` 对应 |
@@ -331,12 +330,12 @@ DSH_DESKTOP_RESOURCES_DIR="$PWD/out-arm64/resources" ELECTRON_RUN_AS_NODE=1 \
 应用树阶段自动运行 `patches/patch-system-proxy.py`，补充 Desktop Host 的系统代理读取和动态更新。范围、环境覆盖规则及测试见 [SYSTEM_PROXY.md](SYSTEM_PROXY.md)。新补丁对未知或重复匹配中止，不直接改用户插件目录。
 
 
-## 官方桌面 ZIP 载荷
+## 官网页面发布的桌面载荷
 
-官方更新清单中的完整 macOS 应用 ZIP 也可构建，使用 `--archive /绝对路径/官方.zip`（`--dmg` 仍兼容）。先按对应官方清单校验文件大小及 SHA512，再解包核对应用 package.json 与 runtime.json 的版本；文件名或 HEAD 不代表版本。当前构建入口不会自动读取更新清单或验证它的 SHA512，该步骤需在构建前完成。7z 自动识别归档格式，按内容 SHA256 复用/刷新解包缓存。运行时版本仍读取该载荷，不采用旧包版本顶替。
+自用打包以[官方下载页](https://deepseek.com/harness/)的 Apple Silicon DMG 为准，nightly 清单仅用于了解更新进度。适配新版本时，下载 DMG，解包核对应用 `package.json` 和运行时 `runtime.json`，记录 SHA256，然后更新 `PKGBUILD` 和 `.SRCINFO`。官网 URL 滚动更新后，重建旧版本须将匹配摘要的 DMG 以 `PKGBUILD` 中的文件名放在 `SRCDEST`（默认在仓库根目录）。
 
 
-2026-11-18 使用开发版更新清单提供的 rc.5 ZIP 完成 Arch 系统运行时包构建。Electron 默认基线为 44.7.0，构建阶段使用载荷要求的 Node、Python、pnpm 和同版本原生依赖，LibreOffice 使用同版本 WASM。来源、校验及验证范围见 [rc.5 兼容性记录](COMPATIBILITY.md)。
+`--archive` 仍支持显式传入归档，可用于复现此前的 ZIP 构建。历史载荷及成品验证见 [rc.5 兼容性记录](COMPATIBILITY.md)。
 
 ## libc 探测补丁
 
