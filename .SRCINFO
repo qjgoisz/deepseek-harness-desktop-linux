@@ -1,4 +1,4 @@
-pkgbase = deepseek-harness-desktop-macos-style
+pkgbase = dsh-desktop-macos-style
 	pkgdesc = DeepSeek Harness Desktop with macOS-style window controls and system runtime
 	pkgver = 0.2.2_rc.5+systemruntime1
 	pkgrel = 1
@@ -33,4 +33,4 @@ pkgbase = deepseek-harness-desktop-macos-style
 	sha256sums = 9f0c4406ce97f0cdd3862ba1e70a085b422dbeb1390fdeb8a6e810c38b0a8ffd
 	sha256sums = ebb4f09972aee8608be255debaf78451a68e95c290f55c240dec2ecfa16ea6be
 
-pkgname = deepseek-harness-desktop-macos-style
+pkgname = dsh-desktop-macos-style

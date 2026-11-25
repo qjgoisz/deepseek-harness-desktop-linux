@@ -1,4 +1,4 @@
-pkgname=deepseek-harness-desktop-macos-style
+pkgname=dsh-desktop-macos-style
 _upstream_version=0.2.2-rc.5
 _electron_version=44.7.0
 _node_version=24.21.0

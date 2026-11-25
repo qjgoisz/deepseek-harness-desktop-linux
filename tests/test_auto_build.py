@@ -327,7 +327,7 @@ class BuildCLI(unittest.TestCase):
         self.env['ZSTD_LOG'] = str(log)
         result = self.run_cli('--only', 'package', '--formats', 'pacman', '--store', str(store), '--package-jobs', '1')
         self.assertEqual(result.returncode, 0, result.stderr)
-        pkgname = 'deepseek-harness-desktop-macos-style'
+        pkgname = 'dsh-desktop-macos-style'
         archive = self.root / f'dist/{pkgname}-1.3.7_rc.4-1-x86_64.pkg.tar.zst'
         info = subprocess.check_output(['bsdtar', '-xOf', str(archive), '.PKGINFO'], text=True)
         self.assertIn(f'pkgname = {pkgname}', info.splitlines())

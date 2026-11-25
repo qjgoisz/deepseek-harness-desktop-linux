@@ -285,7 +285,7 @@ EOF
 
 build_pkgtar() {
   local r="$WORK/pkgroot"
-  local pkgname=deepseek-harness-desktop-macos-style
+  local pkgname=dsh-desktop-macos-style
   local version="$VER_PKG-1"
   local -a deps=("electron${PACKAGED_ELECTRON_VERSION%%.*}>=$PACKAGED_ELECTRON_VERSION" xdg-utils)
   drop "$r"

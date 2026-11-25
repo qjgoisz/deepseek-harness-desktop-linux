@@ -126,7 +126,7 @@ PKGDEST="$PWD/dist" makepkg -s
 需要 Arch 的 `base-devel`，并启用提供 `python-pptx` 的仓库，例如 Arch Linux CN。
 根目录的 `PKGBUILD` 从官网下载页获取 Apple Silicon DMG，以版本化文件名缓存并固定 SHA256，复用仓库的 Linux 构建脚本和补丁，
 由 `makepkg` 生成包索引和归档。`.SRCINFO` 用 `makepkg --printsrcinfo > .SRCINFO` 更新。
-当前成品为 `deepseek-harness-desktop-macos-style-0.2.2_rc.5+systemruntime1-1-x86_64.pkg.tar.zst`。
+当前成品为 `dsh-desktop-macos-style-0.2.2_rc.5+systemruntime1-1-x86_64.pkg.tar.zst`。
 构建时，`makepkg` 仍会准备官方基线运行时用于 Linux 应用树与自检。
 
 也可以沿用跨发行版脚本，仍支持原来的 `pkgrel=1` 输出：
@@ -137,7 +137,7 @@ PKGDEST="$PWD/dist" makepkg -s
 ```
 
 确认校验文件后，在管理员 shell 中用 `pacman -U /绝对路径/安装包.pkg.tar.zst` 安装，
-让 pacman 解析依赖。已安装旧包 `deepseek-harness-desktop` 时，确认 pacman 提示的冲突移除。
+让 pacman 解析依赖。已安装旧包时，确认 pacman 提示的冲突移除。
 同一次事务将安装新包，沿用原来的启动器和用户数据路径。[成品与安装命令](ARTIFACTS.md)
 
 - Desktop、Host、CLI 分别使用版本化的系统 Electron 和 `/usr/bin/node`。rc.5 成品允许

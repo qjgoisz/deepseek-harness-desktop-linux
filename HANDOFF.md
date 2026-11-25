@@ -2,7 +2,7 @@
 
 ## 2026-11-25 · Arch 包名迁移
 
-- `codex/personal-desktop` 的 Arch 包名为 `deepseek-harness-desktop-macos-style`，版本为 `0.2.2_rc.5+systemruntime1-1`。用户已验收，宿主已安装新包。旧包和本轮暂存已清理，`dist/` 保留新包与复核过的 SHA256。[成品和用法](docs/ARTIFACTS.md)
+- `codex/personal-desktop` 的 Arch 包名定为 `dsh-desktop-macos-style`，版本为 `0.2.2_rc.5+systemruntime1-1`。短名包沿用前一轮用户已验收的载荷，宿主已安装。旧名成品和本轮暂存已清理，`dist/` 保留短名成品与复核过的 SHA256。[成品和用法](docs/ARTIFACTS.md)
 
 ## 2026-11-23 · 0.2.2-rc.5
 
