@@ -49,6 +49,8 @@
 
 ## 构建与产物
 
+- 2026-11-25，Arch 自用包名改为 `deepseek-harness-desktop-macos-style`，与 AUR 的 `deepseek-harness-desktop` 区分。`PKGBUILD` 和手工 pacman 打包均声明提供旧包名并与之冲突。迁移时用 `pacman -U` 安装新包，并在同一次事务中确认移除旧包。保留启动器、桌面项、应用 ID 和用户数据路径。
+- 用户已验收新包，Arch 宿主已迁移到 `deepseek-harness-desktop-macos-style 0.2.2_rc.5+systemruntime1-1`。清理移除了旧包、旧校验与签名文件和本轮重打包暂存。`dist/` 保留新包及复核过的 SHA256。
 - 2026-11-21，包元数据主页统一为官方仓库列出的 `https://deepseek.com/harness/`。更新 `PKGBUILD` 后重新生成 `.SRCINFO`，deb、RPM 和手工 pacman 包使用同一主页。Arch 重打包保持 `0.2.2_rc.5+systemruntime1-1`，应用载荷与上一份包逐文件相同，新的产物校验和见 `docs/ARTIFACTS.md`。
 - 主页修正重打包交付后，已按用户要求清理本轮下载、应用树、测试副本和旧包解包暂存；`dist/` 保留重打包成品及复核通过的 SHA256 文件。
 - 2026-11-23，使用官网 DMG 和当前 `PKGBUILD` 重打 Arch 包，版本仍为 `0.2.2_rc.5+systemruntime1-1`。最终包的 25,005 项载荷与已验收的 ZIP 构建逐项一致，隔离桌面启动、CLI、pnpm 和图片 worker 均通过。用户验收后清理本轮构建缓存和隔离测试目录，`dist/` 保留已验收成品及复核过的 SHA256。

@@ -285,6 +285,7 @@ EOF
 
 build_pkgtar() {
   local r="$WORK/pkgroot"
+  local pkgname=deepseek-harness-desktop-macos-style
   local version="$VER_PKG-1"
   local -a deps=("electron${PACKAGED_ELECTRON_VERSION%%.*}>=$PACKAGED_ELECTRON_VERSION" xdg-utils)
   drop "$r"
@@ -303,16 +304,18 @@ build_pkgtar() {
   fi
   local size; size=$(du -sb "$r" | cut -f1)
   cat > "$r/.PKGINFO" <<EOF
-pkgname = deepseek-harness-desktop
-pkgbase = deepseek-harness-desktop
+pkgname = $pkgname
+pkgbase = $pkgname
 pkgver = $version
-pkgdesc = DeepSeek Harness desktop client (system-wide Electron build)
+pkgdesc = DeepSeek Harness Desktop with macOS-style window controls
 url = https://deepseek.com/harness/
 builddate = $(date +%s)
 packager = DeepSeek Harness Linux port
 size = $size
 arch = $PKGARCH
 license = MIT
+provides = deepseek-harness-desktop=$version
+conflict = deepseek-harness-desktop
 EOF
   printf 'depend = %s\n' "${deps[@]}" >> "$r/.PKGINFO"
   cat > "$r/.INSTALL" <<'EOF'
@@ -331,7 +334,7 @@ post_remove() {
 EOF
   ( cd "$r" && bsdtar -cf - --format=mtree --uid 0 --gid 0 --numeric-owner \
       --options='!all,use-set,type,uid,gid,mode,size,md5,time,link' .PKGINFO .INSTALL usr | gzip -9 > .MTREE )
-  local name="deepseek-harness-desktop-${version}-${PKGARCH}.pkg.tar.zst"
+  local name="${pkgname}-${version}-${PKGARCH}.pkg.tar.zst"
   ( cd "$r" && tar --owner=0 --group=0 --numeric-owner --sort=name -cf - .PKGINFO .INSTALL .MTREE usr ) \
     | zstd -19 -T"$(package_threads 4)" -o "$OUT/$name" -q -f
   write_package_checksum "$name"

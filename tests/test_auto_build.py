@@ -327,8 +327,13 @@ class BuildCLI(unittest.TestCase):
         self.env['ZSTD_LOG'] = str(log)
         result = self.run_cli('--only', 'package', '--formats', 'pacman', '--store', str(store), '--package-jobs', '1')
         self.assertEqual(result.returncode, 0, result.stderr)
-        archive = self.root / 'dist/deepseek-harness-desktop-1.3.7_rc.4-1-x86_64.pkg.tar.zst'
+        pkgname = 'deepseek-harness-desktop-macos-style'
+        archive = self.root / f'dist/{pkgname}-1.3.7_rc.4-1-x86_64.pkg.tar.zst'
         info = subprocess.check_output(['bsdtar', '-xOf', str(archive), '.PKGINFO'], text=True)
+        self.assertIn(f'pkgname = {pkgname}', info.splitlines())
+        self.assertIn(f'pkgbase = {pkgname}', info.splitlines())
+        self.assertIn('provides = deepseek-harness-desktop=1.3.7_rc.4-1', info.splitlines())
+        self.assertIn('conflict = deepseek-harness-desktop', info.splitlines())
         self.assertIn('pkgver = 1.3.7_rc.4-1', info)
         self.assertIn('arch = x86_64', info)
         self.assertIn('depend = electron44>=44.4.5', info)

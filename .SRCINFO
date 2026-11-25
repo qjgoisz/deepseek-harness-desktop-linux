@@ -1,5 +1,5 @@
-pkgbase = deepseek-harness-desktop
-	pkgdesc = DeepSeek Harness Desktop with system Electron, Node.js, Python and pnpm
+pkgbase = deepseek-harness-desktop-macos-style
+	pkgdesc = DeepSeek Harness Desktop with macOS-style window controls and system runtime
 	pkgver = 0.2.2_rc.5+systemruntime1
 	pkgrel = 1
 	url = https://deepseek.com/harness/
@@ -23,6 +23,8 @@ pkgbase = deepseek-harness-desktop
 	depends = python-pillow
 	depends = python-lxml
 	depends = python-pptx
+	provides = deepseek-harness-desktop=0.2.2_rc.5+systemruntime1-1
+	conflicts = deepseek-harness-desktop
 	noextract = deepseek-harness-0.2.2-rc.5-mac-arm64.dmg
 	options = !strip
 	options = !debug
@@ -31,4 +33,4 @@ pkgbase = deepseek-harness-desktop
 	sha256sums = 9f0c4406ce97f0cdd3862ba1e70a085b422dbeb1390fdeb8a6e810c38b0a8ffd
 	sha256sums = ebb4f09972aee8608be255debaf78451a68e95c290f55c240dec2ecfa16ea6be
 
-pkgname = deepseek-harness-desktop
+pkgname = deepseek-harness-desktop-macos-style

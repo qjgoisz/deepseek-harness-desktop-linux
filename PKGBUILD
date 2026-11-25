@@ -1,10 +1,10 @@
-pkgname=deepseek-harness-desktop
+pkgname=deepseek-harness-desktop-macos-style
 _upstream_version=0.2.2-rc.5
 _electron_version=44.7.0
 _node_version=24.21.0
 pkgver="${_upstream_version/-/_}+systemruntime1"
 pkgrel=1
-pkgdesc='DeepSeek Harness Desktop with system Electron, Node.js, Python and pnpm'
+pkgdesc='DeepSeek Harness Desktop with macOS-style window controls and system runtime'
 arch=('x86_64')
 url='https://deepseek.com/harness/'
 license=('MIT')
@@ -12,6 +12,8 @@ depends=("electron${_electron_version%%.*}>=${_electron_version}"
          "nodejs>=${_node_version}" 'nodejs<27' 'pnpm>=12.21.0' 'pnpm<13'
          'xdg-utils' 'python' 'python-numpy' 'python-pandas' 'python-docx'
          'python-openpyxl' 'python-xlsxwriter' 'python-pillow' 'python-lxml' 'python-pptx')
+provides=("deepseek-harness-desktop=${pkgver}-${pkgrel}")
+conflicts=('deepseek-harness-desktop')
 makedepends=('curl' 'unzip' '7zip')
 options=('!strip' '!debug')
 # The official download URL rolls forward. Keep each verified DMG under its versioned name.
