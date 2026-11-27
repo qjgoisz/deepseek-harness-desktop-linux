@@ -249,8 +249,8 @@ EOF
 
 # Stage the shared pacman payload for both the portable builder and makepkg.
 stage_arch_package() {
-  local r="$1" tree="$2" electron_version="$3" system_runtime="$4"
-  local resources="$r/usr/lib/deepseek-harness/resources"
+  local r="$1" tree="$2" electron_version="$3" system_runtime="$4" pkgname="$5"
+  local resources="$r/usr/lib/$pkgname/resources"
   local electron_major="${electron_version%%.*}"
   if [[ ! "$electron_version" =~ ^[1-9][0-9]*\.[0-9]+\.[0-9]+$ ]]; then
     die "不支持的 Electron 版本：$electron_version"
@@ -267,7 +267,7 @@ stage_arch_package() {
   cat > "$r/usr/bin/deepseek-harness" <<EOF
 #!/bin/sh
 set -e
-dsh_resources="\$(dirname "\$(readlink -f "\$0")")/../lib/deepseek-harness/resources"
+dsh_resources="\$(dirname "\$(readlink -f "\$0")")/../lib/$pkgname/resources"
 . "\$dsh_resources/netlink-guard/preload.sh"
 export DSH_DESKTOP_FORCE_PACKAGED=1
 export DSH_DESKTOP_RESOURCES_DIR="\$dsh_resources"
@@ -275,6 +275,7 @@ export DSH_DESKTOP_NODE_EXECUTABLE=/usr/bin/electron$electron_major
 exec "\$DSH_DESKTOP_NODE_EXECUTABLE" "\$DSH_DESKTOP_RESOURCES_DIR/app" "\$@"
 EOF
   chmod 755 "$r/usr/bin/deepseek-harness"
+  install -Dm644 "$ROOT/DeepSeek-Harness.LICENSE" "$r/usr/share/licenses/$pkgname/LICENSE"
   install -Dm644 "$ROOT/icons/deepseek-harness.desktop" "$r/usr/share/applications/deepseek-harness.desktop"
   local s
   for s in 16 24 32 48 64 128 256 512; do
@@ -286,10 +287,12 @@ EOF
 build_pkgtar() {
   local r="$WORK/pkgroot"
   local pkgname=dsh-desktop-macos-style
-  local version="$VER_PKG-1"
-  local -a deps=("electron${PACKAGED_ELECTRON_VERSION%%.*}>=$PACKAGED_ELECTRON_VERSION" xdg-utils)
+  local release=1.1
+  local -a deps=(bash coreutils "electron${PACKAGED_ELECTRON_VERSION%%.*}>=$PACKAGED_ELECTRON_VERSION"
+    glibc hicolor-icon-theme libgcc libstdc++ xdg-utils)
+  local -a optdeps=()
   drop "$r"
-  stage_arch_package "$r" "$SRC" "$PACKAGED_ELECTRON_VERSION" "$SYSTEM_RUNTIME"
+  stage_arch_package "$r" "$SRC" "$PACKAGED_ELECTRON_VERSION" "$SYSTEM_RUNTIME" "$pkgname"
   if [ "$SYSTEM_RUNTIME" -eq 1 ]; then
     local node_version node_major node_next
     read -r _ node_version _ < <(runtime_json "$SRC/resources/runtime/primary-runtime/runtime.json")
@@ -297,45 +300,44 @@ build_pkgtar() {
     node_next=$((node_major + 1))
     # rc.3 also works with Arch's current Node 26.
     if [ "$node_major" -eq 24 ]; then node_next=27; fi
-    version="$VER_PKG+systemruntime1-1"
+    release=2
     deps+=("nodejs>=$node_version" "nodejs<$node_next"
-      'pnpm>=12.21.0' 'pnpm<13' python python-numpy python-pandas python-docx
-      python-openpyxl python-xlsxwriter python-pillow python-lxml python-pptx)
+      'pnpm>=12.21.0' 'pnpm<13' python)
+    optdeps=('python-docx: Word document editing'
+      'python-lxml: Office XML processing'
+      'python-numpy: numerical processing in workspace scripts'
+      'python-openpyxl: Excel workbook editing'
+      'python-pandas: tabular data processing'
+      'python-pillow: image processing in Office scripts'
+      'python-pptx: PowerPoint editing'
+      'python-xlsxwriter: Excel workbook generation')
   fi
+  local version="1:$VER_PKG-$release"
+  local date_epoch="${SOURCE_DATE_EPOCH:-$(date +%s)}"
   local size; size=$(du -sb "$r" | cut -f1)
   cat > "$r/.PKGINFO" <<EOF
 pkgname = $pkgname
 pkgbase = $pkgname
 pkgver = $version
-pkgdesc = DeepSeek Harness Desktop with macOS-style window controls
+pkgdesc = AI development workspace with macOS-style window controls
 url = https://deepseek.com/harness/
-builddate = $(date +%s)
-packager = DeepSeek Harness Linux port
+builddate = $date_epoch
 size = $size
 arch = $PKGARCH
 license = MIT
-provides = deepseek-harness-desktop=$version
+provides = deepseek-harness-desktop=$VER_PKG-$release
 conflict = deepseek-harness-desktop
 EOF
   printf 'depend = %s\n' "${deps[@]}" >> "$r/.PKGINFO"
-  cat > "$r/.INSTALL" <<'EOF'
-post_install() {
-  update-desktop-database -q 2>/dev/null || true
-  gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor 2>/dev/null || true
-  if [ -f /usr/lib/deepseek-harness/chrome-sandbox ]; then
-    chmod 4755 /usr/lib/deepseek-harness/chrome-sandbox 2>/dev/null || true
+  if (("${#optdeps[@]}")); then
+    printf 'optdepend = %s\n' "${optdeps[@]}" >> "$r/.PKGINFO"
   fi
-}
-post_upgrade() { post_install; }
-post_remove() {
-  update-desktop-database -q 2>/dev/null || true
-  gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor 2>/dev/null || true
-}
-EOF
+  find "$r" -exec touch -h -d "@$date_epoch" {} +
   ( cd "$r" && bsdtar -cf - --format=mtree --uid 0 --gid 0 --numeric-owner \
-      --options='!all,use-set,type,uid,gid,mode,size,md5,time,link' .PKGINFO .INSTALL usr | gzip -9 > .MTREE )
+      --options='!all,use-set,type,uid,gid,mode,size,sha256,time,link' .PKGINFO usr | gzip -9n > .MTREE )
+  touch -d "@$date_epoch" "$r/.MTREE"
   local name="${pkgname}-${version}-${PKGARCH}.pkg.tar.zst"
-  ( cd "$r" && tar --owner=0 --group=0 --numeric-owner --sort=name -cf - .PKGINFO .INSTALL .MTREE usr ) \
+  ( cd "$r" && tar --owner=0 --group=0 --numeric-owner --sort=name -cf - .PKGINFO .MTREE usr ) \
     | zstd -19 -T"$(package_threads 4)" -o "$OUT/$name" -q -f
   write_package_checksum "$name"
   echo "  ✓ pkg.tar.zst: $(du -h "$OUT/$name" | cut -f1)"

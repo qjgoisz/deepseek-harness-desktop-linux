@@ -1,36 +1,43 @@
 pkgbase = dsh-desktop-macos-style
-	pkgdesc = DeepSeek Harness Desktop with macOS-style window controls and system runtime
-	pkgver = 0.2.2_rc.5+systemruntime1
-	pkgrel = 1
+	pkgdesc = AI development workspace with macOS-style window controls
+	pkgver = 0.2.2_rc.5
+	pkgrel = 2
+	epoch = 1
 	url = https://deepseek.com/harness/
 	arch = x86_64
 	license = MIT
+	makedepends = 7zip
 	makedepends = curl
 	makedepends = unzip
-	makedepends = 7zip
+	depends = bash
+	depends = coreutils
 	depends = electron44>=44.7.0
+	depends = glibc
+	depends = hicolor-icon-theme
+	depends = libgcc
+	depends = libstdc++
 	depends = nodejs>=24.21.0
 	depends = nodejs<27
 	depends = pnpm>=12.21.0
 	depends = pnpm<13
-	depends = xdg-utils
 	depends = python
-	depends = python-numpy
-	depends = python-pandas
-	depends = python-docx
-	depends = python-openpyxl
-	depends = python-xlsxwriter
-	depends = python-pillow
-	depends = python-lxml
-	depends = python-pptx
-	provides = deepseek-harness-desktop=0.2.2_rc.5+systemruntime1-1
+	depends = xdg-utils
+	optdepends = python-docx: Word document editing
+	optdepends = python-lxml: Office XML processing
+	optdepends = python-numpy: numerical processing in workspace scripts
+	optdepends = python-openpyxl: Excel workbook editing
+	optdepends = python-pandas: tabular data processing
+	optdepends = python-pillow: image processing in Office scripts
+	optdepends = python-pptx: PowerPoint editing
+	optdepends = python-xlsxwriter: Excel workbook generation
+	provides = deepseek-harness-desktop=0.2.2_rc.5-2
 	conflicts = deepseek-harness-desktop
 	noextract = deepseek-harness-0.2.2-rc.5-mac-arm64.dmg
 	options = !strip
 	options = !debug
 	source = deepseek-harness-0.2.2-rc.5-mac-arm64.dmg::https://download.deepseek.com/desktop/dsh-latest-macos-arm64.dmg
-	source = deepseek-harness-0.2.2-rc.5-LICENSE::https://raw.githubusercontent.com/deepseek-ai/deepseek-harness/9c2670d3bce5275e0d1610272958121af87787bb/LICENSE
-	sha256sums = 9f0c4406ce97f0cdd3862ba1e70a085b422dbeb1390fdeb8a6e810c38b0a8ffd
+	source = DeepSeek-Harness.LICENSE
+	sha256sums = a257ded3fbcb9211d5ea0329cec68a07bbd05a5caaa73fd46693c02aa02c52e9
 	sha256sums = ebb4f09972aee8608be255debaf78451a68e95c290f55c240dec2ecfa16ea6be
 
 pkgname = dsh-desktop-macos-style

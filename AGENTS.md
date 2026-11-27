@@ -50,6 +50,7 @@
 
 ## 构建与产物
 
+- 2026-11-27，Arch 自用包版本调整为 `1:0.2.2_rc.5-2`。保留 `epoch=1` 以处理旧 `+systemruntime1` 版本的升级排序。`pkgver` 对应上游版本，同上游版本重打包时递增 `pkgrel`。应用资源位于 `/usr/lib/dsh-desktop-macos-style/resources`，Office 和数据处理 Python 库列为 `optdepends`。用户已验收，复核宿主已安装此版本。清理本轮构建和测试暂存及上一版成品，复核 `dist/` 中的当前包及 SHA256。
 - 2026-11-25，Arch 自用包名定为 `dsh-desktop-macos-style`，与 AUR 的 `deepseek-harness-desktop` 区分。`PKGBUILD` 和手工 pacman 打包均声明提供 AUR 包名并与之冲突。迁移时用 `pacman -U` 安装新包，并在同一次事务中确认移除提示冲突的旧包。保留启动器、桌面项、应用 ID 和用户数据路径。
 - 短名包复用前一轮已验收的 `0.2.2_rc.5+systemruntime1-1` 应用载荷。隔离迁移和三种显示模式的启动检查通过，Arch 宿主已安装短名包。旧名成品和本轮暂存已清理，`dist/` 保留短名成品及复核过的 SHA256。
 - 2026-11-21，包元数据主页统一为官方仓库列出的 `https://deepseek.com/harness/`。更新 `PKGBUILD` 后重新生成 `.SRCINFO`，deb、RPM 和手工 pacman 包使用同一主页。Arch 重打包保持 `0.2.2_rc.5+systemruntime1-1`，应用载荷与上一份包逐文件相同，新的产物校验和见 `docs/ARTIFACTS.md`。

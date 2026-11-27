@@ -53,3 +53,11 @@ KDE 排除列表中的 IP 通配形式会使适配器拒绝该次读取。排除
 - 新包的 SHA256、CLI、pnpm、Agent 预设依赖和图片 worker 通过检查。隔离 Xvfb、原生 Wayland 和 XWayland 均显示主界面并加载 Netlink 守卫。自动回归 75 项通过、4 项跳过。[新包与迁移命令](ARTIFACTS.md)
 - 用户已验收并在宿主安装新包。旧包和重打包暂存已清理，交付包 SHA256 已复核。
 - 包名随后缩短为 `dsh-desktop-macos-style`。同版本的 25,008 项载荷清单复核通过，许可证位于短包名目录。隔离的 pacman 事务成功从上一包名迁移，新包通过 SHA256、CLI、pnpm、图片 worker 和三种显示模式的启动检查。使用包内载荷运行回归，76 项通过，3 项因缺少 deb/RPM 工具跳过。
+
+## 2026-11-27 Arch 打包规范化
+
+- 重新下载官网 Apple Silicon DMG，大小为 276235917 字节，SHA256 为 `a257ded3fbcb9211d5ea0329cec68a07bbd05a5caaa73fd46693c02aa02c52e9`。包内应用和运行时均为 `0.2.2-rc.5`，应用构建提交为 `3f85d888b1297107937d9bd5b853f7e733e179a4`，Node 和 Python 版本与此前载荷一致。[官方 DMG](https://download.deepseek.com/desktop/dsh-latest-macos-arm64.dmg)
+- Arch 包采用上游版本 `0.2.2_rc.5`、`pkgrel=2` 和 `epoch=1`。资源移入 `/usr/lib/dsh-desktop-macos-style/`，保留启动器和桌面项。补齐直接依赖，将 Office 和数据处理的 Python 库移至 `optdepends`。跨发行版脚本生成的 pacman 包也使用标准许可证路径和系统安装钩子。
+- 隔离 pacman 事务从 `0.2.2_rc.5+systemruntime1-1` 升级成功，25,008 个条目无缺失。成品通过 CLI、pnpm、图片 worker、Netlink 守卫以及 Xvfb、原生 Wayland 和 XWayland 启动检查。隔离遮蔽系统 Python 第三方库后，原生 Wayland 主界面仍正常启动。自动回归 76 项通过，3 项因缺少 deb/RPM 工具跳过。
+- 在同一 Arch 宿主上复用已准备的依赖缓存，以相同构建输入和固定 `SOURCE_DATE_EPOCH` 完整运行两次 `makepkg`，成品逐字节一致。空缓存构建需要下载运行时和原生依赖。独立 chroot 的 `repro` 验证尚未运行。
+- 用户已验收，复核宿主已安装 `1:0.2.2_rc.5-2`。上一版成品及本轮构建和测试暂存已清理，当前成品 SHA256 已复核。[产物说明](ARTIFACTS.md)

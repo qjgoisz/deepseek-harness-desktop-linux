@@ -123,18 +123,22 @@ mkdir -p dist
 PKGDEST="$PWD/dist" makepkg -s
 ```
 
-需要 Arch 的 `base-devel`，并启用提供 `python-pptx` 的仓库，例如 Arch Linux CN。
+需要 Arch 的 `base-devel`。如需 PowerPoint 编辑，在提供 `python-pptx` 的仓库（例如 Arch Linux CN）中安装该可选依赖。
 根目录的 `PKGBUILD` 从官网下载页获取 Apple Silicon DMG，以版本化文件名缓存并固定 SHA256，复用仓库的 Linux 构建脚本和补丁，
 由 `makepkg` 生成包索引和归档。`.SRCINFO` 用 `makepkg --printsrcinfo > .SRCINFO` 更新。
-当前成品为 `dsh-desktop-macos-style-0.2.2_rc.5+systemruntime1-1-x86_64.pkg.tar.zst`。
+当前成品的包版本为 `1:0.2.2_rc.5-2`。`pkgver` 对应上游发布号，`pkgrel=2` 对应本次重打包。
+`epoch=1` 使 pacman 能从先前带 `+systemruntime1` 后缀的版本正常升级。后续 Arch 版本须沿用该 epoch。
+应用资源安装在 `/usr/lib/dsh-desktop-macos-style/resources`。
 构建时，`makepkg` 仍会准备官方基线运行时用于 Linux 应用树与自检。
 
-也可以沿用跨发行版脚本，仍支持原来的 `pkgrel=1` 输出：
+跨发行版脚本也可以生成同包名的系统运行时变体：
 
 ```sh
 ./auto-build.sh --arch x64 --formats pacman --electron system --system-runtime \
   --package-jobs 4 --dmg /绝对路径/已校验的/deepseek-harness-0.2.2-rc.5-mac-arm64.dmg
 ```
+
+跨发行版脚本省略 `--system-runtime` 时，仍可生成内置 Node、Python 和 pnpm 的变体，其发行号为 `1.1`。两种变体都用系统 Electron。
 
 确认校验文件后，在管理员 shell 中用 `pacman -U /绝对路径/安装包.pkg.tar.zst` 安装，
 让 pacman 解析依赖。已安装旧包时，确认 pacman 提示的冲突移除。
@@ -142,8 +146,8 @@ PKGDEST="$PWD/dist" makepkg -s
 
 - Desktop、Host、CLI 分别使用版本化的系统 Electron 和 `/usr/bin/node`。rc.5 成品允许
   Node 24.21.0 至 26.x，包括 Arch 的 Node 24 LTS 和 Node 26。
-- Python 和 Office 库由 pacman 管理。工具调用 `/usr/bin/python3`，从系统解释器查询
-  site-packages；PPTX 技能直接导入系统 `python-pptx`。
+- 工具调用 `/usr/bin/python3` 并从系统解释器查询 site-packages。Office 和数据处理库列为
+  `optdepends`，由实际使用的技能和脚本按需安装。PPTX 技能直接导入系统 `python-pptx`。
 - 插件安装及工作区依赖工具直接调用 `/usr/bin/pnpm`。rc.5 适配 Arch 的 pnpm 12.21+（12.x）。
 - Office 内嵌预览与导出仍使用 DSH 的 LibreOffice Kit WASM。系统 `soffice`
   可在工作区独立使用。图片处理仍使用 DSH 的 Sharp worker 及其同版本原生包。
@@ -153,6 +157,9 @@ PKGDEST="$PWD/dist" makepkg -s
 历史会话存储记录原工作区路径，切换系统时先保持该路径可访问。若家目录通过
 `/home/debian → /home/arch` 兼容旧路径，保持该映射并使用会话已有的工作区入口，
 避免同时用两个路径添加同一目录。按需要在新系统上重装依赖本机 ABI 的第三方插件。
+
+打包配方的 0BSD 声明见 `REUSE.toml`。应用的 MIT 许可证取自固定上游快照，安装到
+`/usr/share/licenses/dsh-desktop-macos-style/LICENSE`。[上游许可证](https://github.com/deepseek-ai/deepseek-harness/blob/9c2670d3bce5275e0d1610272958121af87787bb/LICENSE)
 
 ## 分阶段构建
 

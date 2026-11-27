@@ -36,6 +36,7 @@ class BuildCLI(unittest.TestCase):
         shutil.copy2(ROOT / 'auto-build.sh', self.root)
         shutil.copy2(ROOT / 'build-packages.sh', self.root)
         shutil.copy2(ROOT / 'install-image-worker.sh', self.root)
+        shutil.copy2(ROOT / 'DeepSeek-Harness.LICENSE', self.root)
         shutil.copytree(ROOT / 'scripts', self.root / 'scripts')
         shutil.copytree(ROOT / 'image-worker-src', self.root / 'image-worker-src')
         shutil.copytree(ROOT / 'netlink-guard', self.root / 'netlink-guard')
@@ -328,19 +329,21 @@ class BuildCLI(unittest.TestCase):
         result = self.run_cli('--only', 'package', '--formats', 'pacman', '--store', str(store), '--package-jobs', '1')
         self.assertEqual(result.returncode, 0, result.stderr)
         pkgname = 'dsh-desktop-macos-style'
-        archive = self.root / f'dist/{pkgname}-1.3.7_rc.4-1-x86_64.pkg.tar.zst'
+        archive = self.root / f'dist/{pkgname}-1:1.3.7_rc.4-1.1-x86_64.pkg.tar.zst'
         info = subprocess.check_output(['bsdtar', '-xOf', str(archive), '.PKGINFO'], text=True)
         self.assertIn(f'pkgname = {pkgname}', info.splitlines())
         self.assertIn(f'pkgbase = {pkgname}', info.splitlines())
-        self.assertIn('provides = deepseek-harness-desktop=1.3.7_rc.4-1', info.splitlines())
+        self.assertIn('provides = deepseek-harness-desktop=1.3.7_rc.4-1.1', info.splitlines())
         self.assertIn('conflict = deepseek-harness-desktop', info.splitlines())
-        self.assertIn('pkgver = 1.3.7_rc.4-1', info)
+        self.assertIn('pkgver = 1:1.3.7_rc.4-1.1', info.splitlines())
         self.assertIn('arch = x86_64', info)
         self.assertIn('depend = electron44>=44.4.5', info)
         members = subprocess.check_output(['bsdtar', '-tf', str(archive)], text=True)
         self.assertIn('.MTREE\n', members)
         self.assertIn('-T1', log.read_text().splitlines())
-        self.assertIn('.INSTALL', members)
+        self.assertIn(f'usr/lib/{pkgname}/resources/runtime/primary-runtime/runtime.json\n', members)
+        self.assertIn(f'usr/share/licenses/{pkgname}/LICENSE\n', members)
+        self.assertNotIn('.INSTALL\n', members)
         self.assertNotIn('.sharp-native-backup', members)
 
     @unittest.skipUnless(shutil.which('rpmbuild') and shutil.which('rpm'), 'rpm tools unavailable')

@@ -2,27 +2,35 @@ pkgname=dsh-desktop-macos-style
 _upstream_version=0.2.2-rc.5
 _electron_version=44.7.0
 _node_version=24.21.0
-pkgver="${_upstream_version/-/_}+systemruntime1"
-pkgrel=1
-pkgdesc='DeepSeek Harness Desktop with macOS-style window controls and system runtime'
+pkgver="${_upstream_version/-/_}"
+pkgrel=2
+# Older builds appended +systemruntime1 to pkgver and sort above the upstream version.
+epoch=1
+pkgdesc='AI development workspace with macOS-style window controls'
 arch=('x86_64')
 url='https://deepseek.com/harness/'
 license=('MIT')
-depends=("electron${_electron_version%%.*}>=${_electron_version}"
-         "nodejs>=${_node_version}" 'nodejs<27' 'pnpm>=12.21.0' 'pnpm<13'
-         'xdg-utils' 'python' 'python-numpy' 'python-pandas' 'python-docx'
-         'python-openpyxl' 'python-xlsxwriter' 'python-pillow' 'python-lxml' 'python-pptx')
+depends=('bash' 'coreutils' "electron${_electron_version%%.*}>=${_electron_version}" 'glibc'
+         'hicolor-icon-theme' 'libgcc' 'libstdc++' "nodejs>=${_node_version}" 'nodejs<27'
+         'pnpm>=12.21.0' 'pnpm<13' 'python' 'xdg-utils')
+makedepends=('7zip' 'curl' 'unzip')
+optdepends=('python-docx: Word document editing'
+            'python-lxml: Office XML processing'
+            'python-numpy: numerical processing in workspace scripts'
+            'python-openpyxl: Excel workbook editing'
+            'python-pandas: tabular data processing'
+            'python-pillow: image processing in Office scripts'
+            'python-pptx: PowerPoint editing'
+            'python-xlsxwriter: Excel workbook generation')
 provides=("deepseek-harness-desktop=${pkgver}-${pkgrel}")
 conflicts=('deepseek-harness-desktop')
-makedepends=('curl' 'unzip' '7zip')
 options=('!strip' '!debug')
 # The official download URL rolls forward. Keep each verified DMG under its versioned name.
 _archive="deepseek-harness-${_upstream_version}-mac-arm64.dmg"
-_license_file="deepseek-harness-${_upstream_version}-LICENSE"
 source=("${_archive}::https://download.deepseek.com/desktop/dsh-latest-macos-arm64.dmg"
-        "${_license_file}::https://raw.githubusercontent.com/deepseek-ai/deepseek-harness/9c2670d3bce5275e0d1610272958121af87787bb/LICENSE")
+        'DeepSeek-Harness.LICENSE')
 noextract=("${_archive}")
-sha256sums=('9f0c4406ce97f0cdd3862ba1e70a085b422dbeb1390fdeb8a6e810c38b0a8ffd'
+sha256sums=('a257ded3fbcb9211d5ea0329cec68a07bbd05a5caaa73fd46693c02aa02c52e9'
             'ebb4f09972aee8608be255debaf78451a68e95c290f55c240dec2ecfa16ea6be')
 
 prepare() {
@@ -31,7 +39,9 @@ prepare() {
     rm -r -- "$port"
   fi
   mkdir -p "$port"
-  cp -a -- "$startdir"/{auto-build.sh,install-image-worker.sh,scripts,patches,icons,image-worker-src,netlink-guard} "$port/"
+  cp -a -- "$startdir"/{auto-build.sh,install-image-worker.sh,scripts,patches,icons} \
+    "$startdir"/{image-worker-src,netlink-guard} "$port/"
+  cp -- "$srcdir/DeepSeek-Harness.LICENSE" "$port/"
 }
 
 build() {
@@ -59,6 +69,5 @@ package() {
   source "$ROOT/scripts/build/common.sh"
   source "$ROOT/scripts/build/tree.sh"
   source "$ROOT/scripts/build/native-packages.sh"
-  stage_arch_package "$pkgdir" "$ROOT/out-x64" "$_electron_version" 1
-  install -Dm644 "$srcdir/$_license_file" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  stage_arch_package "$pkgdir" "$ROOT/out-x64" "$_electron_version" 1 "$pkgname"
 }

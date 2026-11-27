@@ -28,7 +28,11 @@ def unpack(package, dest):
     else:
         raise ValueError(f"不支持的包格式：{package.name}")
     subprocess.run(command, check=True, timeout=120)
-    return dest / "usr/bin/deepseek-harness", dest / "usr/lib/deepseek-harness/resources"
+    library = dest / "usr/lib"
+    arch_resources = library / "dsh-desktop-macos-style/resources"
+    resources = arch_resources if package.name.endswith(".pkg.tar.zst") and arch_resources.is_dir() else (
+        library / "deepseek-harness/resources")
+    return dest / "usr/bin/deepseek-harness", resources
 
 
 def verify(package, display_mode):

@@ -1,5 +1,9 @@
 # 自用 DSH Desktop 项目交接
 
+## 2026-11-27 · Arch 打包规范化
+
+- 新成品为 `dsh-desktop-macos-style 1:0.2.2_rc.5-2`，基于重新校验的官网 DMG。隔离升级及三种显示模式的启动均已验证，两次同机 `makepkg` 产物逐字节一致。用户已验收，复核宿主已安装此版本。旧成品和本轮下载、构建及测试暂存已清理，当前成品已复核 SHA256。[成品和用法](docs/ARTIFACTS.md)
+
 ## 2026-11-25 · Arch 包名迁移
 
 - `codex/personal-desktop` 的 Arch 包名定为 `dsh-desktop-macos-style`，版本为 `0.2.2_rc.5+systemruntime1-1`。短名包沿用前一轮用户已验收的载荷，宿主已安装。旧名成品和本轮暂存已清理，`dist/` 保留短名成品与复核过的 SHA256。[成品和用法](docs/ARTIFACTS.md)
