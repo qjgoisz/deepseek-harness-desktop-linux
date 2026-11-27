@@ -1,0 +1,39 @@
+--- a/lib/client.js
++++ b/lib/client.js
+@@ -4174,18 +4174,16 @@
+       const li = dsmLineage.get(id);
+       const isSub = !!(li && li.origin === "subagent");
+       const isEmpty = !!(li && li.empty);
+-      row.classList.remove("dsm-row-sub");
++      row.classList.toggle("dsm-row-sub", isSub);
+       row.classList.toggle("dsm-row-active", id === activeId);
+-      row.style.removeProperty("--dsm-indent");
+-      let hideLineage = false;
+-      if (li && isSub) {
+-        row.classList.add("dsm-row-sub");
+-        if (getComputedStyle(row).position === "static") row.style.position = "relative";
+-        const depth = Math.max(0, (li.delegationDepth || 1) - 1);
+-        if (depth > 0) row.style.setProperty("--dsm-indent", String(depth * 10) + "px");
+-      } else if (li && isEmpty && id !== activeId) {
+-        hideLineage = true;
+-      }
++      const depth = isSub ? Math.max(0, (li.delegationDepth || 1) - 1) : 0;
++      const indent = depth > 0 ? String(depth * 10) + "px" : "";
++      if (row.style.getPropertyValue("--dsm-indent") !== indent) {
++        if (indent) row.style.setProperty("--dsm-indent", indent);
++        else row.style.removeProperty("--dsm-indent");
++      }
++      if (isSub && getComputedStyle(row).position === "static") row.style.position = "relative";
++      const hideLineage = !isSub && isEmpty && id !== activeId;
+       if (hideLineage) {
+         if (row.style.display !== "none") row.style.display = "none";
+         if (row.getAttribute(DSM_HIDDEN_ATTR) !== "empty") row.setAttribute(DSM_HIDDEN_ATTR, "empty");
+@@ -4266,7 +4264,7 @@
+           dsmDropSubList(row, id);
+         }
+       } else {
+-        row.classList.remove("dsm-row-open");
++        row.classList.toggle("dsm-row-open", false);
+         const staleKids = row.querySelector("[data-dsm-kids]");
+         if (staleKids) staleKids.remove();
+       }
